@@ -83,7 +83,7 @@
     <div class="header">
         <div class="logo">💰 BYBIT</div>
         <div class="header-controls">
-            <button class="filter-btn" onclick="setSort('change')" id="btn-change">% CHANGE</button>
+            <button class="filter-btn active" onclick="setSort('change')" id="btn-change">% CHANGE</button>
             <button class="filter-btn" onclick="setSort('volume')" id="btn-volume">VOLUME</button>
             <button class="filter-btn" onclick="setSort('alpha')" id="btn-alpha">A-Z</button>
         </div>
@@ -246,13 +246,19 @@
         }
         
         async function loadData() {
-            if (isFirstLoad) document.getElementById('loading').style.display = 'block';
+            if (isFirstLoad) {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading').innerHTML = `
+                    <div class="loading-spinner"></div>
+                    <div style="color: rgba(255,255,255,0.5); font-size: 0.9rem;">Loading market data...</div>
+                `;
+            }
             try {
                 const res = await fetch('https://api.bybit.com/v5/market/tickers?category=linear');
                 const data = await res.json();
-                if (data.retCode !== 0) throw new Error('API error');
+                if (data.retCode !== 0) throw new Error('API error: ' + data.retMsg);
                 
-                bubbleData = data.result.list
+                const rawData = data.result.list
                     .filter(i => i.symbol.endsWith('USDT'))
                     .map(i => ({
                         symbol: i.symbol.replace('USDT', ''),
@@ -262,14 +268,19 @@
                         high24h: parseFloat(i.highPrice24h),
                         low24h: parseFloat(i.lowPrice24h)
                     }))
-                    .filter(i => !isNaN(i.change24h));
+                    .filter(i => !isNaN(i.change24h) && i.price > 0);
                 
-                sortData();
+                if (rawData.length === 0) throw new Error('No valid data');
+                
+                bubbleData = rawData;
+                
+                // Sort by absolute change by default
+                bubbleData.sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h));
                 
                 if (isFirstLoad) {
-                    renderBubbles();
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('container').style.display = 'block';
+                    renderBubbles();
                     isFirstLoad = false;
                     connectWebSocket();
                 } else {
@@ -277,8 +288,14 @@
                 }
                 updateTime();
             } catch (e) {
-                console.error('Error:', e);
-                document.getElementById('loading').style.display = 'none';
+                console.error('Error loading data:', e);
+                document.getElementById('loading').innerHTML = `
+                    <div style="color: #ff0040; font-size: 1rem; text-align: center;">
+                        <div style="margin-bottom: 10px;">⚠️ Error loading data</div>
+                        <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">${e.message}</div>
+                        <button onclick="loadData()" style="margin-top: 15px; padding: 10px 20px; background: rgba(0,255,65,0.2); border: 1px solid #00ff41; color: #00ff41; border-radius: 20px; cursor: pointer;">Retry</button>
+                    </div>
+                `;
             }
         }
         
@@ -417,50 +434,70 @@
         function renderBubbles() {
             const w = document.getElementById('bubble-container').clientWidth || window.innerWidth;
             const isM = w < 768;
+            
+            // Clear existing bubbles
             d3.select('#bubble-container').selectAll('*').remove();
             
+            if (bubbleData.length === 0) {
+                console.warn('No data to render');
+                return;
+            }
+            
+            // Take top 20 gainers and 20 losers
             const gainers = bubbleData.filter(d => d.change24h >= 0).slice(0, 20);
             const losers = bubbleData.filter(d => d.change24h < 0).slice(0, 20);
             
-            const baseRadius = isM ? 18 : 28;
+            if (gainers.length === 0 && losers.length === 0) {
+                console.warn('No gainers or losers to render');
+                return;
+            }
+            
+            const baseRadius = isM ? 20 : 30;
             
             function placeBubblesOrganic(coins, startX, isGainers) {
                 return coins.map((d, i) => {
                     const row = Math.floor(i / 5);
                     const col = i % 5;
-                    const offsetX = (Math.random() - 0.5) * 30;
-                    const offsetY = (Math.random() - 0.5) * 20;
-                    const spacing = isM ? 65 : 90;
+                    const offsetX = (Math.random() - 0.5) * 20;
+                    const offsetY = (Math.random() - 0.5) * 15;
+                    const spacing = isM ? 70 : 100;
                     const x = startX + col * spacing + offsetX;
-                    const y = 100 + row * spacing + offsetY;
-                    const sizeBonus = Math.min(Math.abs(d.change24h) / 30, 1) * 12;
+                    const y = 120 + row * spacing + offsetY;
+                    const sizeBonus = Math.min(Math.abs(d.change24h) / 25, 1) * 15;
                     return { ...d, x, y, r: baseRadius + sizeBonus };
                 });
             }
             
-            const gainersNodes = placeBubblesOrganic(gainers, isM ? 35 : 80, true);
-            const losersNodes = placeBubblesOrganic(losers, isM ? w - 280 : w - 450, false);
+            const gainersNodes = placeBubblesOrganic(gainers, isM ? 50 : 120, true);
+            const losersNodes = placeBubblesOrganic(losers, isM ? w - 320 : w - 500, false);
             
             const all = [...gainersNodes, ...losersNodes];
-            const h = Math.max(window.innerHeight, Math.ceil(20 / 5) * (isM ? 70 : 100) + 150);
+            const h = Math.max(window.innerHeight, Math.ceil(20 / 5) * (isM ? 80 : 110) + 200);
             
-            const svg = d3.select('#bubble-container').append('svg').attr('width', w).attr('height', h);
+            console.log('Rendering', all.length, 'bubbles');
             
+            const svg = d3.select('#bubble-container')
+                .append('svg')
+                .attr('width', w)
+                .attr('height', h)
+                .style('display', 'block');
+            
+            // Simple collision avoidance
             const sim = d3.forceSimulation(all)
-                .force('charge', d3.forceManyBody().strength(isM ? -5 : -10))
-                .force('collide', d3.forceCollide().radius(d => d.r + 8).strength(0.6))
-                .force('x', d3.forceX(d => d.x).strength(0.05))
-                .force('y', d3.forceY(d => d.y).strength(0.05))
+                .force('charge', d3.forceManyBody().strength(isM ? -8 : -15))
+                .force('collide', d3.forceCollide().radius(d => d.r + 10).strength(0.7))
+                .force('x', d3.forceX(d => d.x).strength(0.08))
+                .force('y', d3.forceY(d => d.y).strength(0.08))
                 .stop();
             
-            for (let i = 0; i < 100; i++) sim.tick();
+            for (let i = 0; i < 120; i++) sim.tick();
             
             const bubbles = svg.selectAll('.bubble-group')
                 .data(all)
                 .enter()
                 .append('g')
                 .attr('class', 'bubble-group bubble-enter')
-                .style('animation-delay', (d, i) => `${i * 0.03}s`)
+                .style('animation-delay', (d, i) => `${i * 0.02}s`)
                 .on('click', (e, d) => showModal(d));
             
             bubbles.each(function(d) {
@@ -468,47 +505,58 @@
                 const col = getColor(d.change24h);
                 const rad = d.r;
                 
+                // Outer glow circle
                 g.append('circle')
-                    .attr('r', rad + 12)
-                    .attr('fill', d3.color(col).copy({opacity: 0.08}))
+                    .attr('r', rad + 15)
+                    .attr('fill', d3.color(col).copy({opacity: 0.1}))
                     .attr('class', 'glow-circle');
                 
-                const sp = g.append('g').attr('class', 'bubble-spiral').style('color', col);
+                // Main spiral group
+                const sp = g.append('g')
+                    .attr('class', 'bubble-spiral')
+                    .style('color', col);
                 
+                // Spiral paths
                 sp.selectAll('.spiral-path')
                     .data([
-                        {r: 0.95, t: 3, c: 'outer', opacity: 0.3},
-                        {r: 0.8, t: 2.5, c: '', opacity: 0.8},
-                        {r: 0.6, t: 2, c: 'inner', opacity: 0.6}
+                        {r: 0.95, t: 3, c: 'outer', opacity: 0.3, width: 2},
+                        {r: 0.75, t: 2.5, c: '', opacity: 0.9, width: 3.5},
+                        {r: 0.55, t: 2, c: 'inner', opacity: 0.7, width: 2.5}
                     ])
                     .enter()
                     .append('path')
                     .attr('class', d => `spiral-path ${d.c}`)
                     .attr('d', d => spiralPath(rad * d.r, d.t))
                     .attr('stroke', col)
+                    .attr('stroke-width', d => d.width)
                     .attr('opacity', d => d.opacity);
                 
+                // Center glow dot
                 sp.append('circle')
-                    .attr('r', rad * 0.15)
+                    .attr('r', rad * 0.18)
                     .attr('fill', col)
-                    .attr('opacity', 0.6)
-                    .attr('filter', `drop-shadow(0 0 ${rad * 0.3}px ${col})`);
+                    .attr('opacity', 0.8)
+                    .attr('filter', `drop-shadow(0 0 ${rad * 0.4}px ${col})`);
                 
+                // Symbol text
                 g.append('text')
                     .attr('class', 'bubble-label')
-                    .attr('dy', '-0.15em')
-                    .style('font-size', Math.min(rad / 2, isM ? 11 : 14) + 'px')
+                    .attr('dy', '-0.2em')
+                    .style('font-size', Math.min(rad / 1.8, isM ? 12 : 16) + 'px')
                     .style('letter-spacing', '1px')
                     .text(d.symbol);
                 
+                // Change percentage text
                 g.append('text')
                     .attr('class', 'bubble-change')
-                    .attr('dy', '0.9em')
-                    .style('font-size', Math.min(rad / 2.8, isM ? 9 : 11) + 'px')
+                    .attr('dy', '1em')
+                    .style('font-size', Math.min(rad / 2.5, isM ? 10 : 12) + 'px')
                     .text((d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(1) + '%');
             });
             
             bubbles.attr('transform', d => `translate(${d.x.toFixed(1)},${d.y.toFixed(1)})`);
+            
+            console.log('Bubbles rendered successfully');
         }
         
         function updateBubbles() {
