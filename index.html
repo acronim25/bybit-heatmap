@@ -10,7 +10,25 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         :root { --neon-green: #00ff41; --neon-red: #ff0040; --accent-gold: #ffd700; }
         html, body { font-family: 'Rajdhani', sans-serif; background: #0a0a0f; min-height: 100vh; color: #fff; }
-        body { background: radial-gradient(ellipse at 20% 30%, rgba(0,255,65,0.03) 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(255,0,64,0.03) 0%, transparent 50%), radial-gradient(ellipse at center, #0f0f15 0%, #050508 100%); }
+        body {
+            background:
+                /* Grid pattern - subtle */
+                linear-gradient(90deg, rgba(0, 255, 65, 0.04) 1px, transparent 1px),
+                linear-gradient(rgba(0, 255, 65, 0.04) 1px, transparent 1px),
+                /* Horizontal glitch lines */
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 3px,
+                    rgba(255, 0, 64, 0.03) 3px,
+                    rgba(255, 0, 64, 0.03) 6px
+                ),
+                /* Base gradient */
+                radial-gradient(ellipse at 20% 30%, rgba(0, 255, 65, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(255, 0, 64, 0.04) 0%, transparent 50%),
+                #0a0a0f;
+            background-size: 60px 60px, 60px 60px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+        }
         .header { position: fixed; top: 0; left: 0; right: 0; padding: 12px 16px; background: linear-gradient(180deg, rgba(10,10,15,0.95), transparent); z-index: 100; display: flex; justify-content: space-between; align-items: center; }
         .logo { font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 2px; background: linear-gradient(135deg, #fff, var(--accent-gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .last-update { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
