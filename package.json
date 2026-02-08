@@ -1,0 +1,12 @@
+{
+  "name": "bybit-heatmap",
+  "version": "1.0.0",
+  "description": "Bybit Gainers & Losers Heatmap",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": ["bybit", "crypto", "heatmap", "trading"],
+  "author": "acro16hunna",
+  "license": "MIT"
+}
