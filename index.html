@@ -432,10 +432,12 @@
         }
         
         function renderBubbles() {
-            const w = document.getElementById('bubble-container').clientWidth || window.innerWidth;
+            const container = document.getElementById('bubble-container');
+            const w = container.clientWidth || window.innerWidth;
+            const h = Math.max(window.innerHeight, 800);
             const isM = w < 768;
             
-            // Clear existing bubbles
+            // Clear existing
             d3.select('#bubble-container').selectAll('*').remove();
             
             if (bubbleData.length === 0) {
@@ -443,38 +445,41 @@
                 return;
             }
             
-            // Take top 20 gainers and 20 losers
+            // Get gainers and losers
             const gainers = bubbleData.filter(d => d.change24h >= 0).slice(0, 20);
             const losers = bubbleData.filter(d => d.change24h < 0).slice(0, 20);
             
-            if (gainers.length === 0 && losers.length === 0) {
-                console.warn('No gainers or losers to render');
-                return;
-            }
+            const baseRadius = isM ? 25 : 35;
             
-            const baseRadius = isM ? 20 : 30;
+            // Position gainers on LEFT side
+            const gainersNodes = gainers.map((d, i) => {
+                const col = i % 4;
+                const row = Math.floor(i / 4);
+                const spacingX = isM ? 80 : 110;
+                const spacingY = isM ? 90 : 120;
+                const startX = isM ? 60 : 150;
+                const x = startX + col * spacingX + (Math.random() - 0.5) * 30;
+                const y = 140 + row * spacingY + (Math.random() - 0.5) * 25;
+                const sizeBonus = Math.min(Math.abs(d.change24h) / 20, 1) * 15;
+                return { ...d, x, y, r: baseRadius + sizeBonus, originalX: x, originalY: y };
+            });
             
-            function placeBubblesOrganic(coins, startX, isGainers) {
-                return coins.map((d, i) => {
-                    const row = Math.floor(i / 5);
-                    const col = i % 5;
-                    const offsetX = (Math.random() - 0.5) * 20;
-                    const offsetY = (Math.random() - 0.5) * 15;
-                    const spacing = isM ? 70 : 100;
-                    const x = startX + col * spacing + offsetX;
-                    const y = 120 + row * spacing + offsetY;
-                    const sizeBonus = Math.min(Math.abs(d.change24h) / 25, 1) * 15;
-                    return { ...d, x, y, r: baseRadius + sizeBonus };
-                });
-            }
-            
-            const gainersNodes = placeBubblesOrganic(gainers, isM ? 50 : 120, true);
-            const losersNodes = placeBubblesOrganic(losers, isM ? w - 320 : w - 500, false);
+            // Position losers on RIGHT side
+            const losersNodes = losers.map((d, i) => {
+                const col = i % 4;
+                const row = Math.floor(i / 4);
+                const spacingX = isM ? 80 : 110;
+                const spacingY = isM ? 90 : 120;
+                const startX = isM ? w - 320 : w - 500;
+                const x = startX + col * spacingX + (Math.random() - 0.5) * 30;
+                const y = 140 + row * spacingY + (Math.random() - 0.5) * 25;
+                const sizeBonus = Math.min(Math.abs(d.change24h) / 20, 1) * 15;
+                return { ...d, x, y, r: baseRadius + sizeBonus, originalX: x, originalY: y };
+            });
             
             const all = [...gainersNodes, ...losersNodes];
-            const h = Math.max(window.innerHeight, Math.ceil(20 / 5) * (isM ? 80 : 110) + 200);
             
-            console.log('Rendering', all.length, 'bubbles');
+            console.log('Rendering', all.length, 'bubbles', 'Width:', w, 'Height:', h);
             
             const svg = d3.select('#bubble-container')
                 .append('svg')
@@ -482,22 +487,24 @@
                 .attr('height', h)
                 .style('display', 'block');
             
-            // Simple collision avoidance
-            const sim = d3.forceSimulation(all)
-                .force('charge', d3.forceManyBody().strength(isM ? -8 : -15))
-                .force('collide', d3.forceCollide().radius(d => d.r + 10).strength(0.7))
-                .force('x', d3.forceX(d => d.x).strength(0.08))
-                .force('y', d3.forceY(d => d.y).strength(0.08))
+            // Force simulation to prevent overlap but keep positions
+            const simulation = d3.forceSimulation(all)
+                .force('charge', d3.forceManyBody().strength(isM ? -10 : -20))
+                .force('collide', d3.forceCollide().radius(d => d.r + 8).strength(0.8))
+                .force('x', d3.forceX(d => d.originalX).strength(0.1))
+                .force('y', d3.forceY(d => d.originalY).strength(0.1))
                 .stop();
             
-            for (let i = 0; i < 120; i++) sim.tick();
+            // Run simulation for a few iterations
+            for (let i = 0; i < 80; i++) simulation.tick();
             
+            // Create bubble groups
             const bubbles = svg.selectAll('.bubble-group')
                 .data(all)
                 .enter()
                 .append('g')
                 .attr('class', 'bubble-group bubble-enter')
-                .style('animation-delay', (d, i) => `${i * 0.02}s`)
+                .style('animation-delay', (d, i) => `${i * 0.025}s`)
                 .on('click', (e, d) => showModal(d));
             
             bubbles.each(function(d) {
@@ -505,23 +512,23 @@
                 const col = getColor(d.change24h);
                 const rad = d.r;
                 
-                // Outer glow circle
+                // Outer glow
                 g.append('circle')
                     .attr('r', rad + 15)
                     .attr('fill', d3.color(col).copy({opacity: 0.1}))
                     .attr('class', 'glow-circle');
                 
-                // Main spiral group
+                // Spiral group
                 const sp = g.append('g')
                     .attr('class', 'bubble-spiral')
                     .style('color', col);
                 
-                // Spiral paths
+                // Multiple spiral layers
                 sp.selectAll('.spiral-path')
                     .data([
                         {r: 0.95, t: 3, c: 'outer', opacity: 0.3, width: 2},
-                        {r: 0.75, t: 2.5, c: '', opacity: 0.9, width: 3.5},
-                        {r: 0.55, t: 2, c: 'inner', opacity: 0.7, width: 2.5}
+                        {r: 0.75, t: 2.5, c: '', opacity: 1, width: 4},
+                        {r: 0.55, t: 2, c: 'inner', opacity: 0.8, width: 2.5}
                     ])
                     .enter()
                     .append('path')
@@ -529,34 +536,39 @@
                     .attr('d', d => spiralPath(rad * d.r, d.t))
                     .attr('stroke', col)
                     .attr('stroke-width', d => d.width)
-                    .attr('opacity', d => d.opacity);
+                    .attr('opacity', d => d.opacity)
+                    .attr('fill', 'none')
+                    .attr('stroke-linecap', 'round');
                 
-                // Center glow dot
+                // Center dot
                 sp.append('circle')
-                    .attr('r', rad * 0.18)
+                    .attr('r', rad * 0.2)
                     .attr('fill', col)
-                    .attr('opacity', 0.8)
-                    .attr('filter', `drop-shadow(0 0 ${rad * 0.4}px ${col})`);
+                    .attr('opacity', 0.9)
+                    .attr('filter', `drop-shadow(0 0 ${rad * 0.5}px ${col})`);
                 
                 // Symbol text
                 g.append('text')
                     .attr('class', 'bubble-label')
-                    .attr('dy', '-0.2em')
-                    .style('font-size', Math.min(rad / 1.8, isM ? 12 : 16) + 'px')
+                    .attr('dy', '-0.25em')
+                    .style('font-size', Math.min(rad / 1.8, isM ? 13 : 18) + 'px')
                     .style('letter-spacing', '1px')
+                    .style('font-weight', '700')
                     .text(d.symbol);
                 
-                // Change percentage text
+                // Change percentage
                 g.append('text')
                     .attr('class', 'bubble-change')
-                    .attr('dy', '1em')
-                    .style('font-size', Math.min(rad / 2.5, isM ? 10 : 12) + 'px')
+                    .attr('dy', '1.1em')
+                    .style('font-size', Math.min(rad / 2.5, isM ? 11 : 14) + 'px')
+                    .style('font-weight', '600')
                     .text((d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(1) + '%');
             });
             
-            bubbles.attr('transform', d => `translate(${d.x.toFixed(1)},${d.y.toFixed(1)})`);
+            // Apply positions
+            bubbles.attr('transform', d => `translate(${d.x.toFixed(1)}, ${d.y.toFixed(1)})`);
             
-            console.log('Bubbles rendered successfully');
+            console.log('Bubbles rendered - Gainers:', gainersNodes.length, 'Losers:', losersNodes.length);
         }
         
         function updateBubbles() {
