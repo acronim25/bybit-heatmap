@@ -1,435 +1,257 @@
-        // Global state
-        let bubbleData = [], isFirstLoad = true, currentSort = 'change';
-        let ws = null, priceChart = null, currentModalCoin = null;
-        const BUBBLE_COUNT = 40; // 40 gainers + 40 losers = 80 total
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BYBIT HEATMAP | Guap 💰</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --neon-green: #00ff41; --neon-red: #ff0040; --gold: #ffd700; --bg: #050508; }
+        body { font-family: 'Rajdhani', sans-serif; background: var(--bg); color: #fff; min-height: 100vh; overflow-x: hidden; }
         
-        // Enhanced particle system
-        const canvas = document.getElementById('particles-canvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
+        .header { position: fixed; top: 0; left: 0; right: 0; padding: 15px 20px; background: rgba(5,5,8,0.95); backdrop-filter: blur(10px); z-index: 100; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,255,65,0.2); }
+        .logo { font-family: 'Orbitron'; font-size: 1.3rem; font-weight: 900; letter-spacing: 3px; background: linear-gradient(135deg, #fff, var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        resizeCanvas(); window.addEventListener('resize', () => { resizeCanvas(); if (!isFirstLoad) renderBubbles(); });
+        .controls { display: flex; gap: 10px; }
+        .btn { background: rgba(0,255,65,0.1); border: 1px solid rgba(0,255,65,0.3); color: var(--neon-green); padding: 8px 16px; border-radius: 20px; font-family: 'Rajdhani'; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn:hover, .btn.active { background: rgba(0,255,65,0.25); box-shadow: 0 0 15px rgba(0,255,65,0.4); }
         
-        class Particle {
+        .stats { display: flex; gap: 30px; align-items: center; }
+        .stat { text-align: center; }
+        .stat-value { font-family: 'Orbitron'; font-size: 1.2rem; font-weight: 700; }
+        .stat-value.up { color: var(--neon-green); }
+        .stat-value.down { color: var(--neon-red); }
+        .stat-label { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+        
+        #canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
+        
+        .container { padding-top: 80px; min-height: 100vh; }
+        #bubbles { width: 100%; min-height: calc(100vh - 80px); }
+        
+        .bubble { cursor: pointer; transition: transform 0.3s; }
+        .bubble:hover { transform: scale(1.1); }
+        .bubble-spiral { filter: drop-shadow(0 0 10px currentColor); }
+        .bubble-text { font-family: 'Orbitron'; font-weight: 700; text-anchor: middle; fill: #fff; font-size: 12px; }
+        .bubble-pct { font-family: 'Rajdhani'; font-weight: 600; text-anchor: middle; fill: #fff; font-size: 10px; }
+        
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; justify-content: center; align-items: flex-end; }
+        .modal.show { display: flex; }
+        .modal-content { background: linear-gradient(180deg, rgba(15,15,20,0.98), rgba(10,10,15,0.99)); width: 100%; max-width: 500px; border-radius: 25px 25px 0 0; padding: 25px; border-top: 2px solid var(--neon-green); }
+        .modal-header { text-align: center; margin-bottom: 20px; }
+        .modal-symbol { font-family: 'Orbitron'; font-size: 2rem; font-weight: 900; }
+        .modal-change { font-family: 'Orbitron'; font-size: 2.5rem; font-weight: 700; margin-top: 10px; }
+        .modal-change.up { color: var(--neon-green); }
+        .modal-change.down { color: var(--neon-red); }
+        .chart-box { height: 180px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 15px; }
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .info-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; }
+        .info-label { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 5px; }
+        .info-value { font-family: 'Orbitron'; font-size: 1rem; }
+        
+        @media (max-width: 768px) {
+            .header { padding: 12px 15px; flex-wrap: wrap; gap: 10px; }
+            .logo { font-size: 1rem; }
+            .btn { padding: 6px 12px; font-size: 0.75rem; }
+            .stats { gap: 15px; }
+            .stat-value { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="header">
+        <div class="logo">💰 BYBIT</div>
+        <div class="controls">
+            <button class="btn active" onclick="sortBy('change')">% CHANGE</button>
+            <button class="btn" onclick="sortBy('volume')">VOLUME</button>
+            <button class="btn" onclick="sortBy('alpha')">A-Z</button>
+        </div>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value up" id="gainers-count">0</div>
+                <div class="stat-label">Gainers</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value down" id="losers-count">0</div>
+                <div class="stat-label">Losers</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div id="bubbles"></div>
+    </div>
+    
+    <div class="modal" id="modal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-symbol" id="m-symbol">BTC</div>
+                <div class="modal-change" id="m-change">+5.23%</div>
+            </div>
+            <div class="chart-box">
+                <canvas id="m-chart"></canvas>
+            </div>
+            <div class="info-grid">
+                <div class="info-item"><div class="info-label">Price</div><div class="info-value" id="m-price">-</div></div>
+                <div class="info-item"><div class="info-label">Volume 24h</div><div class="info-value" id="m-volume">-</div></div>
+                <div class="info-item"><div class="info-label">High 24h</div><div class="info-value" id="m-high">-</div></div>
+                <div class="info-item"><div class="info-label">Low 24h</div><div class="info-value" id="m-low">-</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let data = [], chart = null, currentCoin = null;
+        const COUNT = 40;
+        
+        // Particles
+        const cvs = document.getElementById('canvas');
+        const cx = cvs.getContext('2d');
+        let pts = [];
+        function resize() { cvs.width = window.innerWidth; cvs.height = window.innerHeight; }
+        resize(); window.addEventListener('resize', resize);
+        
+        class P {
             constructor() { this.reset(); }
             reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 3 + 1;
-                this.speedX = (Math.random() - 0.5) * 0.8;
-                this.speedY = (Math.random() - 0.5) * 0.8;
-                this.color = Math.random() > 0.5 ? 'rgba(0, 255, 65, ' : 'rgba(255, 0, 64, ';
-                this.alpha = Math.random() * 0.6 + 0.2;
-                this.life = Math.random() * 150 + 100;
-                this.pulse = Math.random() * Math.PI * 2;
+                this.x = Math.random() * cvs.width; this.y = Math.random() * cvs.height;
+                this.s = Math.random() * 2 + 1; this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5;
+                this.c = Math.random() > 0.5 ? 'rgba(0,255,65,' : 'rgba(255,0,64,'; this.a = Math.random() * 0.5 + 0.2;
             }
             update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.pulse += 0.05;
-                this.life--;
-                const pulseAlpha = this.alpha * (0.7 + 0.3 * Math.sin(this.pulse));
-                if (this.life <= 0 || this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
-                return pulseAlpha;
-            }
-            draw() {
-                const alpha = this.update();
-                ctx.fillStyle = this.color + alpha + ')';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                // Glow effect
-                ctx.fillStyle = this.color + (alpha * 0.3) + ')';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
-                ctx.fill();
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > cvs.width || this.y < 0 || this.y > cvs.height) this.reset();
+                cx.fillStyle = this.c + this.a + ')'; cx.beginPath(); cx.arc(this.x, this.y, this.s, 0, Math.PI * 2); cx.fill();
             }
         }
+        for (let i = 0; i < 80; i++) pts.push(new P());
+        function anim() { cx.clearRect(0, 0, cvs.width, cvs.height); pts.forEach(p => p.update()); requestAnimationFrame(anim); }
+        anim();
         
-        // Create 100 particles
-        for (let i = 0; i < 100; i++) particles.push(new Particle());
-        
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => p.draw());
-            requestAnimationFrame(animateParticles);
-        }
-        animateParticles();
-        
-        // Create floating particles
-        function createFloatParticles() {
-            for (let i = 0; i < 15; i++) {
-                const p = document.createElement('div');
-                p.className = 'float-particle';
-                p.style.left = Math.random() * 100 + '%';
-                p.style.top = Math.random() * 100 + '%';
-                p.style.animationDelay = Math.random() * 10 + 's';
-                p.style.animationDuration = (8 + Math.random() * 6) + 's';
-                document.body.appendChild(p);
-            }
-        }
-        createFloatParticles();
-        
-        // WebSocket connection
-        function connectWebSocket() {
+        // Fetch data
+        async function load() {
             try {
-                ws = new WebSocket('wss://stream.bybit.com/v5/public/linear');
-                ws.onopen = () => {
-                    document.getElementById('ws-status').classList.add('connected');
-                    ws.send(JSON.stringify({ op: 'subscribe', args: ['tickers.24h'] }));
-                };
-                ws.onmessage = (event) => {
-                    const data = JSON.parse(event.data);
-                    if (data.topic === 'tickers.24h' && data.data) updateFromWebSocket(data.data);
-                };
-                ws.onclose = () => {
-                    document.getElementById('ws-status').classList.remove('connected');
-                    setTimeout(connectWebSocket, 5000);
-                };
-                ws.onerror = () => ws.close();
-            } catch (e) {}
+                const r = await fetch('https://api.bybit.com/v5/market/tickers?category=linear');
+                const j = await r.json();
+                data = j.result.list.filter(i => i.symbol.endsWith('USDT')).map(i => ({
+                    s: i.symbol.replace('USDT', ''), c: parseFloat(i.price24hPcnt) * 100,
+                    p: parseFloat(i.lastPrice), v: parseFloat(i.volume24h) * parseFloat(i.lastPrice),
+                    h: parseFloat(i.highPrice24h), l: parseFloat(i.lowPrice24h)
+                })).filter(i => !isNaN(i.c));
+                data.sort((a, b) => Math.abs(b.c) - Math.abs(a.c));
+                updateStats();
+                draw();
+            } catch (e) { console.error(e); }
         }
         
-        function updateFromWebSocket(data) {
-            let updated = false;
-            data.forEach(ticker => {
-                if (!ticker.symbol.endsWith('USDT')) return;
-                const symbol = ticker.symbol.replace('USDT', '');
-                const coin = bubbleData.find(c => c.symbol === symbol);
-                if (coin) {
-                    coin.change24h = parseFloat(ticker.price24hPcnt) * 100;
-                    coin.price = parseFloat(ticker.lastPrice);
-                    coin.volume24h = parseFloat(ticker.volume24h) * parseFloat(ticker.lastPrice);
-                    updated = true;
-                    if (currentModalCoin === symbol) updateModalData(coin);
-                }
+        function updateStats() {
+            document.getElementById('gainers-count').textContent = data.filter(d => d.c >= 0).length;
+            document.getElementById('losers-count').textContent = data.filter(d => d.c < 0).length;
+        }
+        
+        function sortBy(type) {
+            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            if (type === 'change') data.sort((a, b) => Math.abs(b.c) - Math.abs(a.c));
+            else if (type === 'volume') data.sort((a, b) => b.v - a.v);
+            else if (type === 'alpha') data.sort((a, b) => a.s.localeCompare(b.s));
+            draw();
+        }
+        
+        function getColor(v) { return v >= 0 ? '#00ff41' : '#ff0040'; }
+        
+        function draw() {
+            const w = window.innerWidth, mobile = w < 768;
+            d3.select('#bubbles').selectAll('*').remove();
+            
+            const gainers = data.filter(d => d.c >= 0).slice(0, COUNT);
+            const losers = data.filter(d => d.c < 0).slice(0, COUNT);
+            
+            const cols = mobile ? 3 : 5, r = mobile ? 20 : 30;
+            const sx = (w / 2 - 60) / cols, sy = mobile ? 80 : 100;
+            
+            const pos = [];
+            gainers.forEach((d, i) => {
+                const col = i % cols, row = Math.floor(i / cols);
+                pos.push({ ...d, x: 40 + col * sx + sx / 2, y: 30 + row * sy, r: r + Math.min(Math.abs(d.c) / 20, 1) * 10 });
             });
-            if (updated) { updateBubbles(); updateTime(); updateStatsBar(); }
-        }
-        
-        async function loadData() {
-            if (isFirstLoad) document.getElementById('loading').style.display = 'block';
-            try {
-                const res = await fetch('https://api.bybit.com/v5/market/tickers?category=linear');
-                const data = await res.json();
-                if (data.retCode !== 0) throw new Error(data.retMsg);
-                
-                bubbleData = data.result.list
-                    .filter(i => i.symbol.endsWith('USDT'))
-                    .map(i => ({
-                        symbol: i.symbol.replace('USDT', ''),
-                        change24h: parseFloat(i.price24hPcnt) * 100,
-                        price: parseFloat(i.lastPrice),
-                        volume24h: parseFloat(i.volume24h) * parseFloat(i.lastPrice),
-                        high24h: parseFloat(i.highPrice24h),
-                        low24h: parseFloat(i.lowPrice24h)
-                    }))
-                    .filter(i => !isNaN(i.change24h) && i.price > 0);
-                
-                bubbleData.sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h));
-                
-                if (isFirstLoad) {
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('container').style.display = 'block';
-                    renderBubbles();
-                    updateStatsBar();
-                    isFirstLoad = false;
-                    connectWebSocket();
-                } else {
-                    updateBubbles();
-                    updateStatsBar();
-                }
-                updateTime();
-            } catch (e) {
-                document.getElementById('loading').innerHTML = `
-                    <div style="color: #ff0040; text-align: center; padding: 20px;">
-                        <div style="font-size: 1.2rem; margin-bottom: 10px;">⚠️ Error</div>
-                        <div style="font-size: 0.9rem; color: rgba(255,255,255,0.6);">${e.message}</div>
-                        <button onclick="loadData()" style="margin-top: 20px; padding: 12px 30px; background: rgba(0,255,65,0.2); border: 2px solid #00ff41; color: #00ff41; border-radius: 30px; cursor: pointer; font-family: Orbitron; font-weight: 600;">RETRY</button>
-                    </div>`;
-            }
-        }
-        
-        function updateStatsBar() {
-            const gainers = bubbleData.filter(d => d.change24h >= 0).length;
-            const losers = bubbleData.filter(d => d.change24h < 0).length;
-            const sentiment = gainers > losers ? 'BULLISH 📈' : gainers < losers ? 'BEARISH 📉' : 'NEUTRAL ⚖️';
-            
-            document.getElementById('total-gainers').textContent = gainers;
-            document.getElementById('total-losers').textContent = losers;
-            document.getElementById('market-sentiment').textContent = sentiment;
-        }
-        
-        function setSort(type) {
-            currentSort = type;
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('btn-' + type).classList.add('active');
-            if (type === 'change') bubbleData.sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h));
-            else if (type === 'volume') bubbleData.sort((a, b) => b.volume24h - a.volume24h);
-            else if (type === 'alpha') bubbleData.sort((a, b) => a.symbol.localeCompare(b.symbol));
-            renderBubbles();
-        }
-        
-        function updateTime() { 
-            document.getElementById('update-time').textContent = new Date().toLocaleTimeString('ro-RO', { 
-                hour: '2-digit', minute: '2-digit', second: '2-digit' 
-            }); 
-        }
-        
-        function getColor(c) { 
-            return c >= 0 
-                ? d3.interpolateRgb('#00ff41', '#66ff7a')(Math.min(c / 25, 1))
-                : d3.interpolateRgb('#ff0040', '#ff5c7c')(Math.min(Math.abs(c) / 25, 1));
-        }
-        
-        // Render 80+ bubbles
-        function renderBubbles() {
-            const w = window.innerWidth;
-            const isMobile = w < 768;
-            d3.select('#bubble-container').selectAll('*').remove();
-            
-            if (bubbleData.length === 0) return;
-            
-            const gainers = bubbleData.filter(d => d.change24h >= 0).slice(0, BUBBLE_COUNT);
-            const losers = bubbleData.filter(d => d.change24h < 0).slice(0, BUBBLE_COUNT);
-            
-            const baseRadius = isMobile ? 18 : 28;
-            const cols = isMobile ? 3 : 5;
-            const spacingX = (w / 2 - 40) / cols;
-            const spacingY = isMobile ? 75 : 95;
-            
-            // Position gainers (left side)
-            const gainersPos = gainers.map((d, i) => {
-                const col = i % cols;
-                const row = Math.floor(i / cols);
-                const x = 30 + col * spacingX + spacingX / 2 + (Math.random() - 0.5) * 25;
-                const y = 30 + row * spacingY + (Math.random() - 0.5) * 20;
-                const r = baseRadius + Math.min(Math.abs(d.change24h) / 20, 1) * 12;
-                return { ...d, x, y, r, side: 'left' };
+            losers.forEach((d, i) => {
+                const col = i % cols, row = Math.floor(i / cols);
+                pos.push({ ...d, x: w / 2 + 40 + col * sx + sx / 2, y: 30 + row * sy, r: r + Math.min(Math.abs(d.c) / 20, 1) * 10 });
             });
             
-            // Position losers (right side)
-            const losersPos = losers.map((d, i) => {
-                const col = i % cols;
-                const row = Math.floor(i / cols);
-                const x = w / 2 + 30 + col * spacingX + spacingX / 2 + (Math.random() - 0.5) * 25;
-                const y = 30 + row * spacingY + (Math.random() - 0.5) * 20;
-                const r = baseRadius + Math.min(Math.abs(d.change24h) / 20, 1) * 12;
-                return { ...d, x, y, r, side: 'right' };
-            });
-            
-            const all = [...gainersPos, ...losersPos];
             const rows = Math.max(Math.ceil(gainers.length / cols), Math.ceil(losers.length / cols));
-            const h = Math.max(window.innerHeight - 150, rows * spacingY + 100);
+            const h = Math.max(window.innerHeight - 80, rows * sy + 100);
             
-            const svg = d3.select('#bubble-container').append('svg').attr('width', w).attr('height', h);
+            const svg = d3.select('#bubbles').append('svg').attr('width', w).attr('height', h);
             
-            const bubbles = svg.selectAll('.bubble-group')
-                .data(all)
-                .enter()
-                .append('g')
-                .attr('class', 'bubble-group')
-                .style('opacity', 0)
-                .on('click', (e, d) => showModal(d));
+            const g = svg.selectAll('.bubble').data(pos).enter().append('g').attr('class', 'bubble').on('click', (e, d) => openModal(d));
             
-            // Entry animation
-            bubbles.transition()
-                .duration(600)
-                .delay((d, i) => i * 30)
-                .ease(d3.easeBackOut)
-                .style('opacity', 1);
-            
-            bubbles.each(function(d) {
-                const g = d3.select(this);
-                const col = getColor(d.change24h);
-                const rad = d.r;
+            g.each(function(d) {
+                const el = d3.select(this), col = getColor(d.c);
                 
-                // Outer glow ring
-                g.append('circle')
-                    .attr('r', rad + 12)
-                    .attr('fill', d3.color(col).copy({opacity: 0.08}))
-                    .attr('stroke', d3.color(col).copy({opacity: 0.15}))
-                    .attr('stroke-width', 2);
+                // Glow
+                el.append('circle').attr('r', d.r + 10).attr('fill', col).attr('opacity', 0.1);
                 
-                // Main spiral
-                const sp = g.append('g').attr('class', 'bubble-spiral').style('color', col);
-                
-                // Draw 3 spiral rings
-                [0.9, 0.7, 0.5].forEach((scale, idx) => {
-                    let path = '';
-                    const steps = 50;
-                    const turns = 2.5 - idx * 0.3;
-                    for (let i = 0; i <= steps; i++) {
-                        const t = i / steps;
-                        const angle = t * turns * 2 * Math.PI;
-                        const radius = rad * (0.3 + 0.7 * t) * scale;
-                        const x = radius * Math.cos(angle);
-                        const y = radius * Math.sin(angle);
-                        path += (i === 0 ? 'M' : 'L') + ` ${x.toFixed(1)} ${y.toFixed(1)}`;
+                // Spiral
+                const sp = el.append('g').attr('class', 'bubble-spiral').style('color', col);
+                [0.9, 0.7, 0.5].forEach((sc, i) => {
+                    let p = '';
+                    for (let j = 0; j <= 50; j++) {
+                        const t = j / 50, a = t * 2.5 * Math.PI, rad = d.r * (0.3 + 0.7 * t) * sc;
+                        p += (j === 0 ? 'M' : 'L') + ` ${rad * Math.cos(a)} ${rad * Math.sin(a)}`;
                     }
-                    sp.append('path')
-                        .attr('d', path)
-                        .attr('stroke', col)
-                        .attr('stroke-width', idx === 0 ? 3.5 : idx === 1 ? 2.5 : 1.5)
-                        .attr('fill', 'none')
-                        .attr('opacity', idx === 0 ? 1 : idx === 1 ? 0.7 : 0.4)
-                        .attr('stroke-linecap', 'round');
+                    sp.append('path').attr('d', p).attr('stroke', col).attr('stroke-width', 3 - i).attr('fill', 'none').attr('opacity', 1 - i * 0.2);
                 });
+                sp.append('circle').attr('r', d.r * 0.2).attr('fill', col);
                 
-                // Center glow
-                sp.append('circle')
-                    .attr('r', rad * 0.22)
-                    .attr('fill', col)
-                    .attr('filter', `drop-shadow(0 0 ${rad * 0.6}px ${col})`);
-                
-                // Symbol
-                g.append('text')
-                    .attr('class', 'bubble-label')
-                    .attr('dy', '-0.15em')
-                    .style('font-size', Math.min(rad / 1.5, isMobile ? 11 : 15) + 'px')
-                    .text(d.symbol);
-                
-                // Change %
-                g.append('text')
-                    .attr('class', 'bubble-change')
-                    .attr('dy', '1em')
-                    .style('font-size', Math.min(rad / 2.2, isMobile ? 9 : 12) + 'px')
-                    .text((d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(1) + '%');
+                // Text
+                el.append('text').attr('class', 'bubble-text').attr('dy', '-0.2em').text(d.s);
+                el.append('text').attr('class', 'bubble-pct').attr('dy', '1em').text((d.c >= 0 ? '+' : '') + d.c.toFixed(1) + '%');
             });
             
-            bubbles.attr('transform', d => `translate(${d.x}, ${d.y})`);
+            g.attr('transform', d => `translate(${d.x},${d.y})`);
         }
         
-        function updateBubbles() {
-            d3.selectAll('.bubble-change').text(d => (d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(1) + '%');
-            d3.selectAll('.bubble-spiral').each(function(d) {
-                const c = getColor(d.change24h);
-                d3.select(this).style('color', c).selectAll('path').attr('stroke', c);
-                d3.select(this).select('circle').attr('fill', c);
-            });
-        }
+        function fmt(n) { return n >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(2) + 'K' : n.toFixed(2); }
         
-        function fmtNum(n) { 
-            if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
-            if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
-            if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
-            return n.toFixed(2);
-        }
-        function fmtPrice(p) {
-            if (p >= 10000) return p.toLocaleString('en-US', {maximumFractionDigits: 0});
-            if (p >= 1000) return p.toLocaleString('en-US', {maximumFractionDigits: 1});
-            if (p >= 1) return p.toFixed(2);
-            return p.toFixed(4);
-        }
-        
-        function generateChartData(price, change) {
-            const data = []; let p = price / (1 + change / 100);
-            for (let i = 0; i < 24; i++) { 
-                p *= (1 + (Math.random() - 0.5) * Math.abs(change) / 100 * 0.4); 
-                data.push(p); 
-            }
-            data[23] = price; return data;
-        }
-        
-        function showModal(d) {
-            currentModalCoin = d.symbol;
-            document.getElementById('modal-symbol').textContent = d.symbol;
-            const ce = document.getElementById('modal-change');
-            ce.textContent = (d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(2) + '%';
-            ce.className = 'coin-change ' + (d.change24h >= 0 ? 'positive' : 'negative');
-            document.getElementById('modal-price').textContent = '$' + fmtPrice(d.price);
-            document.getElementById('modal-volume').textContent = '$' + fmtNum(d.volume24h);
-            document.getElementById('modal-high').textContent = '$' + fmtPrice(d.high24h);
-            document.getElementById('modal-low').textContent = '$' + fmtPrice(d.low24h);
-            document.getElementById('modal').classList.add('active');
+        function openModal(d) {
+            currentCoin = d.s;
+            document.getElementById('m-symbol').textContent = d.s;
+            const ch = document.getElementById('m-change');
+            ch.textContent = (d.c >= 0 ? '+' : '') + d.c.toFixed(2) + '%';
+            ch.className = 'modal-change ' + (d.c >= 0 ? 'up' : 'down');
+            document.getElementById('m-price').textContent = '$' + d.p.toFixed(4);
+            document.getElementById('m-volume').textContent = '$' + fmt(d.v);
+            document.getElementById('m-high').textContent = '$' + d.h.toFixed(4);
+            document.getElementById('m-low').textContent = '$' + d.l.toFixed(4);
+            document.getElementById('modal').classList.add('show');
             
             setTimeout(() => {
-                const ctx = document.getElementById('priceChart').getContext('2d');
-                const isPos = d.change24h >= 0;
-                const color = isPos ? '#00ff41' : '#ff0040';
-                if (priceChart) priceChart.destroy();
-                
-                priceChart = new Chart(ctx, {
+                const ctx = document.getElementById('m-chart').getContext('2d');
+                if (chart) chart.destroy();
+                const up = d.c >= 0, col = up ? '#00ff41' : '#ff0040';
+                const hist = []; let pr = d.p / (1 + d.c / 100);
+                for (let i = 0; i < 24; i++) { pr *= (1 + (Math.random() - 0.5) * 0.1); hist.push(pr); }
+                hist[23] = d.p;
+                chart = new Chart(ctx, {
                     type: 'line',
-                    data: {
-                        labels: Array(24).fill('').map((_, i) => i + 'h'),
-                        datasets: [{
-                            data: generateChartData(d.price, d.change24h),
-                            borderColor: color,
-                            backgroundColor: (ctx) => {
-                                const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 200);
-                                g.addColorStop(0, isPos ? 'rgba(0,255,65,0.4)' : 'rgba(255,0,64,0.4)');
-                                g.addColorStop(1, 'rgba(0,0,0,0)');
-                                return g;
-                            },
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 0,
-                            pointHoverRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false }, tooltip: {
-                            backgroundColor: 'rgba(10,10,15,0.95)',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: color,
-                            borderWidth: 1,
-                            padding: 10,
-                            callbacks: { label: (ctx) => '$' + ctx.parsed.y.toFixed(4) }
-                        }},
-                        scales: {
-                            x: { display: false },
-                            y: { display: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { 
-                                color: 'rgba(255,255,255,0.5)', font: { size: 10 }, callback: v => '$' + v.toFixed(2) 
-                            }}
-                        }
-                    }
+                    data: { labels: Array(24).fill('').map((_, i) => i + 'h'), datasets: [{ data: hist, borderColor: col, backgroundColor: up ? 'rgba(0,255,65,0.2)' : 'rgba(255,0,64,0.2)', borderWidth: 2, fill: true, tension: 0.4, pointRadius: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
                 });
-            }, 50);
+            }, 10);
         }
         
-        function updateModalData(coin) {
-            if (!document.getElementById('modal').classList.contains('active')) return;
-            document.getElementById('modal-price').textContent = '$' + fmtPrice(coin.price);
-            document.getElementById('modal-high').textContent = '$' + fmtPrice(coin.high24h);
-            document.getElementById('modal-low').textContent = '$' + fmtPrice(coin.low24h);
-            document.getElementById('modal-volume').textContent = '$' + fmtNum(coin.volume24h);
-            const ce = document.getElementById('modal-change');
-            ce.textContent = (coin.change24h >= 0 ? '+' : '') + coin.change24h.toFixed(2) + '%';
-            ce.className = 'coin-change ' + (coin.change24h >= 0 ? 'positive' : 'negative');
-        }
+        function closeModal() { document.getElementById('modal').classList.remove('show'); }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
         
-        function closeModal(e) { 
-            if (e.target === document.getElementById('modal')) { 
-                document.getElementById('modal').classList.remove('active'); 
-                currentModalCoin = null; 
-            } 
-        }
-        
-        document.addEventListener('keydown', (e) => { 
-            if (e.key === 'Escape') { 
-                document.getElementById('modal').classList.remove('active'); 
-                currentModalCoin = null; 
-            } 
-        });
-        
-        let touchStartY = 0;
-        document.getElementById('modal').addEventListener('touchstart', (e) => { touchStartY = e.touches[0].clientY; });
-        document.getElementById('modal').addEventListener('touchend', (e) => { 
-            if (e.changedTouches[0].clientY - touchStartY > 120) { 
-                document.getElementById('modal').classList.remove('active'); 
-                currentModalCoin = null; 
-            } 
-        });
-        
-        // Init
-        loadData();
-        setInterval(loadData, 30000);
+        load();
+        setInterval(load, 30000);
+        window.addEventListener('resize', draw);
     </script>
 </body>
 </html>
