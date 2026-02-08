@@ -1,187 +1,516 @@
-<!DOCTYPE html>
-<html lang="ro">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BYBIT HEATMAP | Guap 💰</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        :root { --neon-green: #00ff41; --neon-red: #ff0040; --accent-gold: #ffd700; }
-        html, body { font-family: 'Rajdhani', sans-serif; background: #0a0a0f; min-height: 100vh; color: #fff; }
-        body {
-            background:
-                /* Grid pattern - subtle */
-                linear-gradient(90deg, rgba(0, 255, 65, 0.04) 1px, transparent 1px),
-                linear-gradient(rgba(0, 255, 65, 0.04) 1px, transparent 1px),
-                /* Horizontal glitch lines */
-                repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 3px,
-                    rgba(255, 0, 64, 0.03) 3px,
-                    rgba(255, 0, 64, 0.03) 6px
-                ),
-                /* Base gradient */
-                radial-gradient(ellipse at 20% 30%, rgba(0, 255, 65, 0.04) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 70%, rgba(255, 0, 64, 0.04) 0%, transparent 50%),
-                #0a0a0f;
-            background-size: 60px 60px, 60px 60px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+        // Global state
+        let bubbleData = [], isFirstLoad = true, currentSort = 'change';
+        let ws = null, priceChart = null;
+        let currentModalCoin = null;
+        
+        // Particle system
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         }
-        .header { position: fixed; top: 0; left: 0; right: 0; padding: 12px 16px; background: linear-gradient(180deg, rgba(10,10,15,0.95), transparent); z-index: 100; display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 2px; background: linear-gradient(135deg, #fff, var(--accent-gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .last-update { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
-        .update-dot { display: inline-block; width: 8px; height: 8px; background: var(--neon-green); border-radius: 50%; margin-right: 6px; animation: pulse 1.5s ease-in-out infinite; }
-        @keyframes pulse { 0%,100% { opacity: 1; box-shadow: 0 0 5px var(--neon-green); } 50% { opacity: 0.5; box-shadow: 0 0 15px var(--neon-green); } }
-        .container { padding-top: 60px; }
-        #bubble-container { width: 100%; overflow-x: hidden; }
-        .bubble-group { cursor: pointer; }
-        .bubble-spiral { filter: drop-shadow(0 0 12px currentColor); transition: all 0.3s ease; }
-        .bubble-spiral:hover { filter: drop-shadow(0 0 25px currentColor) brightness(1.3); transform: scale(1.1); }
-        .bubble-spiral:active { transform: scale(0.95); }
-        .spiral-path { fill: none; stroke-width: 4; stroke-linecap: round; }
-        .spiral-path.inner { stroke-width: 2.5; opacity: 0.7; }
-        .spiral-path.outer { stroke-width: 1.5; opacity: 0.4; }
-        .bubble-label { font-family: 'Orbitron', sans-serif; font-weight: 700; text-anchor: middle; pointer-events: none; fill: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.9); }
-        .bubble-change { font-family: 'Rajdhani', sans-serif; font-weight: 600; text-anchor: middle; pointer-events: none; fill: #fff; text-shadow: 0 0 8px rgba(0,0,0,0.9); }
-        .loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 50; }
-        .loading-spinner { width: 50px; height: 50px; border: 3px solid rgba(0,255,65,0.2); border-top-color: var(--neon-green); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); z-index: 1000; display: none; justify-content: center; align-items: flex-end; }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background: linear-gradient(145deg, rgba(26,10,15,0.98), rgba(10,10,15,0.99)); border-radius: 24px 24px 0 0; padding: 24px 20px 40px; width: 100%; max-width: 500px; max-height: 70vh; border-top: 2px solid; border-image: linear-gradient(90deg, var(--neon-green), var(--neon-red)) 1; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal-handle { width: 40px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; margin: 0 auto 20px; }
-        .coin-header { text-align: center; margin-bottom: 24px; }
-        .coin-symbol { font-family: 'Orbitron', sans-serif; font-size: 2rem; font-weight: 900; letter-spacing: 3px; }
-        .coin-change { font-family: 'Orbitron', sans-serif; font-size: 2.5rem; font-weight: 700; margin-top: 8px; }
-        .coin-change.positive { color: var(--neon-green); }
-        .coin-change.negative { color: var(--neon-red); }
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .stat-item { background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
-        .stat-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
-        .stat-value { font-family: 'Orbitron', sans-serif; font-size: 0.95rem; font-weight: 600; color: #fff; }
-        @media (max-width: 768px) { .header { padding: 10px 12px; } .logo { font-size: 0.9rem; } }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="logo">💰 BYBIT</div>
-        <div class="last-update"><span class="update-dot"></span><span id="update-time">--:--</span></div>
-    </div>
-    <div class="loading" id="loading"><div class="loading-spinner"></div></div>
-    <div class="container" id="container" style="display: none;"><div id="bubble-container"></div></div>
-    <div class="modal-overlay" id="modal" onclick="closeModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-handle"></div>
-            <div class="coin-header">
-                <div class="coin-symbol" id="modal-symbol">BTC</div>
-                <div class="coin-change" id="modal-change">+5.23%</div>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-item"><div class="stat-label">Preț</div><div class="stat-value" id="modal-price">-</div></div>
-                <div class="stat-item"><div class="stat-label">Volum 24h</div><div class="stat-value" id="modal-volume">-</div></div>
-                <div class="stat-item"><div class="stat-label">Max 24h</div><div class="stat-value" id="modal-high">-</div></div>
-                <div class="stat-item"><div class="stat-label">Min 24h</div><div class="stat-value" id="modal-low">-</div></div>
-            </div>
-        </div>
-    </div>
-    <script>
-        let bubbleData = [], isFirstLoad = true;
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.color = Math.random() > 0.5 ? 'rgba(0, 255, 65, ' : 'rgba(255, 0, 64, ';
+                this.alpha = Math.random() * 0.5 + 0.1;
+                this.life = Math.random() * 100 + 50;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.life--;
+                if (this.life <= 0 || this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.reset();
+                }
+            }
+            draw() {
+                ctx.fillStyle = this.color + this.alpha + ')';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        for (let i = 0; i < 50; i++) particles.push(new Particle());
+        
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+        
+        // WebSocket connection
+        function connectWebSocket() {
+            try {
+                ws = new WebSocket('wss://stream.bybit.com/v5/public/linear');
+                
+                ws.onopen = () => {
+                    console.log('WebSocket connected');
+                    document.getElementById('ws-status').classList.add('connected');
+                    // Subscribe to all USDT tickers
+                    ws.send(JSON.stringify({
+                        op: 'subscribe',
+                        args: ['tickers.24h']
+                    }));
+                };
+                
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.topic === 'tickers.24h' && data.data) {
+                        updateFromWebSocket(data.data);
+                    }
+                };
+                
+                ws.onclose = () => {
+                    console.log('WebSocket disconnected');
+                    document.getElementById('ws-status').classList.remove('connected');
+                    setTimeout(connectWebSocket, 5000); // Reconnect after 5s
+                };
+                
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    ws.close();
+                };
+            } catch (e) {
+                console.error('WebSocket init error:', e);
+            }
+        }
+        
+        function updateFromWebSocket(data) {
+            let updated = false;
+            data.forEach(ticker => {
+                if (!ticker.symbol.endsWith('USDT')) return;
+                const symbol = ticker.symbol.replace('USDT', '');
+                const coin = bubbleData.find(c => c.symbol === symbol);
+                if (coin) {
+                    coin.change24h = parseFloat(ticker.price24hPcnt) * 100;
+                    coin.price = parseFloat(ticker.lastPrice);
+                    coin.volume24h = parseFloat(ticker.volume24h) * parseFloat(ticker.lastPrice);
+                    coin.high24h = parseFloat(ticker.highPrice24h);
+                    coin.low24h = parseFloat(ticker.lowPrice24h);
+                    updated = true;
+                    
+                    // Update modal if open
+                    if (currentModalCoin === symbol) {
+                        updateModalData(coin);
+                    }
+                }
+            });
+            if (updated) {
+                updateBubbles();
+                updateTime();
+            }
+        }
+        
+        // API Data loading
         async function loadData() {
             if (isFirstLoad) document.getElementById('loading').style.display = 'block';
             try {
                 const res = await fetch('https://api.bybit.com/v5/market/tickers?category=linear');
                 const data = await res.json();
                 if (data.retCode !== 0) throw new Error('API error');
-                bubbleData = data.result.list.filter(i => i.symbol.endsWith('USDT')).map(i => ({
-                    symbol: i.symbol.replace('USDT', ''),
-                    change24h: parseFloat(i.price24hPcnt) * 100,
-                    price: parseFloat(i.lastPrice),
-                    volume24h: parseFloat(i.volume24h) * parseFloat(i.lastPrice),
-                    high24h: parseFloat(i.highPrice24h),
-                    low24h: parseFloat(i.lowPrice24h)
-                })).filter(i => !isNaN(i.change24h)).sort((a, b) => b.volume24h - a.volume24h).slice(0, 140);
-                if (isFirstLoad) { renderBubbles(); document.getElementById('loading').style.display = 'none'; document.getElementById('container').style.display = 'block'; isFirstLoad = false; } else { updateBubbles(); }
+                
+                bubbleData = data.result.list
+                    .filter(i => i.symbol.endsWith('USDT'))
+                    .map(i => ({
+                        symbol: i.symbol.replace('USDT', ''),
+                        change24h: parseFloat(i.price24hPcnt) * 100,
+                        price: parseFloat(i.lastPrice),
+                        volume24h: parseFloat(i.volume24h) * parseFloat(i.lastPrice),
+                        high24h: parseFloat(i.highPrice24h),
+                        low24h: parseFloat(i.lowPrice24h)
+                    }))
+                    .filter(i => !isNaN(i.change24h));
+                
+                sortData();
+                
+                if (isFirstLoad) {
+                    renderBubbles();
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('container').style.display = 'block';
+                    isFirstLoad = false;
+                    connectWebSocket(); // Connect WS after initial load
+                } else {
+                    updateBubbles();
+                }
                 updateTime();
-            } catch (e) { console.error('Error:', e); document.getElementById('loading').style.display = 'none'; }
+            } catch (e) {
+                console.error('Error:', e);
+                document.getElementById('loading').style.display = 'none';
+            }
         }
-        function updateTime() { document.getElementById('update-time').textContent = new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' }); }
-        function getColor(c) { return c >= 0 ? d3.interpolateRgb('#00ff41', '#39ff14')(Math.min(c / 20, 1)) : d3.interpolateRgb('#ff0040', '#ff1744')(Math.min(Math.abs(c) / 20, 1)); }
-        function spiralPath(r, t) { let p = ''; for (let i = 0; i <= 80; i++) { let x = i / 80, a = x * t * 2 * Math.PI, rad = r * (0.3 + 0.7 * x); let px = rad * Math.cos(a), py = rad * Math.sin(a); p += (i === 0 ? 'M' : 'L') + ` ${px.toFixed(2)} ${py.toFixed(2)}`; } return p; }
+        
+        // Sorting functions
+        function setSort(type) {
+            currentSort = type;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + type).classList.add('active');
+            sortData();
+            renderBubbles();
+        }
+        
+        function sortData() {
+            switch(currentSort) {
+                case 'change':
+                    bubbleData.sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h));
+                    break;
+                case 'volume':
+                    bubbleData.sort((a, b) => b.volume24h - a.volume24h);
+                    break;
+                case 'alpha':
+                    bubbleData.sort((a, b) => a.symbol.localeCompare(b.symbol));
+                    break;
+            }
+        }
+        
+        function updateTime() {
+            document.getElementById('update-time').textContent = new Date().toLocaleTimeString('ro-RO', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        function getColor(c) {
+            return c >= 0 
+                ? d3.interpolateRgb('#00ff41', '#39ff14')(Math.min(c / 20, 1))
+                : d3.interpolateRgb('#ff0040', '#ff1744')(Math.min(Math.abs(c) / 20, 1));
+        }
+        
+        function spiralPath(r, t) {
+            let p = '';
+            for (let i = 0; i <= 80; i++) {
+                let x = i / 80;
+                let a = x * t * 2 * Math.PI;
+                let rad = r * (0.3 + 0.7 * x);
+                let px = rad * Math.cos(a);
+                let py = rad * Math.sin(a);
+                p += (i === 0 ? 'M' : 'L') + ` ${px.toFixed(2)} ${py.toFixed(2)}`;
+            }
+            return p;
+        }
+        
+        // Generate mock historical data for chart
+        function generateChartData(currentPrice, change24h) {
+            const points = 24;
+            const data = [];
+            let price = currentPrice / (1 + change24h / 100);
+            const volatility = Math.abs(change24h) / 100 * 0.5;
+            
+            for (let i = 0; i < points; i++) {
+                const randomChange = (Math.random() - 0.5) * volatility;
+                price = price * (1 + randomChange);
+                data.push(price);
+            }
+            data[data.length - 1] = currentPrice; // Ensure last point matches
+            return data;
+        }
+        
+        // Chart initialization
+        function initChart(coin) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            const isPositive = coin.change24h >= 0;
+            const chartData = generateChartData(coin.price, coin.change24h);
+            const color = isPositive ? '#00ff41' : '#ff0040';
+            
+            if (priceChart) {
+                priceChart.destroy();
+            }
+            
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(24).fill('').map((_, i) => `${i}h`),
+                    datasets: [{
+                        label: 'Price',
+                        data: chartData,
+                        borderColor: color,
+                        backgroundColor: (context) => {
+                            const ctx = context.chart.ctx;
+                            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+                            gradient.addColorStop(0, isPositive ? 'rgba(0, 255, 65, 0.3)' : 'rgba(255, 0, 64, 0.3)');
+                            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                            return gradient;
+                        },
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: color,
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(10, 10, 15, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: color,
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: (context) => '$' + context.parsed.y.toFixed(4)
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: {
+                            display: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.5)',
+                                font: { family: 'Rajdhani', size: 10 },
+                                callback: (value) => '$' + value.toFixed(2)
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+        
         function renderBubbles() {
             const w = document.getElementById('bubble-container').clientWidth || window.innerWidth;
             const isM = w < 768;
             d3.select('#bubble-container').selectAll('*').remove();
             
-            // Separate gainers and losers
-            const gainers = bubbleData.filter(d => d.change24h >= 0).sort((a, b) => b.change24h - a.change24h);
-            const losers = bubbleData.filter(d => d.change24h < 0).sort((a, b) => a.change24h - b.change24h);
+            // Take top 20 gainers and 20 losers
+            const gainers = bubbleData.filter(d => d.change24h >= 0).slice(0, 20);
+            const losers = bubbleData.filter(d => d.change24h < 0).slice(0, 20);
             
-            const baseRadius = isM ? 16 : 24;
-            const sectionGap = isM ? 30 : 60;
+            const baseRadius = isM ? 18 : 28;
             
-            // Organic placement function
-            function placeBubblesOrganic(coins, startY, isGainers) {
+            function placeBubblesOrganic(coins, startX, isGainers) {
                 return coins.map((d, i) => {
-                    const angle = (i * 2.4) + (Math.random() * 0.8); // Golden angle + randomness
-                    const radiusFromCenter = 40 + Math.sqrt(i) * (isM ? 24 : 32) + (Math.random() * 20);
+                    const row = Math.floor(i / 5);
+                    const col = i % 5;
+                    const offsetX = (Math.random() - 0.5) * 30;
+                    const offsetY = (Math.random() - 0.5) * 20;
                     
-                    // For gainers: left side, losers: right side - CLOSER TOGETHER
-                    const centerX = isGainers ? w * 0.38 : w * 0.62;
-                    const centerY = startY + radiusFromCenter * 0.3;
+                    const spacing = isM ? 65 : 90;
+                    const x = startX + col * spacing + offsetX;
+                    const y = 100 + row * spacing + offsetY;
                     
-                    let x = centerX + Math.cos(angle) * radiusFromCenter;
-                    let y = centerY + Math.sin(angle) * radiusFromCenter * 0.6;
+                    const sizeBonus = Math.min(Math.abs(d.change24h) / 30, 1) * 12;
                     
-                    // Size based on change
-                    const sizeBonus = Math.min(Math.abs(d.change24h) / 25, 1) * 15;
-                    
-                    return { ...d, x, y, r: baseRadius + sizeBonus, originalX: x, originalY: y };
+                    return { ...d, x, y, r: baseRadius + sizeBonus };
                 });
             }
             
-            const gainersNodes = placeBubblesOrganic(gainers, 80, true);
-            const losersStartY = 80 + (Math.ceil(gainers.length / 5) * (isM ? 70 : 100)) + sectionGap;
-            const losersNodes = placeBubblesOrganic(losers, losersStartY, false);
+            const gainersNodes = placeBubblesOrganic(gainers, isM ? 35 : 80, true);
+            const losersNodes = placeBubblesOrganic(losers, isM ? w - 280 : w - 450, false);
             
             const all = [...gainersNodes, ...losersNodes];
-            const h = Math.max(window.innerHeight, losersStartY + (Math.ceil(losers.length / 5) * (isM ? 70 : 100)) + 100);
+            const h = Math.max(window.innerHeight, Math.ceil(20 / 5) * (isM ? 70 : 100) + 150);
             
             const svg = d3.select('#bubble-container').append('svg').attr('width', w).attr('height', h);
             
-            // Relaxation simulation for organic look
+            // Collision simulation
             const sim = d3.forceSimulation(all)
-                .force('charge', d3.forceManyBody().strength(isM ? -4 : -7))
-                .force('collide', d3.forceCollide().radius(d => d.r + (isM ? 3 : 5)).strength(0.5))
-                .force('x', d3.forceX(d => d.originalX).strength(0.03))
-                .force('y', d3.forceY(d => d.originalY).strength(0.03));
+                .force('charge', d3.forceManyBody().strength(isM ? -5 : -10))
+                .force('collide', d3.forceCollide().radius(d => d.r + 8).strength(0.6))
+                .force('x', d3.forceX(d => d.x).strength(0.05))
+                .force('y', d3.forceY(d => d.y).strength(0.05))
+                .stop();
             
-            const bubbles = svg.selectAll('.bubble-group').data(all).enter().append('g').attr('class', 'bubble-group').on('click', (e, d) => showModal(d));
+            for (let i = 0; i < 100; i++) sim.tick();
+            
+            const bubbles = svg.selectAll('.bubble-group')
+                .data(all)
+                .enter()
+                .append('g')
+                .attr('class', 'bubble-group bubble-enter')
+                .style('animation-delay', (d, i) => `${i * 0.03}s`)
+                .on('click', (e, d) => showModal(d));
             
             bubbles.each(function(d) {
-                const g = d3.select(this), col = getColor(d.change24h), rad = d.r;
-                g.append('circle').attr('r', rad + 10).attr('fill', d3.color(col).copy({opacity: 0.12}));
+                const g = d3.select(this);
+                const col = getColor(d.change24h);
+                const rad = d.r;
+                
+                // Outer glow circle
+                g.append('circle')
+                    .attr('r', rad + 12)
+                    .attr('fill', d3.color(col).copy({opacity: 0.08}))
+                    .attr('class', 'glow-circle');
+                
+                // Main spiral
                 const sp = g.append('g').attr('class', 'bubble-spiral').style('color', col);
-                sp.selectAll('.spiral-path').data([{r: 0.9, t: 2.5, c: 'outer'}, {r: 0.7, t: 2, c: ''}, {r: 0.5, t: 1.5, c: 'inner'}]).enter().append('path').attr('class', x => `spiral-path ${x.c}`).attr('d', x => spiralPath(rad * x.r, x.t)).attr('stroke', col);
-                sp.append('circle').attr('r', rad * 0.12).attr('fill', col).attr('opacity', 0.5);
-                g.append('text').attr('class', 'bubble-label').attr('dy', '-0.2em').style('font-size', Math.min(rad / 2.2, isM ? 10 : 13) + 'px').text(d.symbol);
-                g.append('text').attr('class', 'bubble-change').attr('dy', '0.8em').style('font-size', Math.min(rad / 3, isM ? 8 : 10) + 'px').text((d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(1) + '%');
-                let rot = Math.random() * 360, spd = 0.08 + Math.random() * 0.15, dir = Math.random() > 0.5 ? 1 : -1;
-                function rotate() { rot += spd * dir; sp.attr('transform', `rotate(${rot})`); requestAnimationFrame(rotate); }
-                rotate();
+                
+                // Multiple spiral paths for depth
+                sp.selectAll('.spiral-path')
+                    .data([
+                        {r: 0.95, t: 3, c: 'outer', opacity: 0.3},
+                        {r: 0.8, t: 2.5, c: '', opacity: 0.8},
+                        {r: 0.6, t: 2, c: 'inner', opacity: 0.6}
+                    ])
+                    .enter()
+                    .append('path')
+                    .attr('class', d => `spiral-path ${d.c}`)
+                    .attr('d', d => spiralPath(rad * d.r, d.t))
+                    .attr('stroke', col)
+                    .attr('opacity', d => d.opacity);
+                
+                // Center dot
+                sp.append('circle')
+                    .attr('r', rad * 0.15)
+                    .attr('fill', col)
+                    .attr('opacity', 0.6)
+                    .attr('filter', `drop-shadow(0 0 ${rad * 0.3}px ${col})`);
+                
+                // Symbol text
+                g.append('text')
+                    .attr('class', 'bubble-label')
+                    .attr('dy', '-0.15em')
+                    .style('font-size', Math.min(rad / 2, isM ? 11 : 14) + 'px')
+                    .style('letter-spacing', '1px')
+                    .text(d.symbol);
+                
+                // Change text
+                g.append('text')
+                    .attr('class', 'bubble-change')
+                    .attr('dy', '0.9em')
+                    .style('font-size', Math.min(rad / 2.8, isM ? 9 : 11) + 'px')
+                    .text((d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(1) + '%');
             });
             
-            sim.on('tick', () => bubbles.attr('transform', d => `translate(${d.x.toFixed(1)},${d.y.toFixed(1)})`));
+            bubbles.attr('transform', d => `translate(${d.x.toFixed(1)},${d.y.toFixed(1)})`);
         }
-        function updateBubbles() { d3.selectAll('.bubble-change').text(d => (d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(1) + '%'); d3.selectAll('.bubble-spiral').each(function(d) { const c = getColor(d.change24h); d3.select(this).style('color', c).selectAll('path').attr('stroke', c).select(function() { return this.parentNode; }).select('circle').attr('fill', c); }); }
-        function fmtNum(n) { if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B'; if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M'; if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K'; return n.toFixed(2); }
-        function fmtPrice(p) { if (p >= 1000) return p.toLocaleString('en-US', {maximumFractionDigits: 0}); if (p >= 1) return p.toFixed(2); return p.toFixed(4); }
-        function showModal(d) { document.getElementById('modal-symbol').textContent = d.symbol; const ce = document.getElementById('modal-change'); ce.textContent = (d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(2) + '%'; ce.className = 'coin-change ' + (d.change24h >= 0 ? 'positive' : 'negative'); document.getElementById('modal-price').textContent = '$' + fmtPrice(d.price); document.getElementById('modal-volume').textContent = '$' + fmtNum(d.volume24h); document.getElementById('modal-high').textContent = '$' + fmtPrice(d.high24h); document.getElementById('modal-low').textContent = '$' + fmtPrice(d.low24h); document.getElementById('modal').classList.add('active'); }
-        function closeModal(e) { if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('active'); }
-        setInterval(loadData, 30000);
+        
+        function updateBubbles() {
+            d3.selectAll('.bubble-change').text(d => (d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(1) + '%');
+            d3.selectAll('.bubble-spiral').each(function(d) {
+                const c = getColor(d.change24h);
+                d3.select(this)
+                    .style('color', c)
+                    .selectAll('path')
+                    .attr('stroke', c);
+                d3.select(this).select('circle')
+                    .attr('fill', c)
+                    .attr('filter', `drop-shadow(0 0 ${d.r * 0.3}px ${c})`);
+            });
+            d3.selectAll('.glow-circle').attr('fill', d => d3.color(getColor(d.change24h)).copy({opacity: 0.08}));
+        }
+        
+        function fmtNum(n) {
+            if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+            if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+            if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+            return n.toFixed(2);
+        }
+        
+        function fmtPrice(p) {
+            if (p >= 1000) return p.toLocaleString('en-US', {maximumFractionDigits: 0});
+            if (p >= 1) return p.toFixed(2);
+            return p.toFixed(4);
+        }
+        
+        function showModal(d) {
+            currentModalCoin = d.symbol;
+            document.getElementById('modal-symbol').textContent = d.symbol;
+            
+            const ce = document.getElementById('modal-change');
+            ce.textContent = (d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(2) + '%';
+            ce.className = 'coin-change ' + (d.change24h >= 0 ? 'positive' : 'negative');
+            
+            document.getElementById('modal-price').textContent = '$' + fmtPrice(d.price);
+            document.getElementById('modal-volume').textContent = '$' + fmtNum(d.volume24h);
+            document.getElementById('modal-high').textContent = '$' + fmtPrice(d.high24h);
+            document.getElementById('modal-low').textContent = '$' + fmtPrice(d.low24h);
+            
+            document.getElementById('modal').classList.add('active');
+            
+            // Initialize chart
+            setTimeout(() => initChart(d), 100);
+        }
+        
+        function updateModalData(coin) {
+            if (!document.getElementById('modal').classList.contains('active')) return;
+            
+            document.getElementById('modal-price').textContent = '$' + fmtPrice(coin.price);
+            document.getElementById('modal-high').textContent = '$' + fmtPrice(coin.high24h);
+            document.getElementById('modal-low').textContent = '$' + fmtPrice(coin.low24h);
+            document.getElementById('modal-volume').textContent = '$' + fmtNum(coin.volume24h);
+            
+            const ce = document.getElementById('modal-change');
+            ce.textContent = (coin.change24h >= 0 ? '+' : '') + coin.change24h.toFixed(2) + '%';
+            ce.className = 'coin-change ' + (coin.change24h >= 0 ? 'positive' : 'negative');
+            
+            // Update chart with new data
+            if (priceChart) {
+                const isPositive = coin.change24h >= 0;
+                const color = isPositive ? '#00ff41' : '#ff0040';
+                const chartData = generateChartData(coin.price, coin.change24h);
+                
+                priceChart.data.datasets[0].data = chartData;
+                priceChart.data.datasets[0].borderColor = color;
+                priceChart.data.datasets[0].pointHoverBackgroundColor = color;
+                priceChart.options.plugins.tooltip.borderColor = color;
+                priceChart.update('none');
+            }
+        }
+        
+        function closeModal(e) {
+            if (e.target === document.getElementById('modal')) {
+                document.getElementById('modal').classList.remove('active');
+                currentModalCoin = null;
+            }
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.getElementById('modal').classList.remove('active');
+                currentModalCoin = null;
+            }
+        });
+        
+        // Swipe to close modal
+        let touchStartY = 0;
+        document.getElementById('modal').addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+        });
+        
+        document.getElementById('modal').addEventListener('touchend', (e) => {
+            const touchEndY = e.changedTouches[0].clientY;
+            if (touchEndY - touchStartY > 100) {
+                document.getElementById('modal').classList.remove('active');
+                currentModalCoin = null;
+            }
+        });
+        
+        // Initialize
         loadData();
+        setInterval(loadData, 30000); // Fallback API poll
     </script>
 </body>
 </html>
