@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --neon-green: #00ff41; --neon-red: #ff0040; --gold: #ffd700; --bg: #050508; }
+        :root { --neon-green: #00ff41; --neon-red: #ff0040; --gold: #ffd700; --bg: #050508; --neon-blue: #00d4ff; }
         body { font-family: 'Rajdhani', sans-serif; background: var(--bg); color: #fff; min-height: 100vh; overflow-x: hidden; }
         
         .header { position: fixed; top: 0; left: 0; right: 0; padding: 15px 20px; background: rgba(5,5,8,0.95); backdrop-filter: blur(10px); z-index: 100; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,255,65,0.2); }
@@ -18,6 +18,9 @@
         .controls { display: flex; gap: 10px; }
         .btn { background: rgba(0,255,65,0.1); border: 1px solid rgba(0,255,65,0.3); color: var(--neon-green); padding: 8px 16px; border-radius: 20px; font-family: 'Rajdhani'; font-weight: 600; cursor: pointer; transition: all 0.3s; }
         .btn:hover, .btn.active { background: rgba(0,255,65,0.25); box-shadow: 0 0 15px rgba(0,255,65,0.4); }
+        .btn.secondary { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.3); color: var(--neon-blue); }
+        .btn.secondary:hover { background: rgba(0,212,255,0.25); box-shadow: 0 0 15px rgba(0,212,255,0.4); }
+        .btn.danger { background: rgba(255,0,64,0.1); border-color: rgba(255,0,64,0.3); color: var(--neon-red); }
         
         .stats { display: flex; gap: 30px; align-items: center; }
         .stat { text-align: center; }
@@ -37,19 +40,87 @@
         .bubble-text { font-family: 'Orbitron'; font-weight: 700; text-anchor: middle; fill: #fff; font-size: 12px; }
         .bubble-pct { font-family: 'Rajdhani'; font-weight: 600; text-anchor: middle; fill: #fff; font-size: 10px; }
         
+        /* Modals */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; justify-content: center; align-items: flex-end; }
         .modal.show { display: flex; }
-        .modal-content { background: linear-gradient(180deg, rgba(15,15,20,0.98), rgba(10,10,15,0.99)); width: 100%; max-width: 500px; border-radius: 25px 25px 0 0; padding: 25px; border-top: 2px solid var(--neon-green); }
+        .modal-content { background: linear-gradient(180deg, rgba(15,15,20,0.98), rgba(10,10,15,0.99)); width: 100%; max-width: 500px; border-radius: 25px 25px 0 0; padding: 25px; border-top: 2px solid var(--neon-green); max-height: 90vh; overflow-y: auto; }
         .modal-header { text-align: center; margin-bottom: 20px; }
         .modal-symbol { font-family: 'Orbitron'; font-size: 2rem; font-weight: 900; }
         .modal-change { font-family: 'Orbitron'; font-size: 2.5rem; font-weight: 700; margin-top: 10px; }
         .modal-change.up { color: var(--neon-green); }
         .modal-change.down { color: var(--neon-red); }
         .chart-box { height: 180px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 15px; }
-        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
         .info-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; }
         .info-label { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 5px; }
         .info-value { font-family: 'Orbitron'; font-size: 1rem; }
+        
+        /* Trade Form */
+        .trade-form { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .form-title { font-family: 'Orbitron'; font-size: 1.1rem; margin-bottom: 15px; color: var(--gold); }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-bottom: 5px; text-transform: uppercase; }
+        .form-input, .form-select, .form-textarea { 
+            width: 100%; 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 8px; 
+            padding: 12px; 
+            color: #fff; 
+            font-family: 'Rajdhani'; 
+            font-size: 1rem;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { 
+            outline: none; 
+            border-color: var(--neon-green); 
+            box-shadow: 0 0 10px rgba(0,255,65,0.2); 
+        }
+        .form-textarea { min-height: 80px; resize: vertical; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .radio-group { display: flex; gap: 10px; }
+        .radio-btn { 
+            flex: 1; 
+            padding: 10px; 
+            text-align: center; 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: all 0.3s;
+        }
+        .radio-btn.active.long { background: rgba(0,255,65,0.2); border-color: var(--neon-green); color: var(--neon-green); }
+        .radio-btn.active.short { background: rgba(255,0,64,0.2); border-color: var(--neon-red); color: var(--neon-red); }
+        
+        .btn-full { width: 100%; padding: 15px; font-size: 1rem; margin-top: 10px; }
+        
+        /* Journal View */
+        .journal-list { max-height: 60vh; overflow-y: auto; }
+        .trade-card { 
+            background: rgba(255,255,255,0.03); 
+            border: 1px solid rgba(255,255,255,0.08); 
+            border-radius: 12px; 
+            padding: 15px; 
+            margin-bottom: 12px;
+        }
+        .trade-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .trade-symbol { font-family: 'Orbitron'; font-size: 1.3rem; font-weight: 700; }
+        .trade-side { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
+        .trade-side.long { background: rgba(0,255,65,0.2); color: var(--neon-green); }
+        .trade-side.short { background: rgba(255,0,64,0.2); color: var(--neon-red); }
+        .trade-date { font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+        .trade-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; }
+        .trade-detail { text-align: center; }
+        .trade-detail-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+        .trade-detail-value { font-family: 'Orbitron'; font-size: 0.95rem; margin-top: 2px; }
+        .trade-notes { font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .trade-pnl { font-family: 'Orbitron'; font-size: 1.2rem; font-weight: 700; }
+        .trade-pnl.profit { color: var(--neon-green); }
+        .trade-pnl.loss { color: var(--neon-red); }
+        .empty-state { text-align: center; padding: 40px; color: rgba(255,255,255,0.4); }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; text-align: center; }
+        .stat-card-value { font-family: 'Orbitron'; font-size: 1.4rem; font-weight: 700; color: var(--gold); }
+        .stat-card-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 4px; }
         
         @media (max-width: 768px) {
             .header { padding: 12px 15px; flex-wrap: wrap; gap: 10px; }
@@ -57,6 +128,8 @@
             .btn { padding: 6px 12px; font-size: 0.75rem; }
             .stats { gap: 15px; }
             .stat-value { font-size: 1rem; }
+            .form-row { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -69,6 +142,7 @@
             <button class="btn active" onclick="sortBy('change')">% CHANGE</button>
             <button class="btn" onclick="sortBy('volume')">VOLUME</button>
             <button class="btn" onclick="sortBy('alpha')">A-Z</button>
+            <button class="btn secondary" onclick="openJournal()">📓 JURNAL</button>
         </div>
         <div class="stats">
             <div class="stat">
@@ -86,7 +160,8 @@
         <div id="bubbles"></div>
     </div>
     
-    <div class="modal" id="modal" onclick="closeModal()">
+    <!-- Coin Detail Modal -->
+    <div class="modal" id="coinModal" onclick="closeCoinModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
                 <div class="modal-symbol" id="m-symbol">BTC</div>
@@ -101,12 +176,122 @@
                 <div class="info-item"><div class="info-label">High 24h</div><div class="info-value" id="m-high">-</div></div>
                 <div class="info-item"><div class="info-label">Low 24h</div><div class="info-value" id="m-low">-</div></div>
             </div>
+            <button class="btn btn-full" onclick="showTradeForm()">📝 LOG TRADE</button>
+            
+            <!-- Trade Entry Form (hidden by default) -->
+            <div class="trade-form" id="tradeForm" style="display: none;">
+                <div class="form-title">Log Trade Entry</div>
+                <div class="form-group">
+                    <label class="form-label">Direction</label>
+                    <div class="radio-group">
+                        <div class="radio-btn long" onclick="setTradeSide('long')" id="btnLong">LONG</div>
+                        <div class="radio-btn short" onclick="setTradeSide('short')" id="btnShort">SHORT</div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Entry Price ($)</label>
+                        <input type="number" class="form-input" id="entryPrice" step="0.000001" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Position Size ($)</label>
+                        <input type="number" class="form-input" id="positionSize" step="0.01" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Leverage</label>
+                        <input type="number" class="form-input" id="leverage" value="1" min="1" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stop Loss ($)</label>
+                        <input type="number" class="form-input" id="stopLoss" step="0.000001" placeholder="Optional">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Setup Type</label>
+                    <select class="form-select" id="setupType">
+                        <option value="">Select setup...</option>
+                        <option value="breakout">Breakout</option>
+                        <option value="breakdown">Breakdown</option>
+                        <option value="pullback">Pullback</option>
+                        <option value="rotation">Rotation Play</option>
+                        <option value="unlock_dump">Token Unlock Dump</option>
+                        <option value="fomo_chase">FOMO Chase</option>
+                        <option value="scalp">Scalp</option>
+                        <option value="swing">Swing</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Psychology State</label>
+                    <select class="form-select" id="psychology">
+                        <option value="">How do you feel?</option>
+                        <option value="calm">Calm / Confident</option>
+                        <option value="fomo">FOMO / Greedy</option>
+                        <option value="revenge">Revenge Trading</option>
+                        <option value="fear">Fear / Hesitant</option>
+                        <option value="tired">Tired / Not Focused</option>
+                        <option value="flow">In the Zone</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thesis / Notes</label>
+                    <textarea class="form-textarea" id="tradeNotes" placeholder="Why are you taking this trade? What's your thesis?"></textarea>
+                </div>
+                <div class="form-row">
+                    <button class="btn danger" onclick="hideTradeForm()" style="flex: 1;">Cancel</button>
+                    <button class="btn btn-full" onclick="saveTrade()" style="flex: 2; margin-top: 0;">💾 SAVE ENTRY</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Journal Modal -->
+    <div class="modal" id="journalModal" onclick="closeJournalModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-symbol">📓 Trading Journal</div>
+                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-top: 5px;">Track your trades & psychology</div>
+            </div>
+            
+            <div class="stats-grid" id="journalStats">
+                <div class="stat-card">
+                    <div class="stat-card-value" id="statTotal">0</div>
+                    <div class="stat-card-label">Total Trades</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="statWinRate">0%</div>
+                    <div class="stat-card-label">Win Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="statLongs">0</div>
+                    <div class="stat-card-label">Longs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="statShorts">0</div>
+                    <div class="stat-card-label">Shorts</div>
+                </div>
+            </div>
+            
+            <div class="journal-list" id="journalList">
+                <div class="empty-state">No trades logged yet.<br>Click on a coin and "Log Trade" to start.</div>
+            </div>
         </div>
     </div>
 
     <script>
-        let data = [], chart = null, currentCoin = null;
+        let data = [], chart = null, currentCoin = null, currentSide = null;
         const COUNT = 40;
+        
+        // Load trades from localStorage
+        function getTrades() {
+            return JSON.parse(localStorage.getItem('guap_trades') || '[]');
+        }
+        
+        function saveTrades(trades) {
+            localStorage.setItem('guap_trades', JSON.stringify(trades));
+        }
         
         // Particles
         const cvs = document.getElementById('canvas');
@@ -154,7 +339,7 @@
         }
         
         function sortBy(type) {
-            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.controls .btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
             if (type === 'change') data.sort((a, b) => Math.abs(b.c) - Math.abs(a.c));
             else if (type === 'volume') data.sort((a, b) => b.v - a.v);
@@ -166,36 +351,25 @@
         
         function draw() {
             const w = window.innerWidth;
-            const h = Math.max(window.innerHeight * 1.5, 1200); // Taller for scroll
+            const h = Math.max(window.innerHeight * 1.5, 1200);
             const mobile = w < 768;
             const baseR = mobile ? 20 : 28;
             
             d3.select('#bubbles').selectAll('*').remove();
             
-            // Get top 80 coins - MIXED together (not separated left/right)
             const coins = data.slice(0, 80);
-            
-            // Create organic cluster layout (like Bubblemaps)
             const positions = [];
             const centerX = w / 2;
             const centerY = mobile ? 250 : 350;
             
             coins.forEach((d, i) => {
-                // Golden angle for spiral distribution
-                const angle = i * 2.399; // Golden angle in radians
-                // Radius grows with sqrt for equal area distribution
+                const angle = i * 2.399;
                 const radius = 60 + Math.sqrt(i) * (mobile ? 22 : 30);
-                
-                // Add randomness for organic look
                 const randomX = (Math.random() - 0.5) * 50;
                 const randomY = (Math.random() - 0.5) * 40;
-                
                 const x = centerX + Math.cos(angle) * radius + randomX;
-                const y = centerY + Math.sin(angle) * radius * 0.7 + randomY + (i > 40 ? 100 : 0); // Second ring lower
-                
-                // Size based on percentage change
+                const y = centerY + Math.sin(angle) * radius * 0.7 + randomY + (i > 40 ? 100 : 0);
                 const r = baseR + Math.min(Math.abs(d.c) / 15, 1) * 12;
-                
                 positions.push({ ...d, x, y, r });
             });
             
@@ -207,9 +381,8 @@
                 .append('g')
                 .attr('class', 'bubble')
                 .style('cursor', 'pointer')
-                .on('click', (e, d) => openModal(d));
+                .on('click', (e, d) => openCoinModal(d));
             
-            // Entry animation
             g.style('opacity', 0)
              .transition()
              .duration(600)
@@ -220,13 +393,11 @@
                 const el = d3.select(this);
                 const col = getColor(d.c);
                 
-                // Outer glow
                 el.append('circle')
                     .attr('r', d.r + 12)
                     .attr('fill', col)
                     .attr('opacity', 0.1);
                 
-                // Spiral
                 const sp = el.append('g').attr('class', 'bubble-spiral');
                 [0.9, 0.7, 0.5].forEach((sc, i) => {
                     let p = '';
@@ -244,14 +415,12 @@
                 });
                 sp.append('circle').attr('r', d.r * 0.2).attr('fill', col);
                 
-                // Symbol text
                 el.append('text')
                     .attr('class', 'bubble-text')
                     .attr('dy', '-0.2em')
                     .style('font-size', Math.min(d.r / 1.5, mobile ? 11 : 14) + 'px')
                     .text(d.s);
                 
-                // Percentage
                 el.append('text')
                     .attr('class', 'bubble-pct')
                     .attr('dy', '1em')
@@ -264,8 +433,9 @@
         
         function fmt(n) { return n >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(2) + 'K' : n.toFixed(2); }
         
-        function openModal(d) {
-            currentCoin = d.s;
+        // Coin Modal
+        function openCoinModal(d) {
+            currentCoin = d;
             document.getElementById('m-symbol').textContent = d.s;
             const ch = document.getElementById('m-change');
             ch.textContent = (d.c >= 0 ? '+' : '') + d.c.toFixed(2) + '%';
@@ -274,7 +444,12 @@
             document.getElementById('m-volume').textContent = '$' + fmt(d.v);
             document.getElementById('m-high').textContent = '$' + d.h.toFixed(4);
             document.getElementById('m-low').textContent = '$' + d.l.toFixed(4);
-            document.getElementById('modal').classList.add('show');
+            
+            // Pre-fill entry price
+            document.getElementById('entryPrice').value = d.p.toFixed(d.p < 1 ? 6 : 4);
+            hideTradeForm();
+            
+            document.getElementById('coinModal').classList.add('show');
             
             setTimeout(() => {
                 const ctx = document.getElementById('m-chart').getContext('2d');
@@ -291,8 +466,124 @@
             }, 10);
         }
         
-        function closeModal() { document.getElementById('modal').classList.remove('show'); }
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+        function closeCoinModal() { document.getElementById('coinModal').classList.remove('show'); }
+        
+        // Trade Form
+        function showTradeForm() { document.getElementById('tradeForm').style.display = 'block'; }
+        function hideTradeForm() { 
+            document.getElementById('tradeForm').style.display = 'none';
+            currentSide = null;
+            document.getElementById('btnLong').classList.remove('active', 'long');
+            document.getElementById('btnShort').classList.remove('active', 'short');
+        }
+        
+        function setTradeSide(side) {
+            currentSide = side;
+            document.getElementById('btnLong').classList.toggle('active', side === 'long');
+            document.getElementById('btnLong').classList.toggle('long', side === 'long');
+            document.getElementById('btnShort').classList.toggle('active', side === 'short');
+            document.getElementById('btnShort').classList.toggle('short', side === 'short');
+        }
+        
+        function saveTrade() {
+            if (!currentSide) { alert('Selectează LONG sau SHORT'); return; }
+            
+            const trade = {
+                id: Date.now(),
+                symbol: currentCoin.s,
+                side: currentSide,
+                entryPrice: parseFloat(document.getElementById('entryPrice').value),
+                positionSize: parseFloat(document.getElementById('positionSize').value),
+                leverage: parseInt(document.getElementById('leverage').value) || 1,
+                stopLoss: parseFloat(document.getElementById('stopLoss').value) || null,
+                setupType: document.getElementById('setupType').value,
+                psychology: document.getElementById('psychology').value,
+                notes: document.getElementById('tradeNotes').value,
+                timestamp: new Date().toISOString(),
+                status: 'open',
+                exitPrice: null,
+                pnl: null
+            };
+            
+            const trades = getTrades();
+            trades.unshift(trade);
+            saveTrades(trades);
+            
+            // Reset form
+            document.getElementById('positionSize').value = '';
+            document.getElementById('stopLoss').value = '';
+            document.getElementById('setupType').value = '';
+            document.getElementById('psychology').value = '';
+            document.getElementById('tradeNotes').value = '';
+            hideTradeForm();
+            closeCoinModal();
+            
+            alert(`✅ Trade logged: ${currentCoin.s} ${currentSide.toUpperCase()}`);
+        }
+        
+        // Journal
+        function openJournal() {
+            renderJournal();
+            document.getElementById('journalModal').classList.add('show');
+        }
+        
+        function closeJournalModal() { document.getElementById('journalModal').classList.remove('show'); }
+        
+        function renderJournal() {
+            const trades = getTrades();
+            const list = document.getElementById('journalList');
+            
+            // Update stats
+            document.getElementById('statTotal').textContent = trades.length;
+            document.getElementById('statLongs').textContent = trades.filter(t => t.side === 'long').length;
+            document.getElementById('statShorts').textContent = trades.filter(t => t.side === 'short').length;
+            
+            const closed = trades.filter(t => t.status === 'closed');
+            const winners = closed.filter(t => t.pnl > 0).length;
+            const winRate = closed.length > 0 ? Math.round((winners / closed.length) * 100) : 0;
+            document.getElementById('statWinRate').textContent = winRate + '%';
+            
+            if (trades.length === 0) {
+                list.innerHTML = '<div class="empty-state">No trades logged yet.<br>Click on a coin and "Log Trade" to start.</div>';
+                return;
+            }
+            
+            list.innerHTML = trades.map(t => `
+                <div class="trade-card">
+                    <div class="trade-header">
+                        <div>
+                            <span class="trade-symbol">${t.symbol}</span>
+                            <span class="trade-side ${t.side}">${t.side.toUpperCase()}</span>
+                        </div>
+                        <div class="trade-date">${new Date(t.timestamp).toLocaleDateString()} ${new Date(t.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                    </div>
+                    <div class="trade-details">
+                        <div class="trade-detail">
+                            <div class="trade-detail-label">Entry</div>
+                            <div class="trade-detail-value">$${t.entryPrice.toFixed(t.entryPrice < 1 ? 6 : 4)}</div>
+                        </div>
+                        <div class="trade-detail">
+                            <div class="trade-detail-label">Size</div>
+                            <div class="trade-detail-value">$${t.positionSize.toFixed(0)}</div>
+                        </div>
+                        <div class="trade-detail">
+                            <div class="trade-detail-label">Lev</div>
+                            <div class="trade-detail-value">${t.leverage}x</div>
+                        </div>
+                    </div>
+                    ${t.setupType ? `<div style="font-size: 0.75rem; color: var(--gold); margin-top: 8px;">📊 ${t.setupType.replace(/_/g, ' ').toUpperCase()}</div>` : ''}
+                    ${t.psychology ? `<div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 4px;">🧠 ${t.psychology}</div>` : ''}
+                    ${t.notes ? `<div class="trade-notes">${t.notes}</div>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        document.addEventListener('keydown', e => { 
+            if (e.key === 'Escape') {
+                closeCoinModal();
+                closeJournalModal();
+            }
+        });
         
         load();
         setInterval(load, 30000);
