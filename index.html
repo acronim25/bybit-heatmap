@@ -89,61 +89,574 @@
         .btn-full { width: 100%; padding: 15px; font-size: 1rem; margin-top: 10px; }
         .btn-small { padding: 6px 12px; font-size: 0.75rem; }
         
-        /* Journal View */
-        .journal-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
-        .journal-tab { padding: 8px 16px; background: transparent; border: none; color: rgba(255,255,255,0.5); font-family: 'Rajdhani'; font-weight: 600; cursor: pointer; border-radius: 20px; transition: all 0.3s; }
-        .journal-tab.active { background: rgba(0,255,65,0.1); color: var(--neon-green); }
-        .journal-tab:hover { color: #fff; }
+        /* ═══════════════════════════════════════════════════════════════
+           CYBERPUNK JOURNAL STYLES
+           ═══════════════════════════════════════════════════════════════ */
         
-        .journal-list { max-height: 60vh; overflow-y: auto; }
-        .trade-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 15px; margin-bottom: 12px; position: relative; }
-        .trade-card:hover { border-color: rgba(255,255,255,0.15); }
-        .trade-card.open { border-left: 3px solid var(--neon-blue); }
-        .trade-card.closed { border-left: 3px solid var(--gold); }
-        .trade-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .trade-symbol { font-family: 'Orbitron'; font-size: 1.3rem; font-weight: 700; }
-        .trade-side { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
-        .trade-side.long { background: rgba(0,255,65,0.2); color: var(--neon-green); }
-        .trade-side.short { background: rgba(255,0,64,0.2); color: var(--neon-red); }
-        .trade-date { font-size: 0.7rem; color: rgba(255,255,255,0.4); }
-        .trade-details { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0; }
-        .trade-detail { text-align: center; }
-        .trade-detail-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; }
-        .trade-detail-value { font-family: 'Orbitron'; font-size: 0.9rem; margin-top: 2px; }
-        .trade-notes { font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
-        .trade-actions { display: flex; gap: 8px; margin-top: 12px; }
-        .trade-pnl { font-family: 'Orbitron'; font-size: 1.2rem; font-weight: 700; }
-        .trade-pnl.profit { color: var(--neon-green); }
-        .trade-pnl.loss { color: var(--neon-red); }
-        .empty-state { text-align: center; padding: 40px; color: rgba(255,255,255,0.4); }
+        /* Journal Modal - Wider Cyberpunk Container */
+        .modal-content.wide { 
+            max-width: 1000px; 
+            background: linear-gradient(135deg, rgba(5,5,8,0.98) 0%, rgba(15,10,25,0.99) 100%);
+            border-top: 2px solid var(--neon-green);
+            border-left: 1px solid rgba(0,255,65,0.2);
+            border-right: 1px solid rgba(0,255,65,0.2);
+            position: relative;
+            overflow: hidden;
+        }
         
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .stat-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; text-align: center; }
-        .stat-card-value { font-family: 'Orbitron'; font-size: 1.4rem; font-weight: 700; }
-        .stat-card-value.gold { color: var(--gold); }
-        .stat-card-value.green { color: var(--neon-green); }
-        .stat-card-value.red { color: var(--neon-red); }
-        .stat-card-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 4px; }
+        .modal-content.wide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+            animation: scanline 3s linear infinite;
+        }
         
-        .pnl-chart-container { height: 200px; margin: 20px 0; background: rgba(255,255,255,0.02); border-radius: 12px; padding: 15px; }
+        @keyframes scanline {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
         
-        .tag { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; margin-right: 5px; margin-top: 5px; }
-        .tag.setup { background: rgba(255,215,0,0.15); color: var(--gold); }
-        .tag.psych { background: rgba(0,212,255,0.15); color: var(--neon-blue); }
-        .tag.market { background: rgba(191,0,255,0.15); color: var(--neon-purple); }
-        .tag.mistake { background: rgba(255,0,64,0.15); color: var(--neon-red); }
+        /* Grid Background Effect */
+        .modal-content.wide::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(0,255,65,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,65,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
         
-        .risk-display { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin-top: 15px; }
-        .risk-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .risk-row:last-child { border-bottom: none; }
-        .risk-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
-        .risk-value { font-family: 'Orbitron'; font-size: 0.9rem; }
-        .risk-value.good { color: var(--neon-green); }
-        .risk-value.bad { color: var(--neon-red); }
+        /* Journal Tabs - Cyberpunk Pills */
+        .journal-tabs { 
+            display: flex; 
+            gap: 12px; 
+            margin-bottom: 25px; 
+            padding: 15px;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(0,255,65,0.2);
+            border-radius: 16px;
+            position: relative;
+            z-index: 1;
+        }
         
-        .export-buttons { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .journal-tab { 
+            padding: 12px 24px; 
+            background: rgba(0,255,65,0.05);
+            border: 1px solid rgba(0,255,65,0.2);
+            color: rgba(0,255,65,0.6);
+            font-family: 'Orbitron';
+            font-weight: 600;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            cursor: pointer; 
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
         
-        .section-title { font-family: 'Orbitron'; font-size: 0.9rem; color: var(--gold); margin: 20px 0 10px 0; padding-bottom: 8px; border-bottom: 1px solid rgba(255,215,0,0.2); }
+        .journal-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,255,65,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .journal-tab:hover::before {
+            left: 100%;
+        }
+        
+        .journal-tab.active { 
+            background: rgba(0,255,65,0.15);
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+            box-shadow: 0 0 20px rgba(0,255,65,0.3), inset 0 0 20px rgba(0,255,65,0.05);
+            text-shadow: 0 0 10px rgba(0,255,65,0.5);
+        }
+        
+        .journal-tab:hover:not(.active) {
+            border-color: rgba(0,255,65,0.4);
+            color: rgba(0,255,65,0.8);
+            box-shadow: 0 0 10px rgba(0,255,65,0.1);
+        }
+        
+        /* Stats Grid - Cyberpunk Cards */
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 15px; 
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .stat-card { 
+            background: linear-gradient(145deg, rgba(10,10,15,0.9), rgba(20,15,30,0.9));
+            border: 1px solid rgba(0,255,65,0.15);
+            padding: 20px 15px;
+            border-radius: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+            opacity: 0.5;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0,255,65,0.4);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(0,255,65,0.1);
+        }
+        
+        .stat-card-value { 
+            font-family: 'Orbitron'; 
+            font-size: 1.6rem; 
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+        
+        .stat-card-value.gold { 
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+        
+        .stat-card-value.green { 
+            color: var(--neon-green);
+            text-shadow: 0 0 20px rgba(0,255,65,0.5);
+        }
+        
+        .stat-card-value.red { 
+            color: var(--neon-red);
+            text-shadow: 0 0 20px rgba(255,0,64,0.5);
+        }
+        
+        .stat-card-value.blue {
+            color: var(--neon-blue);
+            text-shadow: 0 0 20px rgba(0,212,255,0.5);
+        }
+        
+        .stat-card-label { 
+            font-size: 0.65rem; 
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 8px;
+            font-family: 'Rajdhani';
+            font-weight: 600;
+        }
+        
+        /* Section Titles - Cyberpunk Headers */
+        .section-title { 
+            font-family: 'Orbitron'; 
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            color: var(--gold);
+            margin: 30px 0 15px 0;
+            padding: 15px 20px;
+            background: linear-gradient(90deg, rgba(255,215,0,0.1), transparent);
+            border-left: 3px solid var(--gold);
+            text-transform: uppercase;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .section-title::after {
+            content: '◆';
+            position: absolute;
+            right: 20px;
+            color: rgba(255,215,0,0.3);
+        }
+        
+        /* Trade Cards - Cyberpunk Entry Cards */
+        .journal-list { 
+            max-height: 55vh; 
+            overflow-y: auto;
+            padding-right: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .journal-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .journal-list::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3);
+            border-radius: 3px;
+        }
+        
+        .journal-list::-webkit-scrollbar-thumb {
+            background: var(--neon-green);
+            border-radius: 3px;
+        }
+        
+        .trade-card { 
+            background: linear-gradient(145deg, rgba(10,10,15,0.95), rgba(15,12,20,0.95));
+            border: 1px solid rgba(0,255,65,0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .trade-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--neon-green), transparent);
+            opacity: 0.5;
+        }
+        
+        .trade-card:hover { 
+            border-color: rgba(0,255,65,0.3);
+            box-shadow: 0 0 30px rgba(0,255,65,0.1), inset 0 0 30px rgba(0,255,65,0.02);
+            transform: translateX(5px);
+        }
+        
+        .trade-card.open { 
+            border-left: 3px solid var(--neon-blue);
+            background: linear-gradient(145deg, rgba(10,15,25,0.95), rgba(15,12,30,0.95));
+        }
+        
+        .trade-card.open::before {
+            background: linear-gradient(180deg, var(--neon-blue), transparent);
+        }
+        
+        .trade-card.closed { 
+            border-left: 3px solid var(--gold);
+            background: linear-gradient(145deg, rgba(25,20,10,0.95), rgba(20,15,12,0.95));
+        }
+        
+        .trade-card.closed::before {
+            background: linear-gradient(180deg, var(--gold), transparent);
+        }
+        
+        .trade-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px;
+        }
+        
+        .trade-symbol { 
+            font-family: 'Orbitron'; 
+            font-size: 1.4rem; 
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #fff, var(--neon-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .trade-side { 
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .trade-side.long { 
+            background: rgba(0,255,65,0.15);
+            color: var(--neon-green);
+            border: 1px solid rgba(0,255,65,0.4);
+            box-shadow: 0 0 15px rgba(0,255,65,0.2), inset 0 0 10px rgba(0,255,65,0.05);
+            text-shadow: 0 0 10px rgba(0,255,65,0.5);
+        }
+        
+        .trade-side.short { 
+            background: rgba(255,0,64,0.15);
+            color: var(--neon-red);
+            border: 1px solid rgba(255,0,64,0.4);
+            box-shadow: 0 0 15px rgba(255,0,64,0.2), inset 0 0 10px rgba(255,0,64,0.05);
+            text-shadow: 0 0 10px rgba(255,0,64,0.5);
+        }
+        
+        .trade-date { 
+            font-size: 0.7rem; 
+            color: rgba(255,255,255,0.3);
+            font-family: 'Rajdhani';
+            letter-spacing: 1px;
+        }
+        
+        .trade-details { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 15px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .trade-detail { 
+            text-align: center;
+            position: relative;
+        }
+        
+        .trade-detail:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1px;
+            height: 60%;
+            background: linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent);
+        }
+        
+        .trade-detail-label { 
+            font-size: 0.6rem; 
+            color: rgba(255,255,255,0.35);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+        
+        .trade-detail-value { 
+            font-family: 'Orbitron'; 
+            font-size: 1rem;
+            font-weight: 700;
+            margin-top: 5px;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .trade-pnl { 
+            font-family: 'Orbitron'; 
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            margin-left: 15px;
+        }
+        
+        .trade-pnl.profit { 
+            color: var(--neon-green);
+            text-shadow: 0 0 20px rgba(0,255,65,0.5);
+        }
+        
+        .trade-pnl.loss { 
+            color: var(--neon-red);
+            text-shadow: 0 0 20px rgba(255,0,64,0.5);
+        }
+        
+        .trade-notes { 
+            font-size: 0.85rem; 
+            color: rgba(255,255,255,0.6);
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            border-left: 2px solid var(--neon-blue);
+            font-style: italic;
+            line-height: 1.6;
+        }
+        
+        .trade-actions { 
+            display: flex; 
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        /* Tags - Cyberpunk Pills */
+        .tag { 
+            display: inline-block; 
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-right: 8px;
+            margin-top: 8px;
+            border: 1px solid;
+            font-family: 'Rajdhani';
+        }
+        
+        .tag.setup { 
+            background: rgba(255,215,0,0.1);
+            color: var(--gold);
+            border-color: rgba(255,215,0,0.4);
+            box-shadow: 0 0 10px rgba(255,215,0,0.1);
+        }
+        
+        .tag.psych { 
+            background: rgba(0,212,255,0.1);
+            color: var(--neon-blue);
+            border-color: rgba(0,212,255,0.4);
+            box-shadow: 0 0 10px rgba(0,212,255,0.1);
+        }
+        
+        .tag.market { 
+            background: rgba(191,0,255,0.1);
+            color: var(--neon-purple);
+            border-color: rgba(191,0,255,0.4);
+            box-shadow: 0 0 10px rgba(191,0,255,0.1);
+        }
+        
+        .tag.mistake { 
+            background: rgba(255,0,64,0.1);
+            color: var(--neon-red);
+            border-color: rgba(255,0,64,0.4);
+            box-shadow: 0 0 10px rgba(255,0,64,0.1);
+        }
+        
+        /* PnL Chart Container */
+        .pnl-chart-container { 
+            height: 250px;
+            margin: 25px 0;
+            background: linear-gradient(145deg, rgba(10,10,15,0.9), rgba(15,12,20,0.9));
+            border: 1px solid rgba(0,255,65,0.15);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pnl-chart-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+        }
+        
+        /* Risk Display - Cyberpunk Terminal Style */
+        .risk-display { 
+            background: linear-gradient(145deg, rgba(5,10,8,0.95), rgba(8,15,12,0.95));
+            border: 1px solid rgba(0,255,65,0.2);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            position: relative;
+            font-family: 'Rajdhani';
+        }
+        
+        .risk-display::before {
+            content: '>';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--neon-green);
+            color: #000;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            border-radius: 4px;
+        }
+        
+        .risk-row { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,255,65,0.1);
+        }
+        
+        .risk-row:last-child { 
+            border-bottom: none; 
+        }
+        
+        .risk-label { 
+            font-size: 0.75rem; 
+            color: rgba(0,255,65,0.6);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .risk-value { 
+            font-family: 'Orbitron'; 
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        .risk-value.good { 
+            color: var(--neon-green);
+            text-shadow: 0 0 10px rgba(0,255,65,0.3);
+        }
+        
+        .risk-value.bad { 
+            color: var(--neon-red);
+            text-shadow: 0 0 10px rgba(255,0,64,0.3);
+        }
+        
+        /* Export Buttons */
+        .export-buttons { 
+            display: flex; 
+            gap: 12px;
+            margin: 25px 0;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        /* Empty State - Cyberpunk Style */
+        .empty-state { 
+            text-align: center; 
+            padding: 60px 40px;
+            color: rgba(255,255,255,0.3);
+            border: 2px dashed rgba(0,255,65,0.2);
+            border-radius: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .empty-state::before {
+            content: '◈';
+            font-size: 3rem;
+            color: rgba(0,255,65,0.2);
+            display: block;
+            margin-bottom: 20px;
+        }
+        
+        /* Filter Cards in Journal */
+        #view-trades .stat-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #view-trades .stat-card:hover {
+            transform: scale(1.05);
+            border-color: var(--neon-green);
+        }
+        
+        #view-trades .stat-card:active {
+            transform: scale(0.98);
+        }
         
         @media (max-width: 768px) {
             .header { padding: 12px 15px; flex-wrap: wrap; gap: 10px; }
