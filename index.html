@@ -1614,6 +1614,7 @@
         }
         
         function sortBy(type) {
+            HAPTIC.light();
             document.querySelectorAll('.controls .btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
             if (type === 'change') data.sort((a, b) => Math.abs(b.c) - Math.abs(a.c));
@@ -1679,6 +1680,7 @@
         
         // Coin Modal
         function openCoinModal(d) {
+            HAPTIC.medium();
             currentCoin = d;
             document.getElementById('m-symbol').textContent = d.s;
             const ch = document.getElementById('m-change');
@@ -1704,7 +1706,10 @@
             }, 10);
         }
         
-        function closeCoinModal() { document.getElementById('coinModal').classList.remove('show'); }
+        function closeCoinModal() { 
+            HAPTIC.light();
+            document.getElementById('coinModal').classList.remove('show'); 
+        }
         
         // Risk Calculator
         function updateRiskCalc() {
@@ -1751,8 +1756,13 @@
         }
         
         // Trade Form
-        function showTradeForm() { document.getElementById('tradeForm').style.display = 'block'; }
+        function showTradeForm() { 
+            HAPTIC.medium();
+            document.getElementById('tradeForm').style.display = 'block'; 
+        }
+        
         function hideTradeForm() { 
+            HAPTIC.light();
             document.getElementById('tradeForm').style.display = 'none';
             currentSide = null;
             document.getElementById('btnLong').classList.remove('active', 'long');
@@ -1761,6 +1771,7 @@
         }
         
         function setTradeSide(side) {
+            HAPTIC.medium();
             currentSide = side;
             document.getElementById('btnLong').classList.toggle('active', side === 'long');
             document.getElementById('btnLong').classList.toggle('long', side === 'long');
@@ -1818,6 +1829,7 @@
         
         // Journal
         function openJournal() {
+            HAPTIC.medium();
             renderJournal();
             renderStats();
             renderPerformance();
@@ -1825,15 +1837,20 @@
             document.getElementById('journalModal').classList.add('show');
         }
         
-        function closeJournalModal() { document.getElementById('journalModal').classList.remove('show'); }
+        function closeJournalModal() { 
+            HAPTIC.light();
+            document.getElementById('journalModal').classList.remove('show'); 
+        }
         
         function switchTab(tab) {
+            HAPTIC.medium();
             document.querySelectorAll('.journal-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
             ['trades', 'stats', 'performance', 'psychology'].forEach(t => document.getElementById('view-' + t).style.display = t === tab ? 'block' : 'none');
         }
         
         function filterTrades(filter) {
+            HAPTIC.medium();
             currentTradeFilter = filter;
             renderJournal();
         }
@@ -2083,6 +2100,7 @@
         
         // Close Trade Functions
         function openCloseTrade(id) {
+            HAPTIC.medium();
             closingTradeId = id;
             const trade = getTrades().find(t => t.id === id);
             document.getElementById('closeTradeSymbol').textContent = `${trade.symbol} ${trade.side.toUpperCase()}`;
@@ -2095,7 +2113,11 @@
             document.getElementById('closeTradeModal').classList.add('show');
         }
         
-        function closeCloseTradeModal() { document.getElementById('closeTradeModal').classList.remove('show'); closingTradeId = null; }
+        function closeCloseTradeModal() { 
+            HAPTIC.light();
+            document.getElementById('closeTradeModal').classList.remove('show'); 
+            closingTradeId = null; 
+        }
         
         function calculateClosePnl() {
             const trade = getTrades().find(t => t.id === closingTradeId);
@@ -2176,6 +2198,7 @@
         
         // Edit & Delete
         function editTrade(id) {
+            HAPTIC.medium();
             editingTradeId = id;
             const trade = getTrades().find(t => t.id === id);
             
@@ -2218,7 +2241,11 @@
             document.getElementById('editTradeModal').classList.add('show');
         }
         
-        function closeEditModal() { document.getElementById('editTradeModal').classList.remove('show'); editingTradeId = null; }
+        function closeEditModal() { 
+            HAPTIC.light();
+            document.getElementById('editTradeModal').classList.remove('show'); 
+            editingTradeId = null; 
+        }
         
         function saveEditTrade() {
             const trades = getTrades();
@@ -2251,6 +2278,7 @@
         
         function deleteTrade(id) {
             if (!confirm('Delete this trade? Cannot be undone.')) return;
+            HAPTIC.warning();
             const trades = getTrades().filter(t => t.id !== id);
             saveTrades(trades);
             renderJournal();
@@ -2260,7 +2288,9 @@
         }
         
         function clearAllTrades() {
+            HAPTIC.heavy();
             if (!confirm('DELETE ALL TRADES? This will wipe your entire journal!')) return;
+            HAPTIC.error();
             localStorage.removeItem('guap_trades');
             renderJournal();
             renderStats();
@@ -2270,8 +2300,14 @@
         
         // Export
         function exportTrades(format) {
+            HAPTIC.success();
             const trades = getTrades();
-            if (trades.length === 0) { alert('No trades to export'); return; }
+            if (trades.length === 0) { 
+                playSound('error');
+                HAPTIC.error();
+                alert('No trades to export'); 
+                return; 
+            }
             
             if (format === 'json') {
                 const blob = new Blob([JSON.stringify(trades, null, 2)], { type: 'application/json' });
@@ -2298,11 +2334,80 @@
         document.addEventListener('keydown', e => { 
             if (e.key === 'Escape') {
                 playSound('hover');
+                HAPTIC.light();
                 closeCoinModal();
                 closeJournalModal();
                 closeCloseTradeModal();
                 closeEditModal();
             }
+        });
+        
+        // ═══════════════════════════════════════════════════════════════
+        // HAPTIC FEEDBACK - Mobile Vibration
+        // ═══════════════════════════════════════════════════════════════
+        
+        const HAPTIC = {
+            enabled: 'vibrate' in navigator,
+            
+            // Short light tap
+            light: () => {
+                if (HAPTIC.enabled) navigator.vibrate(10);
+            },
+            
+            // Medium feedback
+            medium: () => {
+                if (HAPTIC.enabled) navigator.vibrate(20);
+            },
+            
+            // Strong feedback
+            heavy: () => {
+                if (HAPTIC.enabled) navigator.vibrate([30, 50, 30]);
+            },
+            
+            // Success pattern
+            success: () => {
+                if (HAPTIC.enabled) navigator.vibrate([10, 30, 10, 30, 50]);
+            },
+            
+            // Error pattern
+            error: () => {
+                if (HAPTIC.enabled) navigator.vibrate([50, 30, 50, 30, 100]);
+            },
+            
+            // Glitch pattern (rapid stutter)
+            glitch: () => {
+                if (HAPTIC.enabled) navigator.vibrate([5, 5, 5, 5, 5, 5, 10]);
+            },
+            
+            // Typing feedback (very light)
+            type: () => {
+                if (HAPTIC.enabled) navigator.vibrate(3);
+            },
+            
+            // Trade saved - celebration
+            tradeSaved: () => {
+                if (HAPTIC.enabled) navigator.vibrate([10, 20, 10, 20, 10, 50, 100]);
+            },
+            
+            // Trade closed
+            tradeClosed: () => {
+                if (HAPTIC.enabled) navigator.vibrate([20, 30, 40, 50]);
+            },
+            
+            // Heartbeat pattern for open trades
+            heartbeat: () => {
+                if (HAPTIC.enabled) navigator.vibrate([10, 150, 10]);
+            },
+            
+            // Warning pattern
+            warning: () => {
+                if (HAPTIC.enabled) navigator.vibrate([50, 100, 50]);
+            }
+        };
+        
+        // Haptic on page load (subtle confirmation)
+        window.addEventListener('load', () => {
+            setTimeout(() => HAPTIC.light(), 500);
         });
         
         // ═══════════════════════════════════════════════════════════════
@@ -2399,19 +2504,40 @@
             }
         }
         
-        // Add sound to all buttons
+        // Add sound and haptic to all buttons
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.btn, .journal-tab').forEach(btn => {
-                btn.addEventListener('mouseenter', () => playSound('hover'));
-                btn.addEventListener('click', () => playSound('click'));
+                btn.addEventListener('mouseenter', () => {
+                    playSound('hover');
+                    HAPTIC.light();
+                });
+                btn.addEventListener('click', () => {
+                    playSound('click');
+                    HAPTIC.medium();
+                });
             });
             
             document.querySelectorAll('input, select, textarea').forEach(input => {
-                input.addEventListener('keydown', () => playSound('typing'));
+                input.addEventListener('keydown', () => {
+                    playSound('typing');
+                    HAPTIC.type();
+                });
             });
             
             document.querySelectorAll('.glitch-hover').forEach(el => {
-                el.addEventListener('mouseenter', () => playSound('glitch'));
+                el.addEventListener('mouseenter', () => {
+                    playSound('glitch');
+                    HAPTIC.glitch();
+                });
+            });
+            
+            document.querySelectorAll('.trade-card').forEach(card => {
+                card.addEventListener('mouseenter', () => HAPTIC.light());
+            });
+            
+            // Bubble haptic
+            document.querySelectorAll('.bubble').forEach(bubble => {
+                bubble.addEventListener('click', () => HAPTIC.medium());
             });
         });
         
@@ -2484,10 +2610,23 @@
         // Override save functions with effects
         const originalSaveTrade = saveTrade;
         saveTrade = function() {
-            if (!currentSide) { playSound('error'); alert('Selectează LONG sau SHORT'); return; }
+            if (!currentSide) { 
+                playSound('error'); 
+                HAPTIC.error();
+                alert('Selectează LONG sau SHORT'); 
+                return; 
+            }
             
             const entryPrice = parseFloat(document.getElementById('entryPrice').value);
-            if (!entryPrice) { playSound('error'); alert('Entry price required'); return; }
+            if (!entryPrice) { 
+                playSound('error'); 
+                HAPTIC.error();
+                alert('Entry price required'); 
+                return; 
+            }
+            
+            // Haptic feedback
+            HAPTIC.tradeSaved();
             
             // Create burst at button position
             const btn = document.querySelector('#tradeForm .btn-full');
@@ -2502,10 +2641,18 @@
         const originalConfirmCloseTrade = confirmCloseTrade;
         confirmCloseTrade = function() {
             const exitPrice = parseFloat(document.getElementById('exitPrice').value);
-            if (!exitPrice) { playSound('error'); alert('Exit price required'); return; }
+            if (!exitPrice) { 
+                playSound('error'); 
+                HAPTIC.error();
+                alert('Exit price required'); 
+                return; 
+            }
             
             const trade = getTrades().find(t => t.id === closingTradeId);
             const color = trade.side === 'long' ? 'green' : 'red';
+            
+            // Haptic feedback
+            HAPTIC.tradeClosed();
             
             const btn = document.querySelector('#closeTradeModal .btn.gold');
             const rect = btn.getBoundingClientRect();
