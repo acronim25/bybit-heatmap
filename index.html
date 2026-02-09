@@ -1005,6 +1005,123 @@
             }
         }
         
+        /* ═══════════════════════════════════════════════════════════════
+           PARTICLE BURST EFFECTS
+           ═══════════════════════════════════════════════════════════════ */
+        
+        .particle-container {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .particle.green {
+            background: var(--neon-green);
+            box-shadow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
+        }
+        
+        .particle.red {
+            background: var(--neon-red);
+            box-shadow: 0 0 10px var(--neon-red), 0 0 20px var(--neon-red);
+        }
+        
+        .particle.gold {
+            background: var(--gold);
+            box-shadow: 0 0 10px var(--gold), 0 0 20px var(--gold);
+        }
+        
+        .particle.blue {
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
+        }
+        
+        @keyframes particle-burst {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        /* Success Checkmark Animation */
+        .success-checkmark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            z-index: 10000;
+            pointer-events: none;
+        }
+        
+        .success-checkmark svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .success-checkmark path {
+            stroke: var(--neon-green);
+            stroke-width: 4;
+            fill: none;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: draw-check 0.5s ease forwards, check-glow 1s ease 0.5s infinite alternate;
+        }
+        
+        @keyframes draw-check {
+            to { stroke-dashoffset: 0; }
+        }
+        
+        @keyframes check-glow {
+            from { filter: drop-shadow(0 0 5px var(--neon-green)); }
+            to { filter: drop-shadow(0 0 20px var(--neon-green)) drop-shadow(0 0 40px var(--neon-green)); }
+        }
+        
+        /* Digital Rain Effect on Save */
+        .digital-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 9998;
+            overflow: hidden;
+        }
+        
+        .rain-drop {
+            position: absolute;
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            color: var(--neon-green);
+            opacity: 0;
+            animation: rain-fall 1s linear forwards;
+            text-shadow: 0 0 10px var(--neon-green);
+        }
+        
+        @keyframes rain-fall {
+            0% { 
+                transform: translateY(-20px);
+                opacity: 1;
+            }
+            100% { 
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+        
         #view-trades .stat-card:hover {
             transform: scale(1.05);
             border-color: var(--neon-green);
@@ -2180,12 +2297,224 @@
         
         document.addEventListener('keydown', e => { 
             if (e.key === 'Escape') {
+                playSound('hover');
                 closeCoinModal();
                 closeJournalModal();
                 closeCloseTradeModal();
                 closeEditModal();
             }
         });
+        
+        // ═══════════════════════════════════════════════════════════════
+        // AUDIO SYSTEM - Cyberpunk Sound Effects
+        // ═══════════════════════════════════════════════════════════════
+        
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+            
+            oscillator.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            
+            switch(type) {
+                case 'hover':
+                    // Short high-tech beep
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(800, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+                    gainNode.gain.setValueAtTime(0.1, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.05);
+                    break;
+                    
+                case 'click':
+                    // Digital click
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(400, now);
+                    oscillator.frequency.exponentialRampToValueAtTime(200, now + 0.08);
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(1000, now);
+                    gainNode.gain.setValueAtTime(0.15, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.08);
+                    break;
+                    
+                case 'success':
+                    // Victory chime
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(523.25, now); // C5
+                    oscillator.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                    oscillator.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                    gainNode.gain.setValueAtTime(0.2, now);
+                    gainNode.gain.setValueAtTime(0.2, now + 0.2);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.5);
+                    break;
+                    
+                case 'error':
+                    // Error buzz
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(150, now);
+                    oscillator.frequency.linearRampToValueAtTime(100, now + 0.2);
+                    gainNode.gain.setValueAtTime(0.2, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.2);
+                    break;
+                    
+                case 'typing':
+                    // Mechanical keyboard click
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(200 + Math.random() * 100, now);
+                    gainNode.gain.setValueAtTime(0.05, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.03);
+                    break;
+                    
+                case 'glitch':
+                    // Glitch noise
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(800, now);
+                    oscillator.frequency.linearRampToValueAtTime(400, now + 0.1);
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(1000, now);
+                    filter.frequency.linearRampToValueAtTime(2000, now + 0.1);
+                    gainNode.gain.setValueAtTime(0.1, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    oscillator.start(now);
+                    oscillator.stop(now + 0.1);
+                    break;
+            }
+        }
+        
+        // Add sound to all buttons
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.btn, .journal-tab').forEach(btn => {
+                btn.addEventListener('mouseenter', () => playSound('hover'));
+                btn.addEventListener('click', () => playSound('click'));
+            });
+            
+            document.querySelectorAll('input, select, textarea').forEach(input => {
+                input.addEventListener('keydown', () => playSound('typing'));
+            });
+            
+            document.querySelectorAll('.glitch-hover').forEach(el => {
+                el.addEventListener('mouseenter', () => playSound('glitch'));
+            });
+        });
+        
+        // ═══════════════════════════════════════════════════════════════
+        // PARTICLE BURST EFFECTS
+        // ═══════════════════════════════════════════════════════════════
+        
+        function createParticleBurst(x, y, color = 'green', count = 20) {
+            const container = document.createElement('div');
+            container.className = 'particle-container';
+            container.style.left = x + 'px';
+            container.style.top = y + 'px';
+            document.body.appendChild(container);
+            
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = `particle ${color}`;
+                
+                const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+                const velocity = 100 + Math.random() * 150;
+                const tx = Math.cos(angle) * velocity;
+                const ty = Math.sin(angle) * velocity;
+                
+                particle.style.setProperty('--tx', tx + 'px');
+                particle.style.setProperty('--ty', ty + 'px');
+                particle.style.animation = `particle-burst ${0.6 + Math.random() * 0.4}s ease-out forwards`;
+                particle.style.animationDelay = Math.random() * 0.1 + 's';
+                
+                container.appendChild(particle);
+            }
+            
+            setTimeout(() => container.remove(), 1000);
+        }
+        
+        function showSuccessCheckmark() {
+            const checkmark = document.createElement('div');
+            checkmark.className = 'success-checkmark';
+            checkmark.innerHTML = `
+                <svg viewBox="0 0 100 100">
+                    <path d="M20 50 L40 70 L80 30"/>
+                </svg>
+            `;
+            document.body.appendChild(checkmark);
+            
+            playSound('success');
+            
+            setTimeout(() => checkmark.remove(), 2000);
+        }
+        
+        function createDigitalRain() {
+            const container = document.createElement('div');
+            container.className = 'digital-rain';
+            document.body.appendChild(container);
+            
+            const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            
+            for (let i = 0; i < 30; i++) {
+                const drop = document.createElement('span');
+                drop.className = 'rain-drop';
+                drop.textContent = chars[Math.floor(Math.random() * chars.length)];
+                drop.style.left = Math.random() * 100 + 'vw';
+                drop.style.animationDelay = Math.random() * 0.5 + 's';
+                drop.style.animationDuration = (0.5 + Math.random() * 0.5) + 's';
+                container.appendChild(drop);
+            }
+            
+            setTimeout(() => container.remove(), 1500);
+        }
+        
+        // Override save functions with effects
+        const originalSaveTrade = saveTrade;
+        saveTrade = function() {
+            if (!currentSide) { playSound('error'); alert('Selectează LONG sau SHORT'); return; }
+            
+            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
+            if (!entryPrice) { playSound('error'); alert('Entry price required'); return; }
+            
+            // Create burst at button position
+            const btn = document.querySelector('#tradeForm .btn-full');
+            const rect = btn.getBoundingClientRect();
+            createParticleBurst(rect.left + rect.width/2, rect.top + rect.height/2, 'gold', 30);
+            createDigitalRain();
+            showSuccessCheckmark();
+            
+            setTimeout(() => originalSaveTrade(), 300);
+        };
+        
+        const originalConfirmCloseTrade = confirmCloseTrade;
+        confirmCloseTrade = function() {
+            const exitPrice = parseFloat(document.getElementById('exitPrice').value);
+            if (!exitPrice) { playSound('error'); alert('Exit price required'); return; }
+            
+            const trade = getTrades().find(t => t.id === closingTradeId);
+            const color = trade.side === 'long' ? 'green' : 'red';
+            
+            const btn = document.querySelector('#closeTradeModal .btn.gold');
+            const rect = btn.getBoundingClientRect();
+            createParticleBurst(rect.left + rect.width/2, rect.top + rect.height/2, color, 40);
+            createDigitalRain();
+            showSuccessCheckmark();
+            
+            setTimeout(() => originalConfirmCloseTrade(), 300);
+        };
         
         load();
         setInterval(load, 30000);
