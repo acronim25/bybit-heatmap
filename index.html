@@ -90,8 +90,174 @@
         .btn-small { padding: 6px 12px; font-size: 0.75rem; }
         
         /* ═══════════════════════════════════════════════════════════════
-           CYBERPUNK JOURNAL STYLES
+           CYBERPUNK JOURNAL STYLES + GLITCH EFFECTS
            ═══════════════════════════════════════════════════════════════ */
+        
+        /* Glitch Text Effect */
+        .glitch {
+            position: relative;
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            letter-spacing: 4px;
+        }
+        
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .glitch::before {
+            left: 2px;
+            text-shadow: -2px 0 var(--neon-red);
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-1 2s infinite linear alternate-reverse;
+        }
+        
+        .glitch::after {
+            left: -2px;
+            text-shadow: -2px 0 var(--neon-blue);
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim-2 2s infinite linear alternate-reverse;
+        }
+        
+        @keyframes glitch-anim-1 {
+            0% { clip: rect(20px, 9999px, 15px, 0); }
+            20% { clip: rect(60px, 9999px, 70px, 0); }
+            40% { clip: rect(20px, 9999px, 15px, 0); }
+            60% { clip: rect(80px, 9999px, 5px, 0); }
+            80% { clip: rect(10px, 9999px, 60px, 0); }
+            100% { clip: rect(40px, 9999px, 90px, 0); }
+        }
+        
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(60px, 9999px, 70px, 0); }
+            20% { clip: rect(10px, 9999px, 50px, 0); }
+            40% { clip: rect(80px, 9999px, 20px, 0); }
+            60% { clip: rect(30px, 9999px, 60px, 0); }
+            80% { clip: rect(70px, 9999px, 80px, 0); }
+            100% { clip: rect(20px, 9999px, 10px, 0); }
+        }
+        
+        /* Glitch on Hover */
+        .glitch-hover {
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .glitch-hover:hover {
+            animation: glitch-skew 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+            color: var(--neon-green);
+            text-shadow: 
+                2px 0 var(--neon-red),
+                -2px 0 var(--neon-blue);
+        }
+        
+        @keyframes glitch-skew {
+            0% { transform: skew(0deg); }
+            20% { transform: skew(-2deg); }
+            40% { transform: skew(2deg); }
+            60% { transform: skew(-1deg); }
+            80% { transform: skew(1deg); }
+            100% { transform: skew(0deg); }
+        }
+        
+        /* Cyberpunk Logo Glitch */
+        .logo-glitch {
+            position: relative;
+            animation: logo-glitch 3s infinite;
+        }
+        
+        @keyframes logo-glitch {
+            0%, 90%, 100% { 
+                text-shadow: 0 0 10px rgba(255,215,0,0.5);
+                transform: translate(0);
+            }
+            92% { 
+                text-shadow: 
+                    3px 0 var(--neon-red),
+                    -3px 0 var(--neon-blue),
+                    0 0 20px var(--gold);
+                transform: translate(-2px, 1px);
+            }
+            94% { 
+                text-shadow: 
+                    -3px 0 var(--neon-red),
+                    3px 0 var(--neon-blue);
+                transform: translate(2px, -1px);
+            }
+            96% { 
+                text-shadow: 0 0 10px rgba(255,215,0,0.5);
+                transform: translate(0);
+            }
+        }
+        
+        /* Flicker Effect */
+        .flicker {
+            animation: flicker 2s infinite;
+        }
+        
+        @keyframes flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+                opacity: 1;
+                text-shadow: 
+                    0 0 10px currentColor,
+                    0 0 20px currentColor,
+                    0 0 40px currentColor;
+            }
+            20%, 24%, 55% {
+                opacity: 0.8;
+                text-shadow: none;
+            }
+        }
+        
+        /* Scanlines Overlay */
+        .scanlines {
+            position: relative;
+        }
+        
+        .scanlines::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        /* Neon Pulse for Stats */
+        .neon-pulse {
+            animation: neon-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes neon-pulse {
+            0%, 100% {
+                text-shadow: 
+                    0 0 5px currentColor,
+                    0 0 10px currentColor,
+                    0 0 20px currentColor;
+            }
+            50% {
+                text-shadow: 
+                    0 0 10px currentColor,
+                    0 0 20px currentColor,
+                    0 0 40px currentColor,
+                    0 0 80px currentColor;
+            }
+        }
         
         /* Journal Modal - Wider Cyberpunk Container */
         .modal-content.wide { 
@@ -719,7 +885,7 @@
             
             <!-- Trade Entry Form -->
             <div class="trade-form" id="tradeForm" style="display: none;">
-                <div class="form-title">🚀 New Trade Entry</div>
+                <div class="form-title glitch" data-text="🚀 NEW TRADE ENTRY">🚀 NEW TRADE ENTRY</div>
                 
                 <div class="form-group">
                     <label class="form-label">Direction</label>
@@ -865,8 +1031,8 @@
     <div class="modal" id="journalModal" onclick="closeJournalModal()">
         <div class="modal-content wide" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <div class="modal-symbol">📓 Trading Journal</div>
-                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-top: 5px;">Complete trade tracking & analytics</div>
+                <div class="modal-symbol glitch" data-text="📓 TRADING JOURNAL">📓 TRADING JOURNAL</div>
+                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-top: 5px;" class="flicker">Complete trade tracking & analytics</div>
             </div>
             
             <div class="journal-tabs">
@@ -1011,8 +1177,8 @@
     <div class="modal" id="closeTradeModal" onclick="closeCloseTradeModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <div class="modal-symbol">🏁 Close Trade</div>
-                <div id="closeTradeSymbol" style="color: var(--gold); margin-top: 5px;">-</div>
+                <div class="modal-symbol glitch" data-text="🏁 CLOSE TRADE">🏁 CLOSE TRADE</div>
+                <div id="closeTradeSymbol" style="color: var(--gold); margin-top: 5px;" class="flicker">-</div>
             </div>
             
             <div class="form-group">
@@ -1081,7 +1247,7 @@
     <div class="modal" id="editTradeModal" onclick="closeEditModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <div class="modal-symbol">✏️ Edit Trade</div>
+                <div class="modal-symbol glitch" data-text="✏️ EDIT TRADE">✏️ EDIT TRADE</div>
             </div>
             <div id="editFormContainer"></div>
         </div>
