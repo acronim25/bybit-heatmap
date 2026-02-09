@@ -23,6 +23,7 @@
         .controls { display: flex; gap: 10px; }
         .btn { background: rgba(0,255,65,0.1); border: 1px solid rgba(0,255,65,0.3); color: var(--neon-green); padding: 8px 16px; border-radius: 20px; font-family: 'Rajdhani'; font-weight: 600; cursor: pointer; transition: all 0.3s; }
         .btn:hover, .btn.active { background: rgba(0,255,65,0.25); box-shadow: 0 0 15px rgba(0,255,65,0.4); }
+        .btn.glitch-hover { position: relative; overflow: hidden; }
         .btn.secondary { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.3); color: var(--neon-blue); }
         .btn.secondary:hover { background: rgba(0,212,255,0.25); box-shadow: 0 0 15px rgba(0,212,255,0.4); }
         .btn.gold { background: rgba(255,215,0,0.1); border-color: rgba(255,215,0,0.3); color: var(--gold); }
@@ -809,10 +810,199 @@
             margin-bottom: 20px;
         }
         
-        /* Filter Cards in Journal */
-        #view-trades .stat-card {
-            cursor: pointer;
-            transition: all 0.3s ease;
+        /* Button Glitch Hover Effects */
+        .btn.glitch-hover {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn.glitch-hover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn.glitch-hover:hover::before {
+            left: 100%;
+        }
+        
+        .btn.glitch-hover:hover {
+            animation: btn-glitch 0.3s ease;
+            text-shadow: 
+                2px 0 var(--neon-red),
+                -2px 0 var(--neon-blue);
+        }
+        
+        @keyframes btn-glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(2px, -2px); }
+            60% { transform: translate(-2px, -2px); }
+            80% { transform: translate(2px, 2px); }
+            100% { transform: translate(0); }
+        }
+        
+        .btn.gold.glitch-hover:hover {
+            text-shadow: 
+                2px 0 var(--orange),
+                -2px 0 var(--neon-purple);
+            box-shadow: 
+                0 0 20px rgba(255,215,0,0.4),
+                inset 0 0 20px rgba(255,215,0,0.1);
+        }
+        
+        .btn.secondary.glitch-hover:hover {
+            text-shadow: 
+                2px 0 var(--neon-green),
+                -2px 0 var(--neon-purple);
+        }
+        
+        .btn.danger.glitch-hover:hover {
+            text-shadow: 
+                2px 0 var(--gold),
+                -2px 0 var(--neon-blue);
+        }
+        
+        /* Trade Card Glitch Effects */
+        .trade-card.glitch-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .trade-card.glitch-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(0,255,65,0.1) 45%, 
+                rgba(0,255,65,0.2) 50%, 
+                rgba(0,255,65,0.1) 55%, 
+                transparent 100%
+            );
+            transition: left 0.6s;
+            pointer-events: none;
+        }
+        
+        .trade-card.glitch-card:hover::before {
+            left: 100%;
+        }
+        
+        .trade-card.glitch-card:hover {
+            animation: card-glitch 0.4s ease;
+            border-color: rgba(0,255,65,0.5);
+            box-shadow: 
+                0 0 30px rgba(0,255,65,0.15),
+                inset 0 0 30px rgba(0,255,65,0.05);
+        }
+        
+        @keyframes card-glitch {
+            0% { transform: translate(0) skew(0deg); }
+            10% { transform: translate(-3px) skew(-1deg); }
+            20% { transform: translate(3px) skew(1deg); }
+            30% { transform: translate(-2px) skew(-0.5deg); }
+            40% { transform: translate(2px) skew(0.5deg); }
+            50% { transform: translate(0) skew(0deg); }
+            100% { transform: translate(0) skew(0deg); }
+        }
+        
+        .trade-card.glitch-card .trade-symbol {
+            position: relative;
+        }
+        
+        .trade-card.glitch-card:hover .trade-symbol {
+            animation: symbol-glitch 0.3s ease;
+            text-shadow: 
+                1px 0 var(--neon-red),
+                -1px 0 var(--neon-blue),
+                0 0 20px var(--neon-blue);
+        }
+        
+        @keyframes symbol-glitch {
+            0%, 100% { opacity: 1; }
+            25% { opacity: 0.8; transform: translateX(1px); }
+            50% { opacity: 1; transform: translateX(-1px); }
+            75% { opacity: 0.9; transform: translateX(0); }
+        }
+        
+        /* Data Corruption Effect on Hover */
+        .trade-card.glitch-card .trade-detail-value {
+            transition: all 0.2s;
+        }
+        
+        .trade-card.glitch-card:hover .trade-detail-value {
+            animation: data-corrupt 0.5s ease;
+        }
+        
+        @keyframes data-corrupt {
+            0% { opacity: 1; }
+            10% { opacity: 0.5; letter-spacing: 2px; }
+            20% { opacity: 1; letter-spacing: normal; }
+            30% { opacity: 0.7; filter: blur(1px); }
+            40% { opacity: 1; filter: blur(0); }
+            100% { opacity: 1; }
+        }
+        
+        /* Digital Noise on Card */
+        .trade-card.glitch-card .noise-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,255,65,0.03) 2px,
+                rgba(0,255,65,0.03) 4px
+            );
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .trade-card.glitch-card:hover .noise-overlay {
+            opacity: 1;
+            animation: noise-flicker 0.1s infinite;
+        }
+        
+        @keyframes noise-flicker {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        /* Active Button State Glitch */
+        .btn.active.glitch-active {
+            animation: btn-active-glitch 2s infinite;
+        }
+        
+        @keyframes btn-active-glitch {
+            0%, 90%, 100% { 
+                box-shadow: 0 0 15px rgba(0,255,65,0.4);
+            }
+            92% { 
+                box-shadow: 
+                    3px 0 rgba(255,0,64,0.4),
+                    -3px 0 rgba(0,212,255,0.4),
+                    0 0 20px rgba(0,255,65,0.4);
+            }
+            94% { 
+                box-shadow: 
+                    -3px 0 rgba(255,0,64,0.4),
+                    3px 0 rgba(0,212,255,0.4);
+            }
+            96% { 
+                box-shadow: 0 0 15px rgba(0,255,65,0.4);
+            }
         }
         
         #view-trades .stat-card:hover {
@@ -844,10 +1034,10 @@
     <div class="header">
         <div class="logo">💰 BYBIT</div>
         <div class="controls">
-            <button class="btn active" onclick="sortBy('change')">% CHANGE</button>
-            <button class="btn" onclick="sortBy('volume')">VOLUME</button>
-            <button class="btn" onclick="sortBy('alpha')">A-Z</button>
-            <button class="btn secondary" onclick="openJournal()">📓 JURNAL</button>
+            <button class="btn active glitch-hover" onclick="sortBy('change')">% CHANGE</button>
+            <button class="btn glitch-hover" onclick="sortBy('volume')">VOLUME</button>
+            <button class="btn glitch-hover" onclick="sortBy('alpha')">A-Z</button>
+            <button class="btn secondary glitch-hover" onclick="openJournal()">📓 JURNAL</button>
         </div>
         <div class="stats">
             <div class="stat">
@@ -881,7 +1071,7 @@
                 <div class="info-item"><div class="info-label">High 24h</div><div class="info-value" id="m-high">-</div></div>
                 <div class="info-item"><div class="info-label">Low 24h</div><div class="info-value" id="m-low">-</div></div>
             </div>
-            <button class="btn btn-full" onclick="showTradeForm()">📝 LOG TRADE</button>
+            <button class="btn btn-full glitch-hover" onclick="showTradeForm()">📝 LOG TRADE</button>
             
             <!-- Trade Entry Form -->
             <div class="trade-form" id="tradeForm" style="display: none;">
@@ -1020,8 +1210,8 @@
                 </div>
                 
                 <div class="form-row">
-                    <button class="btn danger" onclick="hideTradeForm()" style="flex: 1;">Cancel</button>
-                    <button class="btn btn-full" onclick="saveTrade()" style="flex: 2; margin-top: 0;">💾 SAVE TRADE</button>
+                    <button class="btn danger glitch-hover" onclick="hideTradeForm()" style="flex: 1;">Cancel</button>
+                    <button class="btn btn-full glitch-hover" onclick="saveTrade()" style="flex: 2; margin-top: 0;">💾 SAVE TRADE</button>
                 </div>
             </div>
         </div>
@@ -1036,10 +1226,10 @@
             </div>
             
             <div class="journal-tabs">
-                <button class="journal-tab active" onclick="switchTab('trades')" id="tab-trades">All Trades</button>
-                <button class="journal-tab" onclick="switchTab('stats')" id="tab-stats">📊 Statistics</button>
-                <button class="journal-tab" onclick="switchTab('performance')" id="tab-performance">📈 Performance</button>
-                <button class="journal-tab" onclick="switchTab('psychology')" id="tab-psychology">🧠 Psychology</button>
+                <button class="journal-tab active glitch-hover" onclick="switchTab('trades')" id="tab-trades">All Trades</button>
+                <button class="journal-tab glitch-hover" onclick="switchTab('stats')" id="tab-stats">📊 Statistics</button>
+                <button class="journal-tab glitch-hover" onclick="switchTab('performance')" id="tab-performance">📈 Performance</button>
+                <button class="journal-tab glitch-hover" onclick="switchTab('psychology')" id="tab-psychology">🧠 Psychology</button>
             </div>
             
             <!-- Stats View -->
@@ -1161,9 +1351,9 @@
                 </div>
                 
                 <div class="export-buttons">
-                    <button class="btn secondary btn-small" onclick="exportTrades('json')">📥 Export JSON</button>
-                    <button class="btn secondary btn-small" onclick="exportTrades('csv')">📊 Export CSV</button>
-                    <button class="btn danger btn-small" onclick="clearAllTrades()">🗑️ Clear All</button>
+                    <button class="btn secondary btn-small glitch-hover" onclick="exportTrades('json')">📥 Export JSON</button>
+                    <button class="btn secondary btn-small glitch-hover" onclick="exportTrades('csv')">📊 Export CSV</button>
+                    <button class="btn danger btn-small glitch-hover" onclick="clearAllTrades()">🗑️ Clear All</button>
                 </div>
                 
                 <div class="journal-list" id="journalList">
@@ -1237,8 +1427,8 @@
             </div>
             
             <div class="form-row">
-                <button class="btn" onclick="closeCloseTradeModal()" style="flex: 1;">Cancel</button>
-                <button class="btn gold" onclick="confirmCloseTrade()" style="flex: 2;">🏁 CLOSE TRADE</button>
+                <button class="btn glitch-hover" onclick="closeCloseTradeModal()" style="flex: 1;">Cancel</button>
+                <button class="btn gold glitch-hover" onclick="confirmCloseTrade()" style="flex: 2;">🏁 CLOSE TRADE</button>
             </div>
         </div>
     </div>
@@ -1557,7 +1747,8 @@
                 const pnlDisplay = t.status === 'open' ? 'OPEN' : ((t.pnl >= 0 ? '+' : '') + '$' + t.pnl.toFixed(2));
                 
                 return `
-                <div class="trade-card ${t.status}">
+                <div class="trade-card glitch-card ${t.status}">
+                    <div class="noise-overlay"></div>
                     <div class="trade-header">
                         <div>
                             <span class="trade-symbol">${t.symbol}</span>
@@ -1594,9 +1785,9 @@
                     </div>
                     ${t.notes ? `<div class="trade-notes">${t.notes}</div>` : ''}
                     <div class="trade-actions">
-                        ${t.status === 'open' ? `<button class="btn gold btn-small" onclick="openCloseTrade(${t.id})">🏁 Close</button>` : ''}
-                        <button class="btn secondary btn-small" onclick="editTrade(${t.id})">✏️ Edit</button>
-                        <button class="btn danger btn-small" onclick="deleteTrade(${t.id})">🗑️ Delete</button>
+                        ${t.status === 'open' ? `<button class="btn gold btn-small glitch-hover" onclick="openCloseTrade(${t.id})">🏁 Close</button>` : ''}
+                        <button class="btn secondary btn-small glitch-hover" onclick="editTrade(${t.id})">✏️ Edit</button>
+                        <button class="btn danger btn-small glitch-hover" onclick="deleteTrade(${t.id})">🗑️ Delete</button>
                     </div>
                 </div>
                 `;
@@ -1901,8 +2092,8 @@
                     <textarea class="form-textarea" id="editNotes">${trade.notes || ''}</textarea>
                 </div>
                 <div class="form-row">
-                    <button class="btn" onclick="closeEditModal()" style="flex: 1;">Cancel</button>
-                    <button class="btn gold" onclick="saveEditTrade()" style="flex: 2;">💾 Save Changes</button>
+                    <button class="btn glitch-hover" onclick="closeEditModal()" style="flex: 1;">Cancel</button>
+                    <button class="btn gold glitch-hover" onclick="saveEditTrade()" style="flex: 2;">💾 Save Changes</button>
                 </div>
             `;
             
