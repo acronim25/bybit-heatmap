@@ -2389,6 +2389,37 @@
                 if (HAPTIC.enabled) navigator.vibrate([10, 20, 10, 20, 10, 50, 100]);
             },
             
+            // Trade closed with P&L
+            tradeClosedProfit: (amount) => {
+                if (!HAPTIC.enabled) return;
+                // Scale vibration based on profit size
+                if (amount > 1000) {
+                    // Big win - intense celebration
+                    navigator.vibrate([20, 30, 20, 30, 50, 50, 100, 50, 200]);
+                } else if (amount > 200) {
+                    // Medium win
+                    navigator.vibrate([15, 25, 15, 25, 50, 100]);
+                } else {
+                    // Small win
+                    navigator.vibrate([10, 20, 10, 50]);
+                }
+            },
+            
+            tradeClosedLoss: (amount) => {
+                if (!HAPTIC.enabled) return;
+                // Scale vibration based on loss size
+                if (amount < -1000) {
+                    // Big loss - heavy thud
+                    navigator.vibrate([100, 50, 80, 50, 60]);
+                } else if (amount < -200) {
+                    // Medium loss
+                    navigator.vibrate([60, 40, 50, 40]);
+                } else {
+                    // Small loss - gentle reminder
+                    navigator.vibrate([30, 30, 40]);
+                }
+            },
+            
             // Trade closed
             tradeClosed: () => {
                 if (HAPTIC.enabled) navigator.vibrate([20, 30, 40, 50]);
@@ -2651,8 +2682,19 @@
             const trade = getTrades().find(t => t.id === closingTradeId);
             const color = trade.side === 'long' ? 'green' : 'red';
             
-            // Haptic feedback
-            HAPTIC.tradeClosed();
+            // Calculate P&L first to determine haptic
+            const notional = trade.positionSize * trade.leverage;
+            const priceChange = trade.side === 'long' ? (exitPrice - trade.entryPrice) / trade.entryPrice : (trade.entryPrice - exitPrice) / trade.entryPrice;
+            const grossPnl = priceChange * notional;
+            const fees = parseFloat(document.getElementById('exitFees').value) || 0;
+            const pnl = grossPnl - fees;
+            
+            // Haptic feedback based on P&L
+            if (pnl >= 0) {
+                HAPTIC.tradeClosedProfit(pnl);
+            } else {
+                HAPTIC.tradeClosedLoss(pnl);
+            }
             
             const btn = document.querySelector('#closeTradeModal .btn.gold');
             const rect = btn.getBoundingClientRect();
