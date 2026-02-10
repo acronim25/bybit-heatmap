@@ -2,2712 +2,592 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BYBIT HEATMAP + JOURNAL | Guap 💰</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BYBIT HEATMAP | Cyberpunk Edition 💰</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         :root { 
-            --neon-green: #00ff41; --neon-red: #ff0040; --gold: #ffd700; 
-            --bg: #050508; --neon-blue: #00d4ff; --neon-purple: #bf00ff;
-            --orange: #ff8c00;
+            --neon-green: #00ff41; --neon-green-glow: rgba(0, 255, 65, 0.5);
+            --neon-red: #ff0040; --neon-red-glow: rgba(255, 0, 64, 0.5);
+            --accent-gold: #ffd700; --bg-dark: #050508; --bg-mid: #0a0a0f;
         }
-        body { font-family: 'Rajdhani', sans-serif; background: var(--bg); color: #fff; min-height: 100vh; overflow-x: hidden; }
+        html, body { 
+            font-family: 'Rajdhani', sans-serif; 
+            background: var(--bg-dark); 
+            min-height: 100vh; 
+            color: #fff;
+            overflow-x: hidden;
+        }
         
-        .header { position: fixed; top: 0; left: 0; right: 0; padding: 15px 20px; background: rgba(5,5,8,0.95); backdrop-filter: blur(10px); z-index: 100; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,255,65,0.2); }
-        .logo { font-family: 'Orbitron'; font-size: 1.3rem; font-weight: 900; letter-spacing: 3px; background: linear-gradient(135deg, #fff, var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        /* Cyberpunk Grid Background */
+        body::before {
+            content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                linear-gradient(90deg, rgba(0, 255, 65, 0.04) 1px, transparent 1px),
+                linear-gradient(rgba(0, 255, 65, 0.04) 1px, transparent 1px),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 0, 64, 0.03) 2px, rgba(255, 0, 64, 0.03) 4px),
+                radial-gradient(ellipse at 30% 20%, rgba(0, 255, 65, 0.08) 0%, transparent 40%),
+                radial-gradient(ellipse at 70% 80%, rgba(255, 0, 64, 0.08) 0%, transparent 40%),
+                var(--bg-dark);
+            background-size: 80px 80px, 80px 80px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+            animation: bgShift 20s ease-in-out infinite;
+            z-index: -2;
+        }
+        @keyframes bgShift { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
         
-        .controls { display: flex; gap: 10px; }
-        .btn { background: rgba(0,255,65,0.1); border: 1px solid rgba(0,255,65,0.3); color: var(--neon-green); padding: 8px 16px; border-radius: 20px; font-family: 'Rajdhani'; font-weight: 600; cursor: pointer; transition: all 0.3s; }
-        .btn:hover, .btn.active { background: rgba(0,255,65,0.25); box-shadow: 0 0 15px rgba(0,255,65,0.4); }
-        .btn.glitch-hover { position: relative; overflow: hidden; }
-        .btn.secondary { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.3); color: var(--neon-blue); }
-        .btn.secondary:hover { background: rgba(0,212,255,0.25); box-shadow: 0 0 15px rgba(0,212,255,0.4); }
-        .btn.gold { background: rgba(255,215,0,0.1); border-color: rgba(255,215,0,0.3); color: var(--gold); }
-        .btn.gold:hover { background: rgba(255,215,0,0.25); box-shadow: 0 0 15px rgba(255,215,0,0.4); }
-        .btn.danger { background: rgba(255,0,64,0.1); border-color: rgba(255,0,64,0.3); color: var(--neon-red); }
-        .btn.purple { background: rgba(191,0,255,0.1); border-color: rgba(191,0,255,0.3); color: var(--neon-purple); }
+        /* Scan Line Effect */
+        .scan-line { 
+            position: fixed; top: 0; left: 0; right: 0; height: 3px; 
+            background: linear-gradient(90deg, transparent, var(--neon-green), var(--accent-gold), var(--neon-green), transparent);
+            opacity: 0.4; animation: scanDown 4s linear infinite; pointer-events: none; z-index: 1000;
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+        @keyframes scanDown { 0% { top: -3px; opacity: 0; } 10% { opacity: 0.4; } 90% { opacity: 0.4; } 100% { top: 100vh; opacity: 0; } }
         
-        .stats { display: flex; gap: 30px; align-items: center; }
-        .stat { text-align: center; }
-        .stat-value { font-family: 'Orbitron'; font-size: 1.2rem; font-weight: 700; }
-        .stat-value.up { color: var(--neon-green); }
-        .stat-value.down { color: var(--neon-red); }
-        .stat-label { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+        /* Particle Canvas */
+        #particles-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
         
-        #canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
+        /* Header */
+        .header { 
+            position: fixed; top: 0; left: 0; right: 0; padding: 14px 20px; 
+            background: linear-gradient(180deg, rgba(5,5,8,0.98), rgba(10,10,15,0.9) 50%, transparent);
+            z-index: 100; display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(15px); border-bottom: 1px solid rgba(0, 255, 65, 0.15);
+            box-shadow: 0 4px 30px rgba(0, 255, 65, 0.1);
+        }
+        .logo { 
+            font-family: 'Orbitron', sans-serif; font-size: 1.3rem; font-weight: 900; 
+            letter-spacing: 4px; background: linear-gradient(135deg, #fff, var(--accent-gold), #fff);
+            background-size: 200% 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        @keyframes shimmer { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
         
+        .header-controls { display: flex; gap: 10px; align-items: center; }
+        .filter-btn { 
+            background: rgba(0, 255, 65, 0.08); border: 1px solid rgba(0, 255, 65, 0.3); 
+            color: var(--neon-green); padding: 8px 16px; border-radius: 25px; 
+            font-family: 'Rajdhani', sans-serif; font-size: 0.8rem; font-weight: 600; 
+            cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1.5px;
+        }
+        .filter-btn:hover, .filter-btn.active { 
+            background: rgba(0, 255, 65, 0.25); box-shadow: 0 0 20px rgba(0, 255, 65, 0.4); 
+            transform: translateY(-2px);
+        }
+        .journal-btn { background: rgba(255, 215, 0, 0.15); border-color: rgba(255, 215, 0, 0.4); color: var(--accent-gold); }
+        .journal-btn:hover, .journal-btn.active { background: rgba(255, 215, 0, 0.3); box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
+        
+        .last-update { font-size: 0.8rem; color: rgba(255,255,255,0.6); display: flex; align-items: center; gap: 8px; }
+        .update-dot { 
+            width: 10px; height: 10px; background: var(--neon-green); border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite; box-shadow: 0 0 15px var(--neon-green);
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+        
+        /* Main Container */
         .container { padding-top: 80px; min-height: 100vh; }
-        #bubbles { width: 100%; min-height: calc(100vh - 80px); }
         
-        .bubble { cursor: pointer; transition: transform 0.3s; }
-        .bubble:hover { transform: scale(1.1); }
-        .bubble-spiral { filter: drop-shadow(0 0 10px currentColor); }
-        .bubble-text { font-family: 'Orbitron'; font-weight: 700; text-anchor: middle; fill: #fff; font-size: 12px; }
-        .bubble-pct { font-family: 'Rajdhani'; font-weight: 600; text-anchor: middle; fill: #fff; font-size: 10px; }
-        
-        /* Modals */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: none; justify-content: center; align-items: flex-end; }
-        .modal.show { display: flex; }
-        .modal-content { background: linear-gradient(180deg, rgba(15,15,20,0.98), rgba(10,10,15,0.99)); width: 100%; max-width: 500px; border-radius: 25px 25px 0 0; padding: 25px; border-top: 2px solid var(--neon-green); max-height: 90vh; overflow-y: auto; }
-        .modal-content.wide { max-width: 900px; }
-        .modal-header { text-align: center; margin-bottom: 20px; }
-        .modal-symbol { font-family: 'Orbitron'; font-size: 2rem; font-weight: 900; }
-        .modal-change { font-family: 'Orbitron'; font-size: 2.5rem; font-weight: 700; margin-top: 10px; }
-        .modal-change.up { color: var(--neon-green); }
-        .modal-change.down { color: var(--neon-red); }
-        .chart-box { height: 180px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 15px; }
-        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
-        .info-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; }
-        .info-label { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 5px; }
-        .info-value { font-family: 'Orbitron'; font-size: 1rem; }
-        
-        /* Forms */
-        .trade-form { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .form-title { font-family: 'Orbitron'; font-size: 1.1rem; margin-bottom: 15px; color: var(--gold); }
-        .form-group { margin-bottom: 15px; }
-        .form-label { display: block; font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-bottom: 5px; text-transform: uppercase; }
-        .form-label .hint { color: rgba(255,255,255,0.3); font-size: 0.65rem; }
-        .form-input, .form-select, .form-textarea { 
-            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 8px; padding: 12px; color: #fff; font-family: 'Rajdhani'; font-size: 1rem;
+        /* Stats Bar */
+        .stats-bar {
+            display: flex; justify-content: center; gap: 40px; padding: 15px;
+            background: rgba(0,0,0,0.3); margin: 0 20px 20px; border-radius: 15px;
+            border: 1px solid rgba(0, 255, 65, 0.1);
         }
-        .form-input:focus, .form-select:focus, .form-textarea:focus { 
-            outline: none; border-color: var(--neon-green); box-shadow: 0 0 10px rgba(0,255,65,0.2); 
+        .stat-box { text-align: center; }
+        .stat-value { font-family: 'Orbitron'; font-size: 1.8rem; font-weight: 700; }
+        .stat-value.up { color: var(--neon-green); text-shadow: 0 0 20px var(--neon-green-glow); }
+        .stat-value.down { color: var(--neon-red); text-shadow: 0 0 20px var(--neon-red-glow); }
+        .stat-label { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 4px; }
+        
+        /* Bubble Container */
+        #bubble-container { width: 100%; min-height: calc(100vh - 200px); position: relative; }
+        
+        /* Enhanced Bubbles */
+        .bubble-group { 
+            cursor: pointer; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 0 15px currentColor);
         }
-        .form-textarea { min-height: 80px; resize: vertical; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
-        .radio-group { display: flex; gap: 10px; }
-        .radio-btn { flex: 1; padding: 10px; text-align: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; transition: all 0.3s; }
-        .radio-btn.active.long { background: rgba(0,255,65,0.2); border-color: var(--neon-green); color: var(--neon-green); }
-        .radio-btn.active.short { background: rgba(255,0,64,0.2); border-color: var(--neon-red); color: var(--neon-red); }
-        .radio-btn.active { background: rgba(0,212,255,0.2); border-color: var(--neon-blue); color: var(--neon-blue); }
+        .bubble-group:hover { 
+            transform: scale(1.15) translateY(-5px); 
+            filter: drop-shadow(0 0 30px currentColor) brightness(1.3);
+            z-index: 100;
+        }
+        .bubble-spiral { animation: rotate 20s linear infinite; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         
-        .btn-full { width: 100%; padding: 15px; font-size: 1rem; margin-top: 10px; }
-        .btn-small { padding: 6px 12px; font-size: 0.75rem; }
-        
-        /* ═══════════════════════════════════════════════════════════════
-           CYBERPUNK JOURNAL STYLES + GLITCH EFFECTS
-           ═══════════════════════════════════════════════════════════════ */
-        
-        /* Glitch Text Effect */
-        .glitch {
-            position: relative;
-            font-family: 'Orbitron', monospace;
-            font-weight: 900;
-            letter-spacing: 4px;
+        .spiral-path { fill: none; stroke-linecap: round; }
+        .bubble-label { 
+            font-family: 'Orbitron', sans-serif; font-weight: 700; text-anchor: middle; 
+            pointer-events: none; fill: #fff; text-shadow: 0 0 15px rgba(0,0,0,0.9), 0 0 30px currentColor;
+        }
+        .bubble-change { 
+            font-family: 'Rajdhani', sans-serif; font-weight: 600; text-anchor: middle; 
+            pointer-events: none; fill: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.9);
         }
         
-        .glitch::before,
-        .glitch::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+        /* Modal Styles */
+        .modal-overlay { 
+            position: fixed; inset: 0; background: rgba(5, 5, 8, 0.95);
+            backdrop-filter: blur(25px); z-index: 1000; display: none;
+            justify-content: center; align-items: flex-end;
         }
-        
-        .glitch::before {
-            left: 2px;
-            text-shadow: -2px 0 var(--neon-red);
-            clip: rect(24px, 550px, 90px, 0);
-            animation: glitch-anim-1 2s infinite linear alternate-reverse;
-        }
-        
-        .glitch::after {
-            left: -2px;
-            text-shadow: -2px 0 var(--neon-blue);
-            clip: rect(85px, 550px, 140px, 0);
-            animation: glitch-anim-2 2s infinite linear alternate-reverse;
-        }
-        
-        @keyframes glitch-anim-1 {
-            0% { clip: rect(20px, 9999px, 15px, 0); }
-            20% { clip: rect(60px, 9999px, 70px, 0); }
-            40% { clip: rect(20px, 9999px, 15px, 0); }
-            60% { clip: rect(80px, 9999px, 5px, 0); }
-            80% { clip: rect(10px, 9999px, 60px, 0); }
-            100% { clip: rect(40px, 9999px, 90px, 0); }
-        }
-        
-        @keyframes glitch-anim-2 {
-            0% { clip: rect(60px, 9999px, 70px, 0); }
-            20% { clip: rect(10px, 9999px, 50px, 0); }
-            40% { clip: rect(80px, 9999px, 20px, 0); }
-            60% { clip: rect(30px, 9999px, 60px, 0); }
-            80% { clip: rect(70px, 9999px, 80px, 0); }
-            100% { clip: rect(20px, 9999px, 10px, 0); }
-        }
-        
-        /* Glitch on Hover */
-        .glitch-hover {
-            position: relative;
-            transition: all 0.3s;
-        }
-        
-        .glitch-hover:hover {
-            animation: glitch-skew 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
-            color: var(--neon-green);
-            text-shadow: 
-                2px 0 var(--neon-red),
-                -2px 0 var(--neon-blue);
-        }
-        
-        @keyframes glitch-skew {
-            0% { transform: skew(0deg); }
-            20% { transform: skew(-2deg); }
-            40% { transform: skew(2deg); }
-            60% { transform: skew(-1deg); }
-            80% { transform: skew(1deg); }
-            100% { transform: skew(0deg); }
-        }
-        
-        /* Cyberpunk Logo Glitch */
-        .logo-glitch {
-            position: relative;
-            animation: logo-glitch 3s infinite;
-        }
-        
-        @keyframes logo-glitch {
-            0%, 90%, 100% { 
-                text-shadow: 0 0 10px rgba(255,215,0,0.5);
-                transform: translate(0);
-            }
-            92% { 
-                text-shadow: 
-                    3px 0 var(--neon-red),
-                    -3px 0 var(--neon-blue),
-                    0 0 20px var(--gold);
-                transform: translate(-2px, 1px);
-            }
-            94% { 
-                text-shadow: 
-                    -3px 0 var(--neon-red),
-                    3px 0 var(--neon-blue);
-                transform: translate(2px, -1px);
-            }
-            96% { 
-                text-shadow: 0 0 10px rgba(255,215,0,0.5);
-                transform: translate(0);
-            }
-        }
-        
-        /* Flicker Effect */
-        .flicker {
-            animation: flicker 2s infinite;
-        }
-        
-        @keyframes flicker {
-            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
-                opacity: 1;
-                text-shadow: 
-                    0 0 10px currentColor,
-                    0 0 20px currentColor,
-                    0 0 40px currentColor;
-            }
-            20%, 24%, 55% {
-                opacity: 0.8;
-                text-shadow: none;
-            }
-        }
-        
-        /* Scanlines Overlay */
-        .scanlines {
-            position: relative;
-        }
-        
-        .scanlines::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 0, 0, 0.15),
-                rgba(0, 0, 0, 0.15) 1px,
-                transparent 1px,
-                transparent 2px
-            );
-            pointer-events: none;
-            z-index: 10;
-        }
-        
-        /* Neon Pulse for Stats */
-        .neon-pulse {
-            animation: neon-pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes neon-pulse {
-            0%, 100% {
-                text-shadow: 
-                    0 0 5px currentColor,
-                    0 0 10px currentColor,
-                    0 0 20px currentColor;
-            }
-            50% {
-                text-shadow: 
-                    0 0 10px currentColor,
-                    0 0 20px currentColor,
-                    0 0 40px currentColor,
-                    0 0 80px currentColor;
-            }
-        }
-        
-        /* Journal Modal - Wider Cyberpunk Container */
-        .modal-content.wide { 
-            max-width: 1000px; 
-            background: linear-gradient(135deg, rgba(5,5,8,0.98) 0%, rgba(15,10,25,0.99) 100%);
-            border-top: 2px solid var(--neon-green);
-            border-left: 1px solid rgba(0,255,65,0.2);
-            border-right: 1px solid rgba(0,255,65,0.2);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .modal-content.wide::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
-            animation: scanline 3s linear infinite;
-        }
-        
-        @keyframes scanline {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-        
-        /* Grid Background Effect */
-        .modal-content.wide::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                linear-gradient(rgba(0,255,65,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,255,65,0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        /* Journal Tabs - Cyberpunk Pills */
-        .journal-tabs { 
-            display: flex; 
-            gap: 12px; 
-            margin-bottom: 25px; 
-            padding: 15px;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(0,255,65,0.2);
-            border-radius: 16px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .journal-tab { 
-            padding: 12px 24px; 
-            background: rgba(0,255,65,0.05);
-            border: 1px solid rgba(0,255,65,0.2);
-            color: rgba(0,255,65,0.6);
-            font-family: 'Orbitron';
-            font-weight: 600;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-            cursor: pointer; 
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .journal-tab::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0,255,65,0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .journal-tab:hover::before {
-            left: 100%;
-        }
-        
-        .journal-tab.active { 
-            background: rgba(0,255,65,0.15);
-            border-color: var(--neon-green);
-            color: var(--neon-green);
-            box-shadow: 0 0 20px rgba(0,255,65,0.3), inset 0 0 20px rgba(0,255,65,0.05);
-            text-shadow: 0 0 10px rgba(0,255,65,0.5);
-        }
-        
-        .journal-tab:hover:not(.active) {
-            border-color: rgba(0,255,65,0.4);
-            color: rgba(0,255,65,0.8);
-            box-shadow: 0 0 10px rgba(0,255,65,0.1);
-        }
-        
-        /* Stats Grid - Cyberpunk Cards */
-        .stats-grid { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 15px; 
-            margin-bottom: 25px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .stat-card { 
-            background: linear-gradient(145deg, rgba(10,10,15,0.9), rgba(20,15,30,0.9));
-            border: 1px solid rgba(0,255,65,0.15);
-            padding: 20px 15px;
-            border-radius: 16px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
-            opacity: 0.5;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(0,255,65,0.4);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(0,255,65,0.1);
-        }
-        
-        .stat-card-value { 
-            font-family: 'Orbitron'; 
-            font-size: 1.6rem; 
-            font-weight: 900;
-            letter-spacing: 1px;
-        }
-        
-        .stat-card-value.gold { 
-            color: var(--gold);
-            text-shadow: 0 0 20px rgba(255,215,0,0.5);
-        }
-        
-        .stat-card-value.green { 
-            color: var(--neon-green);
-            text-shadow: 0 0 20px rgba(0,255,65,0.5);
-        }
-        
-        .stat-card-value.red { 
-            color: var(--neon-red);
-            text-shadow: 0 0 20px rgba(255,0,64,0.5);
-        }
-        
-        .stat-card-value.blue {
-            color: var(--neon-blue);
-            text-shadow: 0 0 20px rgba(0,212,255,0.5);
-        }
-        
-        .stat-card-label { 
-            font-size: 0.65rem; 
-            color: rgba(255,255,255,0.4);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-top: 8px;
-            font-family: 'Rajdhani';
-            font-weight: 600;
-        }
-        
-        /* Section Titles - Cyberpunk Headers */
-        .section-title { 
-            font-family: 'Orbitron'; 
-            font-size: 0.85rem;
-            letter-spacing: 3px;
-            color: var(--gold);
-            margin: 30px 0 15px 0;
-            padding: 15px 20px;
-            background: linear-gradient(90deg, rgba(255,215,0,0.1), transparent);
-            border-left: 3px solid var(--gold);
-            text-transform: uppercase;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .section-title::after {
-            content: '◆';
-            position: absolute;
-            right: 20px;
-            color: rgba(255,215,0,0.3);
-        }
-        
-        /* Trade Cards - Cyberpunk Entry Cards */
-        .journal-list { 
-            max-height: 55vh; 
+        .modal-overlay.active { display: flex; }
+        .modal-content { 
+            background: linear-gradient(145deg, rgba(15,10,20,0.98), rgba(8,8,12,0.99));
+            border-radius: 30px 30px 0 0; padding: 30px 24px 50px; width: 100%;
+            max-width: 500px; max-height: 90vh; border-top: 3px solid;
+            border-image: linear-gradient(90deg, var(--neon-green), var(--neon-red)) 1;
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             overflow-y: auto;
-            padding-right: 10px;
-            position: relative;
-            z-index: 1;
         }
-        
-        .journal-list::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .journal-list::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.3);
-            border-radius: 3px;
-        }
-        
-        .journal-list::-webkit-scrollbar-thumb {
-            background: var(--neon-green);
-            border-radius: 3px;
-        }
-        
-        .trade-card { 
-            background: linear-gradient(145deg, rgba(10,10,15,0.95), rgba(15,12,20,0.95));
-            border: 1px solid rgba(0,255,65,0.1);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 15px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .trade-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, var(--neon-green), transparent);
-            opacity: 0.5;
-        }
-        
-        .trade-card:hover { 
-            border-color: rgba(0,255,65,0.3);
-            box-shadow: 0 0 30px rgba(0,255,65,0.1), inset 0 0 30px rgba(0,255,65,0.02);
-            transform: translateX(5px);
-        }
-        
-        .trade-card.open { 
-            border-left: 3px solid var(--neon-blue);
-            background: linear-gradient(145deg, rgba(10,15,25,0.95), rgba(15,12,30,0.95));
-        }
-        
-        .trade-card.open::before {
-            background: linear-gradient(180deg, var(--neon-blue), transparent);
-        }
-        
-        .trade-card.closed { 
-            border-left: 3px solid var(--gold);
-            background: linear-gradient(145deg, rgba(25,20,10,0.95), rgba(20,15,12,0.95));
-        }
-        
-        .trade-card.closed::before {
-            background: linear-gradient(180deg, var(--gold), transparent);
-        }
-        
-        .trade-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 15px;
-        }
-        
-        .trade-symbol { 
-            font-family: 'Orbitron'; 
-            font-size: 1.4rem; 
-            font-weight: 900;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, #fff, var(--neon-blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .trade-side { 
-            font-family: 'Orbitron';
-            font-size: 0.7rem;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-        
-        .trade-side.long { 
-            background: rgba(0,255,65,0.15);
-            color: var(--neon-green);
-            border: 1px solid rgba(0,255,65,0.4);
-            box-shadow: 0 0 15px rgba(0,255,65,0.2), inset 0 0 10px rgba(0,255,65,0.05);
-            text-shadow: 0 0 10px rgba(0,255,65,0.5);
-        }
-        
-        .trade-side.short { 
-            background: rgba(255,0,64,0.15);
-            color: var(--neon-red);
-            border: 1px solid rgba(255,0,64,0.4);
-            box-shadow: 0 0 15px rgba(255,0,64,0.2), inset 0 0 10px rgba(255,0,64,0.05);
-            text-shadow: 0 0 10px rgba(255,0,64,0.5);
-        }
-        
-        .trade-date { 
-            font-size: 0.7rem; 
-            color: rgba(255,255,255,0.3);
-            font-family: 'Rajdhani';
-            letter-spacing: 1px;
-        }
-        
-        .trade-details { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 15px;
-            padding: 15px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        
-        .trade-detail { 
-            text-align: center;
-            position: relative;
-        }
-        
-        .trade-detail:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            right: -8px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 1px;
-            height: 60%;
-            background: linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent);
-        }
-        
-        .trade-detail-label { 
-            font-size: 0.6rem; 
-            color: rgba(255,255,255,0.35);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: 600;
-        }
-        
-        .trade-detail-value { 
-            font-family: 'Orbitron'; 
-            font-size: 1rem;
-            font-weight: 700;
-            margin-top: 5px;
-            color: rgba(255,255,255,0.9);
-        }
-        
-        .trade-pnl { 
-            font-family: 'Orbitron'; 
-            font-size: 1.3rem;
-            font-weight: 900;
-            letter-spacing: 1px;
-            margin-left: 15px;
-        }
-        
-        .trade-pnl.profit { 
-            color: var(--neon-green);
-            text-shadow: 0 0 20px rgba(0,255,65,0.5);
-        }
-        
-        .trade-pnl.loss { 
-            color: var(--neon-red);
-            text-shadow: 0 0 20px rgba(255,0,64,0.5);
-        }
-        
-        .trade-notes { 
-            font-size: 0.85rem; 
-            color: rgba(255,255,255,0.6);
-            margin-top: 15px;
-            padding: 15px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
-            border-left: 2px solid var(--neon-blue);
-            font-style: italic;
-            line-height: 1.6;
-        }
-        
-        .trade-actions { 
-            display: flex; 
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        /* Tags - Cyberpunk Pills */
-        .tag { 
-            display: inline-block; 
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-right: 8px;
-            margin-top: 8px;
-            border: 1px solid;
-            font-family: 'Rajdhani';
-        }
-        
-        .tag.setup { 
-            background: rgba(255,215,0,0.1);
-            color: var(--gold);
-            border-color: rgba(255,215,0,0.4);
-            box-shadow: 0 0 10px rgba(255,215,0,0.1);
-        }
-        
-        .tag.psych { 
-            background: rgba(0,212,255,0.1);
-            color: var(--neon-blue);
-            border-color: rgba(0,212,255,0.4);
-            box-shadow: 0 0 10px rgba(0,212,255,0.1);
-        }
-        
-        .tag.market { 
-            background: rgba(191,0,255,0.1);
-            color: var(--neon-purple);
-            border-color: rgba(191,0,255,0.4);
-            box-shadow: 0 0 10px rgba(191,0,255,0.1);
-        }
-        
-        .tag.mistake { 
-            background: rgba(255,0,64,0.1);
-            color: var(--neon-red);
-            border-color: rgba(255,0,64,0.4);
-            box-shadow: 0 0 10px rgba(255,0,64,0.1);
-        }
-        
-        /* PnL Chart Container */
-        .pnl-chart-container { 
-            height: 250px;
-            margin: 25px 0;
-            background: linear-gradient(145deg, rgba(10,10,15,0.9), rgba(15,12,20,0.9));
-            border: 1px solid rgba(0,255,65,0.15);
-            border-radius: 16px;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .pnl-chart-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
-        }
-        
-        /* Risk Display - Cyberpunk Terminal Style */
-        .risk-display { 
-            background: linear-gradient(145deg, rgba(5,10,8,0.95), rgba(8,15,12,0.95));
-            border: 1px solid rgba(0,255,65,0.2);
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 20px;
-            position: relative;
-            font-family: 'Rajdhani';
-        }
-        
-        .risk-display::before {
-            content: '>';
-            position: absolute;
-            top: -12px;
-            left: 20px;
-            background: var(--neon-green);
-            color: #000;
-            padding: 2px 8px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            border-radius: 4px;
-        }
-        
-        .risk-row { 
-            display: flex; 
-            justify-content: space-between; 
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(0,255,65,0.1);
-        }
-        
-        .risk-row:last-child { 
-            border-bottom: none; 
-        }
-        
-        .risk-label { 
-            font-size: 0.75rem; 
-            color: rgba(0,255,65,0.6);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        
-        .risk-value { 
-            font-family: 'Orbitron'; 
-            font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-        
-        .risk-value.good { 
-            color: var(--neon-green);
-            text-shadow: 0 0 10px rgba(0,255,65,0.3);
-        }
-        
-        .risk-value.bad { 
-            color: var(--neon-red);
-            text-shadow: 0 0 10px rgba(255,0,64,0.3);
-        }
-        
-        /* Export Buttons */
-        .export-buttons { 
-            display: flex; 
-            gap: 12px;
-            margin: 25px 0;
-            padding: 20px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        
-        /* Empty State - Cyberpunk Style */
-        .empty-state { 
-            text-align: center; 
-            padding: 60px 40px;
-            color: rgba(255,255,255,0.3);
-            border: 2px dashed rgba(0,255,65,0.2);
-            border-radius: 20px;
-            margin: 20px 0;
-            position: relative;
-        }
-        
-        .empty-state::before {
-            content: '◈';
-            font-size: 3rem;
-            color: rgba(0,255,65,0.2);
-            display: block;
-            margin-bottom: 20px;
-        }
-        
-        /* Button Glitch Hover Effects */
-        .btn.glitch-hover {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn.glitch-hover::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .btn.glitch-hover:hover::before {
-            left: 100%;
-        }
-        
-        .btn.glitch-hover:hover {
-            animation: btn-glitch 0.3s ease;
-            text-shadow: 
-                2px 0 var(--neon-red),
-                -2px 0 var(--neon-blue);
-        }
-        
-        @keyframes btn-glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-2px, 2px); }
-            40% { transform: translate(2px, -2px); }
-            60% { transform: translate(-2px, -2px); }
-            80% { transform: translate(2px, 2px); }
-            100% { transform: translate(0); }
-        }
-        
-        .btn.gold.glitch-hover:hover {
-            text-shadow: 
-                2px 0 var(--orange),
-                -2px 0 var(--neon-purple);
-            box-shadow: 
-                0 0 20px rgba(255,215,0,0.4),
-                inset 0 0 20px rgba(255,215,0,0.1);
-        }
-        
-        .btn.secondary.glitch-hover:hover {
-            text-shadow: 
-                2px 0 var(--neon-green),
-                -2px 0 var(--neon-purple);
-        }
-        
-        .btn.danger.glitch-hover:hover {
-            text-shadow: 
-                2px 0 var(--gold),
-                -2px 0 var(--neon-blue);
-        }
-        
-        /* Trade Card Glitch Effects */
-        .trade-card.glitch-card {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .trade-card.glitch-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, 
-                transparent 0%, 
-                rgba(0,255,65,0.1) 45%, 
-                rgba(0,255,65,0.2) 50%, 
-                rgba(0,255,65,0.1) 55%, 
-                transparent 100%
-            );
-            transition: left 0.6s;
-            pointer-events: none;
-        }
-        
-        .trade-card.glitch-card:hover::before {
-            left: 100%;
-        }
-        
-        .trade-card.glitch-card:hover {
-            animation: card-glitch 0.4s ease;
-            border-color: rgba(0,255,65,0.5);
-            box-shadow: 
-                0 0 30px rgba(0,255,65,0.15),
-                inset 0 0 30px rgba(0,255,65,0.05);
-        }
-        
-        @keyframes card-glitch {
-            0% { transform: translate(0) skew(0deg); }
-            10% { transform: translate(-3px) skew(-1deg); }
-            20% { transform: translate(3px) skew(1deg); }
-            30% { transform: translate(-2px) skew(-0.5deg); }
-            40% { transform: translate(2px) skew(0.5deg); }
-            50% { transform: translate(0) skew(0deg); }
-            100% { transform: translate(0) skew(0deg); }
-        }
-        
-        .trade-card.glitch-card .trade-symbol {
-            position: relative;
-        }
-        
-        .trade-card.glitch-card:hover .trade-symbol {
-            animation: symbol-glitch 0.3s ease;
-            text-shadow: 
-                1px 0 var(--neon-red),
-                -1px 0 var(--neon-blue),
-                0 0 20px var(--neon-blue);
-        }
-        
-        @keyframes symbol-glitch {
-            0%, 100% { opacity: 1; }
-            25% { opacity: 0.8; transform: translateX(1px); }
-            50% { opacity: 1; transform: translateX(-1px); }
-            75% { opacity: 0.9; transform: translateX(0); }
-        }
-        
-        /* Data Corruption Effect on Hover */
-        .trade-card.glitch-card .trade-detail-value {
-            transition: all 0.2s;
-        }
-        
-        .trade-card.glitch-card:hover .trade-detail-value {
-            animation: data-corrupt 0.5s ease;
-        }
-        
-        @keyframes data-corrupt {
-            0% { opacity: 1; }
-            10% { opacity: 0.5; letter-spacing: 2px; }
-            20% { opacity: 1; letter-spacing: normal; }
-            30% { opacity: 0.7; filter: blur(1px); }
-            40% { opacity: 1; filter: blur(0); }
-            100% { opacity: 1; }
-        }
-        
-        /* Digital Noise on Card */
-        .trade-card.glitch-card .noise-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(0,255,65,0.03) 2px,
-                rgba(0,255,65,0.03) 4px
-            );
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .trade-card.glitch-card:hover .noise-overlay {
-            opacity: 1;
-            animation: noise-flicker 0.1s infinite;
-        }
-        
-        @keyframes noise-flicker {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-        
-        /* Active Button State Glitch */
-        .btn.active.glitch-active {
-            animation: btn-active-glitch 2s infinite;
-        }
-        
-        @keyframes btn-active-glitch {
-            0%, 90%, 100% { 
-                box-shadow: 0 0 15px rgba(0,255,65,0.4);
-            }
-            92% { 
-                box-shadow: 
-                    3px 0 rgba(255,0,64,0.4),
-                    -3px 0 rgba(0,212,255,0.4),
-                    0 0 20px rgba(0,255,65,0.4);
-            }
-            94% { 
-                box-shadow: 
-                    -3px 0 rgba(255,0,64,0.4),
-                    3px 0 rgba(0,212,255,0.4);
-            }
-            96% { 
-                box-shadow: 0 0 15px rgba(0,255,65,0.4);
-            }
-        }
-        
-        /* ═══════════════════════════════════════════════════════════════
-           PARTICLE BURST EFFECTS
-           ═══════════════════════════════════════════════════════════════ */
-        
-        .particle-container {
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-        }
-        
-        .particle {
-            position: absolute;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            pointer-events: none;
-        }
-        
-        .particle.green {
-            background: var(--neon-green);
-            box-shadow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
-        }
-        
-        .particle.red {
-            background: var(--neon-red);
-            box-shadow: 0 0 10px var(--neon-red), 0 0 20px var(--neon-red);
-        }
-        
-        .particle.gold {
-            background: var(--gold);
-            box-shadow: 0 0 10px var(--gold), 0 0 20px var(--gold);
-        }
-        
-        .particle.blue {
-            background: var(--neon-blue);
-            box-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
-        }
-        
-        @keyframes particle-burst {
-            0% {
-                transform: translate(0, 0) scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(var(--tx), var(--ty)) scale(0);
-                opacity: 0;
-            }
-        }
-        
-        /* Success Checkmark Animation */
-        .success-checkmark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100px;
-            height: 100px;
-            z-index: 10000;
-            pointer-events: none;
-        }
-        
-        .success-checkmark svg {
-            width: 100%;
-            height: 100%;
-        }
-        
-        .success-checkmark path {
-            stroke: var(--neon-green);
-            stroke-width: 4;
-            fill: none;
-            stroke-dasharray: 100;
-            stroke-dashoffset: 100;
-            animation: draw-check 0.5s ease forwards, check-glow 1s ease 0.5s infinite alternate;
-        }
-        
-        @keyframes draw-check {
-            to { stroke-dashoffset: 0; }
-        }
-        
-        @keyframes check-glow {
-            from { filter: drop-shadow(0 0 5px var(--neon-green)); }
-            to { filter: drop-shadow(0 0 20px var(--neon-green)) drop-shadow(0 0 40px var(--neon-green)); }
-        }
-        
-        /* Digital Rain Effect on Save */
-        .digital-rain {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            z-index: 9998;
-            overflow: hidden;
-        }
-        
-        .rain-drop {
-            position: absolute;
-            font-family: 'Orbitron', monospace;
-            font-size: 14px;
-            color: var(--neon-green);
-            opacity: 0;
-            animation: rain-fall 1s linear forwards;
-            text-shadow: 0 0 10px var(--neon-green);
-        }
-        
-        @keyframes rain-fall {
-            0% { 
-                transform: translateY(-20px);
-                opacity: 1;
-            }
-            100% { 
-                transform: translateY(100vh);
-                opacity: 0;
-            }
-        }
-        
-        #view-trades .stat-card:hover {
-            transform: scale(1.05);
-            border-color: var(--neon-green);
-        }
-        
-        #view-trades .stat-card:active {
-            transform: scale(0.98);
-        }
-        
-        @media (max-width: 768px) {
-            .header { padding: 12px 15px; flex-wrap: wrap; gap: 10px; }
-            .logo { font-size: 1rem; }
-            .btn { padding: 6px 12px; font-size: 0.75rem; }
-            .stats { gap: 15px; }
-            .stat-value { font-size: 1rem; }
-            .form-row { grid-template-columns: 1fr; }
-            .form-row.three { grid-template-columns: 1fr; }
-            .trade-details { grid-template-columns: repeat(2, 1fr); }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .modal-content.wide { max-width: 100%; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .modal-handle { 
+            width: 60px; height: 5px; background: linear-gradient(90deg, rgba(0,255,65,0.6), rgba(255,0,64,0.6));
+            border-radius: 3px; margin: 0 auto 25px;
+        }
+        .coin-header { text-align: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .coin-symbol { font-family: 'Orbitron', sans-serif; font-size: 2.4rem; font-weight: 900; letter-spacing: 4px; }
+        .coin-change { font-family: 'Orbitron', sans-serif; font-size: 3rem; font-weight: 700; margin-top: 12px; text-shadow: 0 0 40px currentColor; }
+        .coin-change.positive { color: var(--neon-green); }
+        .coin-change.negative { color: var(--neon-red); }
+        
+        .chart-container { width: 100%; height: 200px; margin: 20px 0; background: rgba(255,255,255,0.03); border-radius: 16px; padding: 15px; border: 1px solid rgba(255,255,255,0.08); }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
+        .stat-item { background: rgba(255,255,255,0.04); padding: 18px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease; }
+        .stat-item:hover { background: rgba(255,255,255,0.06); border-color: rgba(0, 255, 65, 0.3); transform: translateY(-2px); }
+        .stat-item-label { font-size: 0.7rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+        .stat-item-value { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 600; color: #fff; }
+        
+        /* Trading Journal Styles */
+        .journal-modal .modal-content { border-top-color: var(--accent-gold); border-image: linear-gradient(90deg, var(--accent-gold), var(--neon-green)) 1; }
+        .journal-title { font-family: 'Orbitron'; font-size: 1.8rem; text-align: center; margin-bottom: 20px; color: var(--accent-gold); }
+        .trade-form { display: flex; flex-direction: column; gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-label { font-size: 0.8rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; }
+        .form-input {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px; padding: 12px 15px; color: #fff; font-size: 1rem;
+            font-family: 'Rajdhani', sans-serif;
+        }
+        .form-input:focus { border-color: var(--accent-gold); outline: none; box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+        .trade-type-buttons { display: flex; gap: 10px; }
+        .trade-type-btn {
+            flex: 1; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05); color: #fff; font-family: 'Orbitron';
+            cursor: pointer; transition: all 0.3s;
+        }
+        .trade-type-btn.long { border-color: rgba(0,255,65,0.4); }
+        .trade-type-btn.long.active { background: rgba(0,255,65,0.2); border-color: var(--neon-green); }
+        .trade-type-btn.short { border-color: rgba(255,0,64,0.4); }
+        .trade-type-btn.short.active { background: rgba(255,0,64,0.2); border-color: var(--neon-red); }
+        .submit-btn {
+            background: linear-gradient(135deg, var(--accent-gold), #ffed4e);
+            color: #000; padding: 15px; border-radius: 25px; border: none;
+            font-family: 'Orbitron'; font-weight: 700; font-size: 1rem;
+            cursor: pointer; margin-top: 10px;
+        }
+        .trades-list { margin-top: 20px; max-height: 300px; overflow-y: auto; }
+        .trade-item {
+            background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px;
+            margin-bottom: 10px; border-left: 3px solid;
+        }
+        .trade-item.long { border-left-color: var(--neon-green); }
+        .trade-item.short { border-left-color: var(--neon-red); }
+        .trade-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .trade-symbol { font-family: 'Orbitron'; font-weight: 700; }
+        .trade-pnl { font-family: 'Orbitron'; font-weight: 700; }
+        .trade-pnl.positive { color: var(--neon-green); }
+        .trade-pnl.negative { color: var(--neon-red); }
+        .trade-details { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+        
+        @media (max-width: 768px) { 
+            .header { padding: 12px 15px; } 
+            .logo { font-size: 1rem; letter-spacing: 2px; }
+            .filter-btn { padding: 6px 12px; font-size: 0.7rem; }
+            .stats-bar { gap: 20px; padding: 12px; }
+            .stat-value { font-size: 1.4rem; }
+            .coin-symbol { font-size: 1.8rem; }
+            .coin-change { font-size: 2.2rem; }
+            .chart-container { height: 150px; }
         }
     </style>
 </head>
 <body>
-    <canvas id="canvas"></canvas>
+    <div class="scan-line"></div>
+    <canvas id="particles-canvas"></canvas>
     
     <div class="header">
         <div class="logo">💰 BYBIT</div>
-        <div class="controls">
-            <button class="btn active glitch-hover" onclick="sortBy('change')">% CHANGE</button>
-            <button class="btn glitch-hover" onclick="sortBy('volume')">VOLUME</button>
-            <button class="btn glitch-hover" onclick="sortBy('alpha')">A-Z</button>
-            <button class="btn secondary glitch-hover" onclick="openJournal()">📓 JURNAL</button>
+        <div class="header-controls">
+            <button class="filter-btn" onclick="showJournal()">📓 JOURNAL</button>
+            <button class="filter-btn active" onclick="setSort('change')" id="btn-change">% CHANGE</button>
+            <button class="filter-btn" onclick="setSort('volume')" id="btn-volume">VOLUME</button>
+            <button class="filter-btn" onclick="setSort('alpha')" id="btn-alpha">A-Z</button>
         </div>
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-value up" id="gainers-count">0</div>
-                <div class="stat-label">Gainers</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value down" id="losers-count">0</div>
-                <div class="stat-label">Losers</div>
-            </div>
+        <div class="last-update">
+            <span class="update-dot"></span>
+            <span id="update-time">--:--</span>
         </div>
     </div>
     
     <div class="container">
-        <div id="bubbles"></div>
+        <div class="stats-bar">
+            <div class="stat-box">
+                <div class="stat-value up" id="total-gainers">--</div>
+                <div class="stat-label">Gainers</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value down" id="total-losers">--</div>
+                <div class="stat-label">Losers</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="market-sentiment" style="color: var(--accent-gold);">--</div>
+                <div class="stat-label">Sentiment</div>
+            </div>
+        </div>
+        
+        <div id="bubble-container"></div>
     </div>
     
     <!-- Coin Detail Modal -->
-    <div class="modal" id="coinModal" onclick="closeCoinModal()">
+    <div class="modal-overlay" id="modal" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <div class="modal-symbol" id="m-symbol">BTC</div>
-                <div class="modal-change" id="m-change">+5.23%</div>
+            <div class="modal-handle"></div>
+            <div class="coin-header">
+                <div class="coin-symbol" id="modal-symbol">BTC</div>
+                <div class="coin-change" id="modal-change">+5.23%</div>
             </div>
-            <div class="chart-box">
-                <canvas id="m-chart"></canvas>
+            <div class="chart-container">
+                <canvas id="priceChart"></canvas>
             </div>
-            <div class="info-grid">
-                <div class="info-item"><div class="info-label">Price</div><div class="info-value" id="m-price">-</div></div>
-                <div class="info-item"><div class="info-label">Volume 24h</div><div class="info-value" id="m-volume">-</div></div>
-                <div class="info-item"><div class="info-label">High 24h</div><div class="info-value" id="m-high">-</div></div>
-                <div class="info-item"><div class="info-label">Low 24h</div><div class="info-value" id="m-low">-</div></div>
+            <div class="stats-grid">
+                <div class="stat-item"><div class="stat-item-label">Preț</div><div class="stat-item-value" id="modal-price">-</div></div>
+                <div class="stat-item"><div class="stat-item-label">Volum 24h</div><div class="stat-item-value" id="modal-volume">-</div></div>
+                <div class="stat-item"><div class="stat-item-label">Max 24h</div><div class="stat-item-value" id="modal-high">-</div></div>
+                <div class="stat-item"><div class="stat-item-label">Min 24h</div><div class="stat-item-value" id="modal-low">-</div></div>
             </div>
-            <button class="btn btn-full glitch-hover" onclick="showTradeForm()">📝 LOG TRADE</button>
-            
-            <!-- Trade Entry Form -->
-            <div class="trade-form" id="tradeForm" style="display: none;">
-                <div class="form-title glitch" data-text="🚀 NEW TRADE ENTRY">🚀 NEW TRADE ENTRY</div>
-                
-                <div class="form-group">
-                    <label class="form-label">Direction</label>
-                    <div class="radio-group">
-                        <div class="radio-btn long" onclick="setTradeSide('long')" id="btnLong">LONG</div>
-                        <div class="radio-btn short" onclick="setTradeSide('short')" id="btnShort">SHORT</div>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Entry Price ($) <span class="hint">(autofill)</span></label>
-                        <input type="number" class="form-input" id="entryPrice" step="0.000001" onchange="updateRiskCalc()">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Position Size ($)</label>
-                        <input type="number" class="form-input" id="positionSize" step="0.01" onchange="updateRiskCalc()">
-                    </div>
-                </div>
-                
-                <div class="form-row three">
-                    <div class="form-group">
-                        <label class="form-label">Leverage</label>
-                        <input type="number" class="form-input" id="leverage" value="1" min="1" max="100" onchange="updateRiskCalc()">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Stop Loss ($)</label>
-                        <input type="number" class="form-input" id="stopLoss" step="0.000001" placeholder="SL" onchange="updateRiskCalc()">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Take Profit ($)</label>
-                        <input type="number" class="form-input" id="takeProfit" step="0.000001" placeholder="TP" onchange="updateRiskCalc()">
-                    </div>
-                </div>
-                
-                <!-- Risk Calculator Display -->
-                <div class="risk-display" id="riskDisplay" style="display: none;">
-                    <div class="risk-row">
-                        <span class="risk-label">Risk Amount:</span>
-                        <span class="risk-value" id="riskAmount">-</span>
-                    </div>
-                    <div class="risk-row">
-                        <span class="risk-label">Risk/Reward:</span>
-                        <span class="risk-value" id="riskReward">-</span>
-                    </div>
-                    <div class="risk-row">
-                        <span class="risk-label">Breakeven:</span>
-                        <span class="risk-value" id="breakevenPrice">-</span>
-                    </div>
-                    <div class="risk-row">
-                        <span class="risk-label">Liquidation Est:</span>
-                        <span class="risk-value" id="liqPrice">-</span>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Setup Type</label>
-                        <select class="form-select" id="setupType">
-                            <option value="">Select setup...</option>
-                            <option value="breakout">Breakout</option>
-                            <option value="breakdown">Breakdown</option>
-                            <option value="pullback">Pullback</option>
-                            <option value="rotation">Rotation Play</option>
-                            <option value="unlock_dump">Token Unlock Dump</option>
-                            <option value="fomo_chase">FOMO Chase</option>
-                            <option value="scalp">Scalp</option>
-                            <option value="swing">Swing Trade</option>
-                            <option value="dca">DCA (Dollar Cost Avg)</option>
-                            <option value="news">News/Event Play</option>
-                            <option value="whale">Whale Wallet Follow</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Market Condition</label>
-                        <select class="form-select" id="marketCondition">
-                            <option value="">Market state...</option>
-                            <option value="bull">🐂 Bull Market</option>
-                            <option value="bear">🐻 Bear Market</option>
-                            <option value="ranging">↔️ Ranging/Consolidation</option>
-                            <option value="volatile">⚡ High Volatility</option>
-                            <option value="low_vol">😴 Low Volume</option>
-                            <option value="uncertain">❓ Uncertain</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Psychology State</label>
-                        <select class="form-select" id="psychology">
-                            <option value="">How do you feel?</option>
-                            <option value="calm">😌 Calm / Confident</option>
-                            <option value="fomo">😰 FOMO / Greedy</option>
-                            <option value="revenge">😤 Revenge Trading</option>
-                            <option value="fear">😨 Fear / Hesitant</option>
-                            <option value="tired">😴 Tired / Not Focused</option>
-                            <option value="flow">🎯 In the Zone</option>
-                            <option value="impulsive">⚡ Impulsive</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Time of Day</label>
-                        <select class="form-select" id="timeOfDay">
-                            <option value="">When trading...</option>
-                            <option value="morning">🌅 Morning (6-12)</option>
-                            <option value="afternoon">☀️ Afternoon (12-18)</option>
-                            <option value="evening">🌆 Evening (18-22)</option>
-                            <option value="night">🌙 Night (22-6)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Thesis / Analysis <span class="hint">Why this trade?</span></label>
-                    <textarea class="form-textarea" id="tradeNotes" placeholder="What's your edge? Key levels? Catalyst?"></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Mistakes to Avoid <span class="hint">Tag if relevant</span></label>
-                    <select class="form-select" id="mistakeTag">
-                        <option value="">None - trading clean</option>
-                        <option value="no_plan">No clear plan</option>
-                        <option value="oversized">Position too big</option>
-                        <option value="no_sl">No stop loss</option>
-                        <option value="chasing">Chasing price</option>
-                        <option value="revenge">Revenge trading</option>
-                        <option value="fomo">FOMO entry</option>
-                        <option value="tired">Trading tired</option>
-                    </select>
-                </div>
-                
-                <div class="form-row">
-                    <button class="btn danger glitch-hover" onclick="hideTradeForm()" style="flex: 1;">Cancel</button>
-                    <button class="btn btn-full glitch-hover" onclick="saveTrade()" style="flex: 2; margin-top: 0;">💾 SAVE TRADE</button>
-                </div>
-            </div>
+            <button class="filter-btn" style="margin-top: 20px; width: 100%;" onclick="addToJournal()">➕ Add to Journal</button>
         </div>
     </div>
-
-    <!-- Journal Modal -->
-    <div class="modal" id="journalModal" onclick="closeJournalModal()">
-        <div class="modal-content wide" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <div class="modal-symbol glitch" data-text="📓 TRADING JOURNAL">📓 TRADING JOURNAL</div>
-                <div style="font-size: 0.9rem; color: rgba(255,255,255,0.5); margin-top: 5px;" class="flicker">Complete trade tracking & analytics</div>
-            </div>
-            
-            <div class="journal-tabs">
-                <button class="journal-tab active glitch-hover" onclick="switchTab('trades')" id="tab-trades">All Trades</button>
-                <button class="journal-tab glitch-hover" onclick="switchTab('stats')" id="tab-stats">📊 Statistics</button>
-                <button class="journal-tab glitch-hover" onclick="switchTab('performance')" id="tab-performance">📈 Performance</button>
-                <button class="journal-tab glitch-hover" onclick="switchTab('psychology')" id="tab-psychology">🧠 Psychology</button>
-            </div>
-            
-            <!-- Stats View -->
-            <div id="view-stats" style="display: none;">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-card-value gold" id="statTotal">0</div>
-                        <div class="stat-card-label">Total Trades</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value green" id="statWinRate">0%</div>
-                        <div class="stat-card-label">Win Rate</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value" id="statProfitFactor">-</div>
-                        <div class="stat-card-label">Profit Factor</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value" id="statAvgRR">-</div>
-                        <div class="stat-card-label">Avg R:R</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value" id="statLongs">0</div>
-                        <div class="stat-card-label">Longs</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value" id="statShorts">0</div>
-                        <div class="stat-card-label">Shorts</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value green" id="statBest">-</div>
-                        <div class="stat-card-label">Best Trade</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value red" id="statWorst">-</div>
-                        <div class="stat-card-label">Worst Trade</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value" id="statAvgWin">-</div>
-                        <div class="stat-card-label">Avg Win</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value" id="statAvgLoss">-</div>
-                        <div class="stat-card-label">Avg Loss</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value green" id="statTotalProfit">-</div>
-                        <div class="stat-card-label">Total Profit</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value red" id="statTotalLoss">-</div>
-                        <div class="stat-card-label">Total Loss</div>
-                    </div>
-                </div>
-                
-                <div class="section-title">Setup Performance</div>
-                <div id="setupStats"></div>
-                
-                <div class="section-title">Market Condition Performance</div>
-                <div id="marketStats"></div>
-            </div>
-            
-            <!-- Performance View with Chart -->
-            <div id="view-performance" style="display: none;">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-card-value" id="perfNetPnl">-</div>
-                        <div class="stat-card-label">Net P&L</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value" id="perfWinStreak">0</div>
-                        <div class="stat-card-label">Current Streak</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value" id="perfMaxDrawdown">-</div>
-                        <div class="stat-card-label">Max Drawdown</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-card-value" id="perfExpectancy">-</div>
-                        <div class="stat-card-label">Expectancy ($)</div>
-                    </div>
-                </div>
-                <div class="pnl-chart-container">
-                    <canvas id="pnlChart"></canvas>
-                </div>
-            </div>
-            
-            <!-- Psychology View -->
-            <div id="view-psychology" style="display: none;">
-                <div class="section-title">Performance by Mental State</div>
-                <div id="psychStats"></div>
-                
-                <div class="section-title">Common Mistakes</div>
-                <div id="mistakeStats"></div>
-                
-                <div class="section-title">Best Time to Trade</div>
-                <div id="timeStats"></div>
-            </div>
-            
-            <!-- Trades List View -->
-            <div id="view-trades">
-                <div class="stats-grid" style="margin-bottom: 15px;">
-                    <div class="stat-card" style="cursor: pointer;" onclick="filterTrades('all')">
-                        <div class="stat-card-value" id="filterAll">0</div>
-                        <div class="stat-card-label">All Trades</div>
-                    </div>
-                    <div class="stat-card" style="cursor: pointer;" onclick="filterTrades('open')">
-                        <div class="stat-card-value" id="filterOpen">0</div>
-                        <div class="stat-card-label">Open</div>
-                    </div>
-                    <div class="stat-card" style="cursor: pointer;" onclick="filterTrades('win')">
-                        <div class="stat-card-value green" id="filterWins">0</div>
-                        <div class="stat-card-label">Wins</div>
-                    </div>
-                    <div class="stat-card" style="cursor: pointer;" onclick="filterTrades('loss')">
-                        <div class="stat-card-value red" id="filterLosses">0</div>
-                        <div class="stat-card-label">Losses</div>
-                    </div>
-                </div>
-                
-                <div class="export-buttons">
-                    <button class="btn secondary btn-small glitch-hover" onclick="exportTrades('json')">📥 Export JSON</button>
-                    <button class="btn secondary btn-small glitch-hover" onclick="exportTrades('csv')">📊 Export CSV</button>
-                    <button class="btn danger btn-small glitch-hover" onclick="clearAllTrades()">🗑️ Clear All</button>
-                </div>
-                
-                <div class="journal-list" id="journalList">
-                    <div class="empty-state">No trades logged yet.<br>Click on a coin and "Log Trade" to start.</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Close Trade Modal -->
-    <div class="modal" id="closeTradeModal" onclick="closeCloseTradeModal()">
+    
+    <!-- Trading Journal Modal -->
+    <div class="modal-overlay journal-modal" id="journal-modal" onclick="closeJournal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <div class="modal-symbol glitch" data-text="🏁 CLOSE TRADE">🏁 CLOSE TRADE</div>
-                <div id="closeTradeSymbol" style="color: var(--gold); margin-top: 5px;" class="flicker">-</div>
-            </div>
+            <div class="modal-handle"></div>
+            <div class="journal-title">📓 TRADING JOURNAL</div>
             
-            <div class="form-group">
-                <label class="form-label">Exit Price ($)</label>
-                <input type="number" class="form-input" id="exitPrice" step="0.000001" onchange="calculateClosePnl()">
-            </div>
-            
-            <div class="form-row">
+            <div class="trade-form">
                 <div class="form-group">
-                    <label class="form-label">Exit Date</label>
-                    <input type="datetime-local" class="form-input" id="exitDate">
+                    <label class="form-label">Symbol</label>
+                    <input type="text" class="form-input" id="trade-symbol" placeholder="BTC">
                 </div>
+                
                 <div class="form-group">
-                    <label class="form-label">Fees ($) <span class="hint">Optional</span></label>
-                    <input type="number" class="form-input" id="exitFees" step="0.01" value="0">
+                    <label class="form-label">Trade Type</label>
+                    <div class="trade-type-buttons">
+                        <button type="button" class="trade-type-btn long" onclick="setTradeType('long')">📈 LONG</button>
+                        <button type="button" class="trade-type-btn short" onclick="setTradeType('short')">📉 SHORT</button>
+                    </div>
                 </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Entry Price</label>
+                    <input type="number" class="form-input" id="trade-entry" placeholder="45000">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Exit Price</label>
+                    <input type="number" class="form-input" id="trade-exit" placeholder="48000">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Position Size ($)</label>
+                    <input type="number" class="form-input" id="trade-size" placeholder="1000">
+                </div>
+                
+                <button class="submit-btn" onclick="submitTrade()">💾 Save Trade</button>
             </div>
             
-            <div class="risk-display" id="closePnlDisplay" style="display: none;">
-                <div class="risk-row">
-                    <span class="risk-label">P&L ($):</span>
-                    <span class="risk-value" id="calcPnl">-</span>
-                </div>
-                <div class="risk-row">
-                    <span class="risk-label">P&L (%):</span>
-                    <span class="risk-value" id="calcPnlPercent">-</span>
-                </div>
-                <div class="risk-row">
-                    <span class="risk-label">R Multiple:</span>
-                    <span class="risk-value" id="calcRMultiple">-</span>
-                </div>
-                <div class="risk-row">
-                    <span class="risk-label">Held for:</span>
-                    <span class="risk-value" id="calcDuration">-</span>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Post-Trade Review</label>
-                <select class="form-select" id="tradeResult">
-                    <option value="">How did it go?</option>
-                    <option value="plan_followed">✅ Followed plan perfectly</option>
-                    <option value="early_exit">⚠️ Exited too early</option>
-                    <option value="late_exit">⚠️ Exited too late</option>
-                    <option value="no_plan">❌ No clear plan</option>
-                    <option value="emotional">❌ Emotional decision</option>
-                    <option value="sl_hit">🛑 Stop loss hit (good)</option>
-                    <option value="sl_moved">🛑 Moved stop (bad)</option>
-                    <option value="tp_hit">🎯 Take profit hit</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Lessons Learned</label>
-                <textarea class="form-textarea" id="closeNotes" placeholder="What would you do differently?"></textarea>
-            </div>
-            
-            <div class="form-row">
-                <button class="btn glitch-hover" onclick="closeCloseTradeModal()" style="flex: 1;">Cancel</button>
-                <button class="btn gold glitch-hover" onclick="confirmCloseTrade()" style="flex: 2;">🏁 CLOSE TRADE</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Trade Modal -->
-    <div class="modal" id="editTradeModal" onclick="closeEditModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <div class="modal-symbol glitch" data-text="✏️ EDIT TRADE">✏️ EDIT TRADE</div>
-            </div>
-            <div id="editFormContainer"></div>
+            <div class="trades-list" id="trades-list"></div>
         </div>
     </div>
 
     <script>
-        let data = [], chart = null, pnlChart = null, currentCoin = null, currentSide = null, currentTradeFilter = 'all', closingTradeId = null, editingTradeId = null;
-        const COUNT = 40;
+        // Global state
+        let bubbleData = [], currentSort = 'change', currentModalCoin = null, trades = [];
+        let tradeType = 'long';
         
-        // Storage
-        function getTrades() { return JSON.parse(localStorage.getItem('guap_trades') || '[]'); }
-        function saveTrades(trades) { localStorage.setItem('guap_trades', JSON.stringify(trades)); }
+        // Load trades from localStorage
+        function loadTrades() {
+            const saved = localStorage.getItem('trading-journal');
+            if (saved) trades = JSON.parse(saved);
+            renderTrades();
+        }
         
-        // Particles
-        const cvs = document.getElementById('canvas');
-        const cx = cvs.getContext('2d');
-        let pts = [];
-        function resize() { cvs.width = window.innerWidth; cvs.height = window.innerHeight; }
-        resize(); window.addEventListener('resize', resize);
+        // Save trades to localStorage
+        function saveTrades() {
+            localStorage.setItem('trading-journal', JSON.stringify(trades));
+        }
         
-        class P {
+        // Particle system
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        class Particle {
             constructor() { this.reset(); }
             reset() {
-                this.x = Math.random() * cvs.width; this.y = Math.random() * cvs.height;
-                this.s = Math.random() * 2 + 1; this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5;
-                this.c = Math.random() > 0.5 ? 'rgba(0,255,65,' : 'rgba(255,0,64,'; this.a = Math.random() * 0.5 + 0.2;
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.color = Math.random() > 0.5 ? 'rgba(0, 255, 65, ' : 'rgba(255, 0, 64, ';
+                this.alpha = Math.random() * 0.5 + 0.1;
             }
             update() {
-                this.x += this.vx; this.y += this.vy;
-                if (this.x < 0 || this.x > cvs.width || this.y < 0 || this.y > cvs.height) this.reset();
-                cx.fillStyle = this.c + this.a + ')'; cx.beginPath(); cx.arc(this.x, this.y, this.s, 0, Math.PI * 2); cx.fill();
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = this.color + this.alpha + ')';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
-        for (let i = 0; i < 80; i++) pts.push(new P());
-        function anim() { cx.clearRect(0, 0, cvs.width, cvs.height); pts.forEach(p => p.update()); requestAnimationFrame(anim); }
-        anim();
         
-        // Fetch data
-        async function load() {
+        for (let i = 0; i < 80; i++) particles.push(new Particle());
+        
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+        
+        // Load data from Bybit
+        async function loadData() {
             try {
-                const r = await fetch('https://api.bybit.com/v5/market/tickers?category=linear');
-                const j = await r.json();
-                data = j.result.list.filter(i => i.symbol.endsWith('USDT')).map(i => ({
-                    s: i.symbol.replace('USDT', ''), c: parseFloat(i.price24hPcnt) * 100,
-                    p: parseFloat(i.lastPrice), v: parseFloat(i.volume24h) * parseFloat(i.lastPrice),
-                    h: parseFloat(i.highPrice24h), l: parseFloat(i.lowPrice24h)
-                })).filter(i => !isNaN(i.c));
-                data.sort((a, b) => Math.abs(b.c) - Math.abs(a.c));
+                const res = await fetch('https://api.bybit.com/v5/market/tickers?category=linear');
+                const json = await res.json();
+                
+                if (json.retCode !== 0) throw new Error(json.retMsg);
+                
+                bubbleData = json.result.list
+                    .filter(i => i.symbol.endsWith('USDT'))
+                    .map(i => ({
+                        symbol: i.symbol.replace('USDT', ''),
+                        change24h: parseFloat(i.price24hPcnt) * 100,
+                        price: parseFloat(i.lastPrice),
+                        volume24h: parseFloat(i.volume24h) * parseFloat(i.lastPrice),
+                        high24h: parseFloat(i.highPrice24h),
+                        low24h: parseFloat(i.lowPrice24h)
+                    }))
+                    .filter(i => !isNaN(i.change24h) && i.price > 0)
+                    .sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h))
+                    .slice(0, 60);
+                
                 updateStats();
-                draw();
-            } catch (e) { console.error(e); }
+                renderBubbles();
+            } catch (e) {
+                console.error('Error loading data:', e);
+            }
         }
         
         function updateStats() {
-            document.getElementById('gainers-count').textContent = data.filter(d => d.c >= 0).length;
-            document.getElementById('losers-count').textContent = data.filter(d => d.c < 0).length;
+            const gainers = bubbleData.filter(d => d.change24h >= 0).length;
+            const losers = bubbleData.filter(d => d.change24h < 0).length;
+            const sentiment = gainers > losers ? 'BULLISH 📈' : gainers < losers ? 'BEARISH 📉' : 'NEUTRAL ⚖️';
+            
+            document.getElementById('total-gainers').textContent = gainers;
+            document.getElementById('total-losers').textContent = losers;
+            document.getElementById('market-sentiment').textContent = sentiment;
+            document.getElementById('update-time').textContent = new Date().toLocaleTimeString('ro-RO');
         }
         
-        function sortBy(type) {
-            HAPTIC.light();
-            document.querySelectorAll('.controls .btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-            if (type === 'change') data.sort((a, b) => Math.abs(b.c) - Math.abs(a.c));
-            else if (type === 'volume') data.sort((a, b) => b.v - a.v);
-            else if (type === 'alpha') data.sort((a, b) => a.s.localeCompare(b.s));
-            draw();
+        function setSort(type) {
+            currentSort = type;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + type).classList.add('active');
+            
+            if (type === 'change') bubbleData.sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h));
+            else if (type === 'volume') bubbleData.sort((a, b) => b.volume24h - a.volume24h);
+            else if (type === 'alpha') bubbleData.sort((a, b) => a.symbol.localeCompare(b.symbol));
+            
+            renderBubbles();
         }
         
-        function getColor(v) { return v >= 0 ? '#00ff41' : '#ff0040'; }
+        function getColor(c) { return c >= 0 ? '#00ff41' : '#ff0040'; }
         
-        function draw() {
-            const w = window.innerWidth;
-            const h = Math.max(window.innerHeight * 1.5, 1200);
-            const mobile = w < 768;
-            const baseR = mobile ? 20 : 28;
+        function renderBubbles() {
+            const w = window.innerWidth, container = document.getElementById('bubble-container');
+            container.innerHTML = '';
             
-            d3.select('#bubbles').selectAll('*').remove();
+            const centerX = w / 2, centerY = 300, isMobile = w < 768;
             
-            const coins = data.slice(0, 80);
-            const positions = [];
-            const centerX = w / 2;
-            const centerY = mobile ? 250 : 350;
-            
-            coins.forEach((d, i) => {
-                const angle = i * 2.399;
-                const radius = 60 + Math.sqrt(i) * (mobile ? 22 : 30);
-                const randomX = (Math.random() - 0.5) * 50;
-                const randomY = (Math.random() - 0.5) * 40;
-                const x = centerX + Math.cos(angle) * radius + randomX;
-                const y = centerY + Math.sin(angle) * radius * 0.7 + randomY + (i > 40 ? 100 : 0);
-                const r = baseR + Math.min(Math.abs(d.c) / 15, 1) * 12;
-                positions.push({ ...d, x, y, r });
-            });
-            
-            const svg = d3.select('#bubbles').append('svg').attr('width', w).attr('height', h);
-            const g = svg.selectAll('.bubble').data(positions).enter()
-                .append('g').attr('class', 'bubble').style('cursor', 'pointer')
-                .on('click', (e, d) => openCoinModal(d));
-            
-            g.style('opacity', 0).transition().duration(600).delay((d, i) => i * 15).style('opacity', 1);
-            
-            g.each(function(d) {
-                const el = d3.select(this), col = getColor(d.c);
-                el.append('circle').attr('r', d.r + 12).attr('fill', col).attr('opacity', 0.1);
-                const sp = el.append('g').attr('class', 'bubble-spiral');
-                [0.9, 0.7, 0.5].forEach((sc, i) => {
-                    let p = '';
-                    for (let j = 0; j <= 50; j++) {
-                        const t = j / 50, a = t * 2.5 * Math.PI, rad = d.r * (0.3 + 0.7 * t) * sc;
-                        p += (j === 0 ? 'M' : 'L') + ` ${rad * Math.cos(a)} ${rad * Math.sin(a)}`;
-                    }
-                    sp.append('path').attr('d', p).attr('stroke', col).attr('stroke-width', 3.5 - i * 0.8).attr('fill', 'none').attr('opacity', 1 - i * 0.25).attr('stroke-linecap', 'round');
-                });
-                sp.append('circle').attr('r', d.r * 0.2).attr('fill', col);
-                el.append('text').attr('class', 'bubble-text').attr('dy', '-0.2em').style('font-size', Math.min(d.r / 1.5, mobile ? 11 : 14) + 'px').text(d.s);
-                el.append('text').attr('class', 'bubble-pct').attr('dy', '1em').style('font-size', Math.min(d.r / 2.2, mobile ? 9 : 11) + 'px').text((d.c >= 0 ? '+' : '') + d.c.toFixed(1) + '%');
-            });
-            
-            g.attr('transform', d => `translate(${d.x},${d.y})`);
-        }
-        
-        function fmt(n) { return n >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(2) + 'K' : n.toFixed(2); }
-        
-        // Coin Modal
-        function openCoinModal(d) {
-            HAPTIC.medium();
-            currentCoin = d;
-            document.getElementById('m-symbol').textContent = d.s;
-            const ch = document.getElementById('m-change');
-            ch.textContent = (d.c >= 0 ? '+' : '') + d.c.toFixed(2) + '%';
-            ch.className = 'modal-change ' + (d.c >= 0 ? 'up' : 'down');
-            document.getElementById('m-price').textContent = '$' + d.p.toFixed(4);
-            document.getElementById('m-volume').textContent = '$' + fmt(d.v);
-            document.getElementById('m-high').textContent = '$' + d.h.toFixed(4);
-            document.getElementById('m-low').textContent = '$' + d.l.toFixed(4);
-            document.getElementById('entryPrice').value = d.p.toFixed(d.p < 1 ? 6 : 4);
-            document.getElementById('exitDate').value = new Date().toISOString().slice(0, 16);
-            hideTradeForm();
-            document.getElementById('coinModal').classList.add('show');
-            
-            setTimeout(() => {
-                const ctx = document.getElementById('m-chart').getContext('2d');
-                if (chart) chart.destroy();
-                const up = d.c >= 0, col = up ? '#00ff41' : '#ff0040';
-                const hist = []; let pr = d.p / (1 + d.c / 100);
-                for (let i = 0; i < 24; i++) { pr *= (1 + (Math.random() - 0.5) * 0.1); hist.push(pr); }
-                hist[23] = d.p;
-                chart = new Chart(ctx, { type: 'line', data: { labels: Array(24).fill('').map((_, i) => i + 'h'), datasets: [{ data: hist, borderColor: col, backgroundColor: up ? 'rgba(0,255,65,0.2)' : 'rgba(255,0,64,0.2)', borderWidth: 2, fill: true, tension: 0.4, pointRadius: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } } });
-            }, 10);
-        }
-        
-        function closeCoinModal() { 
-            HAPTIC.light();
-            document.getElementById('coinModal').classList.remove('show'); 
-        }
-        
-        // Risk Calculator
-        function updateRiskCalc() {
-            const entry = parseFloat(document.getElementById('entryPrice').value);
-            const size = parseFloat(document.getElementById('positionSize').value);
-            const lev = parseInt(document.getElementById('leverage').value) || 1;
-            const sl = parseFloat(document.getElementById('stopLoss').value);
-            const tp = parseFloat(document.getElementById('takeProfit').value);
-            
-            if (!entry || !size) { document.getElementById('riskDisplay').style.display = 'none'; return; }
-            
-            const notional = size * lev;
-            document.getElementById('riskDisplay').style.display = 'block';
-            
-            // Risk amount
-            if (sl) {
-                const riskPerUnit = currentSide === 'long' ? entry - sl : sl - entry;
-                const riskAmount = Math.abs(riskPerUnit / entry) * notional;
-                document.getElementById('riskAmount').textContent = '$' + riskAmount.toFixed(2);
-                document.getElementById('riskAmount').className = 'risk-value' + (riskAmount > size * 0.1 ? ' bad' : ' good');
+            bubbleData.forEach((d, i) => {
+                const angle = i * 2.4;
+                const radius = 80 + Math.sqrt(i) * (isMobile ? 22 : 30);
+                const x = centerX + Math.cos(angle) * radius + (Math.random() - 0.5) * 40;
+                const y = centerY + Math.sin(angle) * radius * 0.6 + (Math.random() - 0.5) * 30;
+                const size = (isMobile ? 40 : 50) + Math.min(Math.abs(d.change24h) / 15, 1) * 15;
+                const col = getColor(d.change24h);
                 
-                // R:R
-                if (tp) {
-                    const rewardPerUnit = currentSide === 'long' ? tp - entry : entry - tp;
-                    const rr = Math.abs(rewardPerUnit / riskPerUnit).toFixed(2);
-                    document.getElementById('riskReward').textContent = '1:' + rr;
-                    document.getElementById('riskReward').className = 'risk-value' + (parseFloat(rr) >= 2 ? ' good' : ' bad');
-                } else {
-                    document.getElementById('riskReward').textContent = '-';
-                }
-            } else {
-                document.getElementById('riskAmount').textContent = 'No SL set';
-                document.getElementById('riskReward').textContent = '-';
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble-group';
+                bubble.style.cssText = `position:absolute;left:${x - size/2}px;top:${y - size/2}px;width:${size}px;height:${size}px;`;
+                bubble.onclick = () => showModal(d);
+                
+                // SVG bubble
+                bubble.innerHTML = `
+                    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="overflow:visible">
+                        <circle cx="${size/2}" cy="${size/2}" r="${size/2 + 8}" fill="${col}" opacity="0.1" />
+                        <circle cx="${size/2}" cy="${size/2}" r="${size/2 - 2}" stroke="${col}" stroke-width="2" fill="none" opacity="0.6" />
+                        <circle cx="${size/2}" cy="${size/2}" r="${size/2 - 10}" stroke="${col}" stroke-width="1.5" fill="none" opacity="0.4" />
+                        <circle cx="${size/2}" cy="${size/2}" r="${size/4}" fill="${col}" opacity="0.3" />
+                        <text x="${size/2}" y="${size/2 - 3}" text-anchor="middle" fill="#fff" font-size="${size/3.5}" font-weight="bold" font-family="Orbitron">${d.symbol}</text>
+                        <text x="${size/2}" y="${size/2 + 10}" text-anchor="middle" fill="${col}" font-size="${size/5}" font-weight="600" font-family="Rajdhani">${d.change24h >= 0 ? '+' : ''}${d.change24h.toFixed(1)}%</text>
+                    </svg>
+                `;
+                
+                container.appendChild(bubble);
+            });
+        }
+        
+        function showModal(d) {
+            currentModalCoin = d;
+            document.getElementById('modal-symbol').textContent = d.symbol;
+            const ce = document.getElementById('modal-change');
+            ce.textContent = (d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(2) + '%';
+            ce.className = 'coin-change ' + (d.change24h >= 0 ? 'positive' : 'negative');
+            document.getElementById('modal-price').textContent = '$' + d.price.toFixed(4);
+            document.getElementById('modal-volume').textContent = '$' + (d.volume24h / 1e6).toFixed(2) + 'M';
+            document.getElementById('modal-high').textContent = '$' + d.high24h.toFixed(4);
+            document.getElementById('modal-low').textContent = '$' + d.low24h.toFixed(4);
+            document.getElementById('modal').classList.add('active');
+            
+            // Fill journal with current coin
+            document.getElementById('trade-symbol').value = d.symbol;
+        }
+        
+        function closeModal(e) {
+            if (!e || e.target === document.getElementById('modal')) {
+                document.getElementById('modal').classList.remove('active');
+            }
+        }
+        
+        // Journal functions
+        function showJournal() {
+            document.getElementById('journal-modal').classList.add('active');
+        }
+        
+        function closeJournal(e) {
+            if (!e || e.target === document.getElementById('journal-modal')) {
+                document.getElementById('journal-modal').classList.remove('active');
+            }
+        }
+        
+        function setTradeType(type) {
+            tradeType = type;
+            document.querySelectorAll('.trade-type-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.trade-type-btn.' + type).classList.add('active');
+        }
+        
+        function addToJournal() {
+            closeModal();
+            showJournal();
+        }
+        
+        function submitTrade() {
+            const symbol = document.getElementById('trade-symbol').value.toUpperCase();
+            const entry = parseFloat(document.getElementById('trade-entry').value);
+            const exit = parseFloat(document.getElementById('trade-exit').value);
+            const size = parseFloat(document.getElementById('trade-size').value);
+            
+            if (!symbol || !entry || !exit || !size) {
+                alert('Complete all fields!');
+                return;
             }
             
-            // Breakeven (includes 0.1% fees approx)
-            const breakeven = currentSide === 'long' ? entry * 1.002 : entry * 0.998;
-            document.getElementById('breakevenPrice').textContent = '$' + breakeven.toFixed(entry < 1 ? 6 : 4);
-            
-            // Liquidation estimate (maint. margin ~0.5%)
-            const liqDistance = 100 / lev * 0.995;
-            const liqPrice = currentSide === 'long' ? entry * (1 - liqDistance / 100) : entry * (1 + liqDistance / 100);
-            document.getElementById('liqPrice').textContent = '$' + liqPrice.toFixed(entry < 1 ? 6 : 4);
-        }
-        
-        // Trade Form
-        function showTradeForm() { 
-            HAPTIC.medium();
-            document.getElementById('tradeForm').style.display = 'block'; 
-        }
-        
-        function hideTradeForm() { 
-            HAPTIC.light();
-            document.getElementById('tradeForm').style.display = 'none';
-            currentSide = null;
-            document.getElementById('btnLong').classList.remove('active', 'long');
-            document.getElementById('btnShort').classList.remove('active', 'short');
-            document.getElementById('riskDisplay').style.display = 'none';
-        }
-        
-        function setTradeSide(side) {
-            HAPTIC.medium();
-            currentSide = side;
-            document.getElementById('btnLong').classList.toggle('active', side === 'long');
-            document.getElementById('btnLong').classList.toggle('long', side === 'long');
-            document.getElementById('btnShort').classList.toggle('active', side === 'short');
-            document.getElementById('btnShort').classList.toggle('short', side === 'short');
-            updateRiskCalc();
-        }
-        
-        function saveTrade() {
-            if (!currentSide) { alert('Selectează LONG sau SHORT'); return; }
-            
-            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
-            if (!entryPrice) { alert('Entry price required'); return; }
+            const pnl = tradeType === 'long' 
+                ? ((exit - entry) / entry) * size 
+                : ((entry - exit) / entry) * size;
             
             const trade = {
                 id: Date.now(),
-                symbol: currentCoin.s,
-                side: currentSide,
-                entryPrice: entryPrice,
-                positionSize: parseFloat(document.getElementById('positionSize').value) || 0,
-                leverage: parseInt(document.getElementById('leverage').value) || 1,
-                stopLoss: parseFloat(document.getElementById('stopLoss').value) || null,
-                takeProfit: parseFloat(document.getElementById('takeProfit').value) || null,
-                setupType: document.getElementById('setupType').value,
-                marketCondition: document.getElementById('marketCondition').value,
-                psychology: document.getElementById('psychology').value,
-                timeOfDay: document.getElementById('timeOfDay').value,
-                notes: document.getElementById('tradeNotes').value,
-                mistakeTag: document.getElementById('mistakeTag').value,
-                timestamp: new Date().toISOString(),
-                status: 'open',
-                exitPrice: null,
-                exitDate: null,
-                exitFees: 0,
-                pnl: null,
-                pnlPercent: null,
-                rMultiple: null,
-                tradeResult: null,
-                closeNotes: null
+                symbol,
+                type: tradeType,
+                entry,
+                exit,
+                size,
+                pnl,
+                date: new Date().toLocaleString('ro-RO')
             };
             
-            const trades = getTrades();
             trades.unshift(trade);
-            saveTrades(trades);
+            saveTrades();
+            renderTrades();
             
-            // Reset form
-            ['positionSize', 'stopLoss', 'takeProfit', 'tradeNotes'].forEach(id => document.getElementById(id).value = '');
-            ['setupType', 'marketCondition', 'psychology', 'timeOfDay', 'mistakeTag'].forEach(id => document.getElementById(id).value = '');
-            document.getElementById('leverage').value = '1';
-            hideTradeForm();
-            closeCoinModal();
+            // Clear form
+            document.getElementById('trade-symbol').value = '';
+            document.getElementById('trade-entry').value = '';
+            document.getElementById('trade-exit').value = '';
+            document.getElementById('trade-size').value = '';
             
-            alert(`✅ Trade logged: ${currentCoin.s} ${currentSide.toUpperCase()}`);
+            alert('Trade saved! P&L: $' + pnl.toFixed(2));
         }
         
-        // Journal
-        function openJournal() {
-            HAPTIC.medium();
-            renderJournal();
-            renderStats();
-            renderPerformance();
-            renderPsychology();
-            document.getElementById('journalModal').classList.add('show');
-        }
-        
-        function closeJournalModal() { 
-            HAPTIC.light();
-            document.getElementById('journalModal').classList.remove('show'); 
-        }
-        
-        function switchTab(tab) {
-            HAPTIC.medium();
-            document.querySelectorAll('.journal-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-' + tab).classList.add('active');
-            ['trades', 'stats', 'performance', 'psychology'].forEach(t => document.getElementById('view-' + t).style.display = t === tab ? 'block' : 'none');
-        }
-        
-        function filterTrades(filter) {
-            HAPTIC.medium();
-            currentTradeFilter = filter;
-            renderJournal();
-        }
-        
-        function renderJournal() {
-            const allTrades = getTrades();
-            let trades = allTrades;
-            
-            if (currentTradeFilter === 'open') trades = allTrades.filter(t => t.status === 'open');
-            else if (currentTradeFilter === 'win') trades = allTrades.filter(t => t.status === 'closed' && t.pnl > 0);
-            else if (currentTradeFilter === 'loss') trades = allTrades.filter(t => t.status === 'closed' && t.pnl <= 0);
-            
-            // Update filter counts
-            document.getElementById('filterAll').textContent = allTrades.length;
-            document.getElementById('filterOpen').textContent = allTrades.filter(t => t.status === 'open').length;
-            document.getElementById('filterWins').textContent = allTrades.filter(t => t.status === 'closed' && t.pnl > 0).length;
-            document.getElementById('filterLosses').textContent = allTrades.filter(t => t.status === 'closed' && t.pnl <= 0).length;
-            
-            const list = document.getElementById('journalList');
+        function renderTrades() {
+            const list = document.getElementById('trades-list');
             if (trades.length === 0) {
-                list.innerHTML = '<div class="empty-state">No trades found.<br>Click on a coin and "Log Trade" to start.</div>';
+                list.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.5);padding:20px;">No trades yet</div>';
                 return;
             }
             
-            list.innerHTML = trades.map(t => {
-                const isWin = t.pnl > 0;
-                const pnlClass = t.status === 'open' ? '' : (isWin ? 'profit' : 'loss');
-                const pnlDisplay = t.status === 'open' ? 'OPEN' : ((t.pnl >= 0 ? '+' : '') + '$' + t.pnl.toFixed(2));
-                
-                return `
-                <div class="trade-card glitch-card ${t.status}">
-                    <div class="noise-overlay"></div>
+            list.innerHTML = trades.map(t => `
+                <div class="trade-item ${t.type}">
                     <div class="trade-header">
-                        <div>
-                            <span class="trade-symbol">${t.symbol}</span>
-                            <span class="trade-side ${t.side}">${t.side.toUpperCase()}</span>
-                            <span class="trade-pnl ${pnlClass}">${pnlDisplay}</span>
-                        </div>
-                        <div class="trade-date">${new Date(t.timestamp).toLocaleDateString()} ${new Date(t.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                        <span class="trade-symbol">${t.symbol} ${t.type === 'long' ? '📈' : '📉'}</span>
+                        <span class="trade-pnl ${t.pnl >= 0 ? 'positive' : 'negative'}">
+                            ${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(2)}
+                        </span>
                     </div>
                     <div class="trade-details">
-                        <div class="trade-detail">
-                            <div class="trade-detail-label">Entry</div>
-                            <div class="trade-detail-value">$${t.entryPrice.toFixed(t.entryPrice < 1 ? 6 : 4)}</div>
-                        </div>
-                        <div class="trade-detail">
-                            <div class="trade-detail-label">Size</div>
-                            <div class="trade-detail-value">$${t.positionSize.toFixed(0)}</div>
-                        </div>
-                        <div class="trade-detail">
-                            <div class="trade-detail-label">Lev</div>
-                            <div class="trade-detail-value">${t.leverage}x</div>
-                        </div>
-                        ${t.exitPrice ? `
-                        <div class="trade-detail">
-                            <div class="trade-detail-label">Exit</div>
-                            <div class="trade-detail-value">$${t.exitPrice.toFixed(t.exitPrice < 1 ? 6 : 4)}</div>
-                        </div>
-                        ` : '<div class="trade-detail"><div class="trade-detail-label">Status</div><div class="trade-detail-value" style="color: var(--neon-blue);">OPEN</div></div>'}
-                    </div>
-                    <div style="margin-top: 8px;">
-                        ${t.setupType ? `<span class="tag setup">${t.setupType.replace(/_/g, ' ')}</span>` : ''}
-                        ${t.psychology ? `<span class="tag psych">${t.psychology}</span>` : ''}
-                        ${t.marketCondition ? `<span class="tag market">${t.marketCondition}</span>` : ''}
-                        ${t.mistakeTag ? `<span class="tag mistake">${t.mistakeTag.replace(/_/g, ' ')}</span>` : ''}
-                    </div>
-                    ${t.notes ? `<div class="trade-notes">${t.notes}</div>` : ''}
-                    <div class="trade-actions">
-                        ${t.status === 'open' ? `<button class="btn gold btn-small glitch-hover" onclick="openCloseTrade(${t.id})">🏁 Close</button>` : ''}
-                        <button class="btn secondary btn-small glitch-hover" onclick="editTrade(${t.id})">✏️ Edit</button>
-                        <button class="btn danger btn-small glitch-hover" onclick="deleteTrade(${t.id})">🗑️ Delete</button>
+                        Entry: $${t.entry} → Exit: $${t.exit} | Size: $${t.size}<br>
+                        ${t.date}
                     </div>
                 </div>
-                `;
-            }).join('');
+            `).join('');
         }
         
-        function renderStats() {
-            const trades = getTrades().filter(t => t.status === 'closed');
-            const allTrades = getTrades();
-            
-            document.getElementById('statTotal').textContent = allTrades.length;
-            document.getElementById('statLongs').textContent = allTrades.filter(t => t.side === 'long').length;
-            document.getElementById('statShorts').textContent = allTrades.filter(t => t.side === 'short').length;
-            
-            if (trades.length === 0) {
-                document.getElementById('statWinRate').textContent = '0%';
-                document.getElementById('statProfitFactor').textContent = '-';
-                document.getElementById('statAvgRR').textContent = '-';
-                document.getElementById('statBest').textContent = '-';
-                document.getElementById('statWorst').textContent = '-';
-                document.getElementById('statAvgWin').textContent = '-';
-                document.getElementById('statAvgLoss').textContent = '-';
-                document.getElementById('statTotalProfit').textContent = '-';
-                document.getElementById('statTotalLoss').textContent = '-';
-                return;
-            }
-            
-            const wins = trades.filter(t => t.pnl > 0);
-            const losses = trades.filter(t => t.pnl <= 0);
-            const winRate = Math.round((wins.length / trades.length) * 100);
-            
-            const totalProfit = wins.reduce((sum, t) => sum + t.pnl, 0);
-            const totalLoss = Math.abs(losses.reduce((sum, t) => sum + t.pnl, 0));
-            const profitFactor = totalLoss > 0 ? (totalProfit / totalLoss).toFixed(2) : '∞';
-            
-            const avgWin = wins.length > 0 ? totalProfit / wins.length : 0;
-            const avgLoss = losses.length > 0 ? totalLoss / losses.length : 0;
-            
-            const bestTrade = trades.reduce((max, t) => t.pnl > max.pnl ? t : max, trades[0]);
-            const worstTrade = trades.reduce((min, t) => t.pnl < min.pnl ? t : min, trades[0]);
-            
-            const avgRR = trades.filter(t => t.rMultiple).reduce((sum, t) => sum + t.rMultiple, 0) / trades.filter(t => t.rMultiple).length || 0;
-            
-            document.getElementById('statWinRate').textContent = winRate + '%';
-            document.getElementById('statProfitFactor').textContent = profitFactor;
-            document.getElementById('statAvgRR').textContent = avgRR.toFixed(2);
-            document.getElementById('statBest').textContent = '+$' + bestTrade.pnl.toFixed(0);
-            document.getElementById('statWorst').textContent = '-$' + Math.abs(worstTrade.pnl).toFixed(0);
-            document.getElementById('statAvgWin').textContent = '+$' + avgWin.toFixed(0);
-            document.getElementById('statAvgLoss').textContent = '-$' + avgLoss.toFixed(0);
-            document.getElementById('statTotalProfit').textContent = '+$' + totalProfit.toFixed(0);
-            document.getElementById('statTotalLoss').textContent = '-$' + totalLoss.toFixed(0);
-            
-            // Setup stats
-            const setupCounts = {};
-            trades.forEach(t => { if (t.setupType) { setupCounts[t.setupType] = setupCounts[t.setupType] || {w: 0, l: 0}; if (t.pnl > 0) setupCounts[t.setupType].w++; else setupCounts[t.setupType].l++; }});
-            const setupHtml = Object.entries(setupCounts).map(([setup, counts]) => {
-                const total = counts.w + counts.l;
-                const wr = Math.round((counts.w / total) * 100);
-                return `<div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);"><span>${setup.replace(/_/g, ' ')}</span><span style="color: ${wr >= 50 ? 'var(--neon-green)' : 'var(--neon-red)'}">${wr}% (${counts.w}/${total})</span></div>`;
-            }).join('') || '<div style="color: rgba(255,255,255,0.3); padding: 10px;">No setup data yet</div>';
-            document.getElementById('setupStats').innerHTML = setupHtml;
-            
-            // Market condition stats
-            const marketCounts = {};
-            trades.forEach(t => { if (t.marketCondition) { marketCounts[t.marketCondition] = marketCounts[t.marketCondition] || {w: 0, l: 0}; if (t.pnl > 0) marketCounts[t.marketCondition].w++; else marketCounts[t.marketCondition].l++; }});
-            const marketHtml = Object.entries(marketCounts).map(([mkt, counts]) => {
-                const total = counts.w + counts.l;
-                const wr = Math.round((counts.w / total) * 100);
-                return `<div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);"><span>${mkt}</span><span style="color: ${wr >= 50 ? 'var(--neon-green)' : 'var(--neon-red)'}">${wr}% (${counts.w}/${total})</span></div>`;
-            }).join('') || '<div style="color: rgba(255,255,255,0.3); padding: 10px;">No market condition data yet</div>';
-            document.getElementById('marketStats').innerHTML = marketHtml;
-        }
-        
-        function renderPerformance() {
-            const trades = getTrades().filter(t => t.status === 'closed').sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-            
-            if (trades.length === 0) {
-                document.getElementById('perfNetPnl').textContent = '-';
-                document.getElementById('perfWinStreak').textContent = '0';
-                document.getElementById('perfMaxDrawdown').textContent = '-';
-                document.getElementById('perfExpectancy').textContent = '-';
-                return;
-            }
-            
-            const netPnl = trades.reduce((sum, t) => sum + t.pnl, 0);
-            document.getElementById('perfNetPnl').textContent = (netPnl >= 0 ? '+' : '') + '$' + netPnl.toFixed(0);
-            document.getElementById('perfNetPnl').className = 'stat-card-value ' + (netPnl >= 0 ? 'green' : 'red');
-            
-            // Calculate streak
-            let streak = 0, maxStreak = 0;
-            for (let i = trades.length - 1; i >= 0; i--) {
-                if (trades[i].pnl > 0) { streak++; maxStreak = Math.max(maxStreak, streak); } 
-                else { streak = 0; }
-            }
-            document.getElementById('perfWinStreak').textContent = streak + (streak > 0 ? ' 🔥' : '');
-            document.getElementById('perfWinStreak').className = 'stat-card-value ' + (streak > 2 ? 'green' : '');
-            
-            // Max drawdown
-            let peak = 0, dd = 0, balance = 0;
-            trades.forEach(t => {
-                balance += t.pnl;
-                if (balance > peak) peak = balance;
-                const currentDD = peak - balance;
-                if (currentDD > dd) dd = currentDD;
-            });
-            document.getElementById('perfMaxDrawdown').textContent = '-$' + dd.toFixed(0);
-            
-            // Expectancy
-            const avgTrade = netPnl / trades.length;
-            document.getElementById('perfExpectancy').textContent = (avgTrade >= 0 ? '+' : '') + '$' + avgTrade.toFixed(0);
-            document.getElementById('perfExpectancy').className = 'stat-card-value ' + (avgTrade >= 0 ? 'green' : 'red');
-            
-            // P&L Chart
-            const ctx = document.getElementById('pnlChart').getContext('2d');
-            if (pnlChart) pnlChart.destroy();
-            
-            let runningPnl = 0;
-            const labels = trades.map((t, i) => i + 1);
-            const data = trades.map(t => { runningPnl += t.pnl; return runningPnl; });
-            
-            pnlChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Cumulative P&L',
-                        data: data,
-                        borderColor: netPnl >= 0 ? '#00ff41' : '#ff0040',
-                        backgroundColor: netPnl >= 0 ? 'rgba(0,255,65,0.1)' : 'rgba(255,0,64,0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { display: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)' } },
-                        y: { display: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)', callback: v => '$' + v.toFixed(0) } }
-                    }
-                }
-            });
-        }
-        
-        function renderPsychology() {
-            const trades = getTrades().filter(t => t.status === 'closed');
-            
-            // Psychology stats
-            const psychCounts = {};
-            trades.forEach(t => { if (t.psychology) { psychCounts[t.psychology] = psychCounts[t.psychology] || {pnl: 0, count: 0}; psychCounts[t.psychology].pnl += t.pnl; psychCounts[t.psychology].count++; }});
-            const psychHtml = Object.entries(psychCounts).sort((a, b) => b[1].pnl - a[1].pnl).map(([psych, data]) => {
-                const avg = data.pnl / data.count;
-                return `<div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);"><span>${psych}</span><span style="color: ${data.pnl >= 0 ? 'var(--neon-green)' : 'var(--neon-red)'}">${data.pnl >= 0 ? '+' : ''}$${data.pnl.toFixed(0)} (${data.count} trades, avg: ${avg >= 0 ? '+' : ''}$${avg.toFixed(0)})</span></div>`;
-            }).join('') || '<div style="color: rgba(255,255,255,0.3); padding: 10px;">No psychology data yet</div>';
-            document.getElementById('psychStats').innerHTML = psychHtml;
-            
-            // Mistake stats
-            const mistakeCounts = {};
-            trades.forEach(t => { if (t.mistakeTag) { mistakeCounts[t.mistakeTag] = mistakeCounts[t.mistakeTag] || {count: 0, pnl: 0}; mistakeCounts[t.mistakeTag].count++; mistakeCounts[t.mistakeTag].pnl += t.pnl; }});
-            const mistakeHtml = Object.entries(mistakeCounts).map(([mistake, data]) => {
-                return `<div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);"><span>${mistake.replace(/_/g, ' ')}</span><span style="color: var(--neon-red)">${data.count} times, avg: ${data.pnl/data.count >= 0 ? '+' : ''}$${(data.pnl/data.count).toFixed(0)}</span></div>`;
-            }).join('') || '<div style="color: rgba(255,255,255,0.3); padding: 10px;">No mistakes tagged yet - keep it clean! 🎯</div>';
-            document.getElementById('mistakeStats').innerHTML = mistakeHtml;
-            
-            // Time stats
-            const timeCounts = {};
-            trades.forEach(t => { if (t.timeOfDay) { timeCounts[t.timeOfDay] = timeCounts[t.timeOfDay] || {pnl: 0, count: 0}; timeCounts[t.timeOfDay].pnl += t.pnl; timeCounts[t.timeOfDay].count++; }});
-            const timeHtml = Object.entries(timeCounts).sort((a, b) => b[1].pnl - a[1].pnl).map(([time, data]) => {
-                return `<div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);"><span>${time}</span><span style="color: ${data.pnl >= 0 ? 'var(--neon-green)' : 'var(--neon-red)'}">${data.pnl >= 0 ? '+' : ''}$${data.pnl.toFixed(0)} (${data.count} trades)</span></div>`;
-            }).join('') || '<div style="color: rgba(255,255,255,0.3); padding: 10px;">No time data yet</div>';
-            document.getElementById('timeStats').innerHTML = timeHtml;
-        }
-        
-        // Close Trade Functions
-        function openCloseTrade(id) {
-            HAPTIC.medium();
-            closingTradeId = id;
-            const trade = getTrades().find(t => t.id === id);
-            document.getElementById('closeTradeSymbol').textContent = `${trade.symbol} ${trade.side.toUpperCase()}`;
-            document.getElementById('exitPrice').value = '';
-            document.getElementById('exitDate').value = new Date().toISOString().slice(0, 16);
-            document.getElementById('exitFees').value = '0';
-            document.getElementById('closePnlDisplay').style.display = 'none';
-            document.getElementById('tradeResult').value = '';
-            document.getElementById('closeNotes').value = '';
-            document.getElementById('closeTradeModal').classList.add('show');
-        }
-        
-        function closeCloseTradeModal() { 
-            HAPTIC.light();
-            document.getElementById('closeTradeModal').classList.remove('show'); 
-            closingTradeId = null; 
-        }
-        
-        function calculateClosePnl() {
-            const trade = getTrades().find(t => t.id === closingTradeId);
-            const exitPrice = parseFloat(document.getElementById('exitPrice').value);
-            if (!exitPrice || !trade) return;
-            
-            const notional = trade.positionSize * trade.leverage;
-            const priceChange = trade.side === 'long' ? (exitPrice - trade.entryPrice) / trade.entryPrice : (trade.entryPrice - exitPrice) / trade.entryPrice;
-            const grossPnl = priceChange * notional;
-            const fees = parseFloat(document.getElementById('exitFees').value) || 0;
-            const pnl = grossPnl - fees;
-            const pnlPercent = (pnl / trade.positionSize) * 100;
-            
-            // R Multiple
-            let rMultiple = null;
-            if (trade.stopLoss) {
-                const riskPerUnit = trade.side === 'long' ? trade.entryPrice - trade.stopLoss : trade.stopLoss - trade.entryPrice;
-                const riskAmount = Math.abs(riskPerUnit / trade.entryPrice) * notional;
-                rMultiple = riskAmount > 0 ? pnl / riskAmount : null;
-            }
-            
-            // Duration
-            const entryTime = new Date(trade.timestamp);
-            const exitTime = new Date(document.getElementById('exitDate').value);
-            const hours = Math.round((exitTime - entryTime) / (1000 * 60 * 60));
-            const duration = hours < 24 ? `${hours}h` : `${Math.floor(hours/24)}d ${hours%24}h`;
-            
-            document.getElementById('closePnlDisplay').style.display = 'block';
-            document.getElementById('calcPnl').textContent = (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
-            document.getElementById('calcPnl').className = 'risk-value ' + (pnl >= 0 ? 'good' : 'bad');
-            document.getElementById('calcPnlPercent').textContent = (pnlPercent >= 0 ? '+' : '') + pnlPercent.toFixed(2) + '%';
-            document.getElementById('calcPnlPercent').className = 'risk-value ' + (pnlPercent >= 0 ? 'good' : 'bad');
-            document.getElementById('calcRMultiple').textContent = rMultiple ? rMultiple.toFixed(2) + 'R' : 'No SL set';
-            document.getElementById('calcRMultiple').className = 'risk-value ' + (rMultiple && rMultiple >= 2 ? 'good' : '');
-            document.getElementById('calcDuration').textContent = duration;
-        }
-        
-        function confirmCloseTrade() {
-            const exitPrice = parseFloat(document.getElementById('exitPrice').value);
-            if (!exitPrice) { alert('Exit price required'); return; }
-            
-            const trades = getTrades();
-            const trade = trades.find(t => t.id === closingTradeId);
-            
-            const notional = trade.positionSize * trade.leverage;
-            const priceChange = trade.side === 'long' ? (exitPrice - trade.entryPrice) / trade.entryPrice : (trade.entryPrice - exitPrice) / trade.entryPrice;
-            const grossPnl = priceChange * notional;
-            const fees = parseFloat(document.getElementById('exitFees').value) || 0;
-            const pnl = grossPnl - fees;
-            
-            // R Multiple
-            let rMultiple = null;
-            if (trade.stopLoss) {
-                const riskPerUnit = trade.side === 'long' ? trade.entryPrice - trade.stopLoss : trade.stopLoss - trade.entryPrice;
-                const riskAmount = Math.abs(riskPerUnit / trade.entryPrice) * notional;
-                rMultiple = riskAmount > 0 ? pnl / riskAmount : null;
-            }
-            
-            trade.exitPrice = exitPrice;
-            trade.exitDate = document.getElementById('exitDate').value;
-            trade.exitFees = fees;
-            trade.pnl = pnl;
-            trade.pnlPercent = (pnl / trade.positionSize) * 100;
-            trade.rMultiple = rMultiple;
-            trade.status = 'closed';
-            trade.tradeResult = document.getElementById('tradeResult').value;
-            trade.closeNotes = document.getElementById('closeNotes').value;
-            
-            saveTrades(trades);
-            closeCloseTradeModal();
-            renderJournal();
-            renderStats();
-            renderPerformance();
-            renderPsychology();
-            
-            alert(`✅ Trade closed! P&L: ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}`);
-        }
-        
-        // Edit & Delete
-        function editTrade(id) {
-            HAPTIC.medium();
-            editingTradeId = id;
-            const trade = getTrades().find(t => t.id === id);
-            
-            const formHtml = `
-                <div class="form-group">
-                    <label class="form-label">Symbol</label>
-                    <input type="text" class="form-input" id="editSymbol" value="${trade.symbol}">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Entry Price</label>
-                        <input type="number" class="form-input" id="editEntry" value="${trade.entryPrice}" step="0.000001">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Exit Price</label>
-                        <input type="number" class="form-input" id="editExit" value="${trade.exitPrice || ''}" step="0.000001">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Position Size</label>
-                        <input type="number" class="form-input" id="editSize" value="${trade.positionSize}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">P&L Override</label>
-                        <input type="number" class="form-input" id="editPnl" value="${trade.pnl || ''}" step="0.01" placeholder="Leave empty to calculate">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Notes</label>
-                    <textarea class="form-textarea" id="editNotes">${trade.notes || ''}</textarea>
-                </div>
-                <div class="form-row">
-                    <button class="btn glitch-hover" onclick="closeEditModal()" style="flex: 1;">Cancel</button>
-                    <button class="btn gold glitch-hover" onclick="saveEditTrade()" style="flex: 2;">💾 Save Changes</button>
-                </div>
-            `;
-            
-            document.getElementById('editFormContainer').innerHTML = formHtml;
-            document.getElementById('editTradeModal').classList.add('show');
-        }
-        
-        function closeEditModal() { 
-            HAPTIC.light();
-            document.getElementById('editTradeModal').classList.remove('show'); 
-            editingTradeId = null; 
-        }
-        
-        function saveEditTrade() {
-            const trades = getTrades();
-            const trade = trades.find(t => t.id === editingTradeId);
-            
-            trade.symbol = document.getElementById('editSymbol').value;
-            trade.entryPrice = parseFloat(document.getElementById('editEntry').value);
-            trade.exitPrice = parseFloat(document.getElementById('editExit').value) || null;
-            trade.positionSize = parseFloat(document.getElementById('editSize').value);
-            trade.notes = document.getElementById('editNotes').value;
-            
-            const pnlOverride = document.getElementById('editPnl').value;
-            if (pnlOverride !== '') {
-                trade.pnl = parseFloat(pnlOverride);
-            } else if (trade.exitPrice) {
-                // Recalculate
-                const notional = trade.positionSize * trade.leverage;
-                const priceChange = trade.side === 'long' ? (trade.exitPrice - trade.entryPrice) / trade.entryPrice : (trade.entryPrice - trade.exitPrice) / trade.entryPrice;
-                trade.pnl = priceChange * notional;
-            }
-            
-            if (trade.exitPrice && trade.pnl !== null) trade.status = 'closed';
-            
-            saveTrades(trades);
-            closeEditModal();
-            renderJournal();
-            renderStats();
-            renderPerformance();
-        }
-        
-        function deleteTrade(id) {
-            if (!confirm('Delete this trade? Cannot be undone.')) return;
-            HAPTIC.warning();
-            const trades = getTrades().filter(t => t.id !== id);
-            saveTrades(trades);
-            renderJournal();
-            renderStats();
-            renderPerformance();
-            renderPsychology();
-        }
-        
-        function clearAllTrades() {
-            HAPTIC.heavy();
-            if (!confirm('DELETE ALL TRADES? This will wipe your entire journal!')) return;
-            HAPTIC.error();
-            localStorage.removeItem('guap_trades');
-            renderJournal();
-            renderStats();
-            renderPerformance();
-            renderPsychology();
-        }
-        
-        // Export
-        function exportTrades(format) {
-            HAPTIC.success();
-            const trades = getTrades();
-            if (trades.length === 0) { 
-                playSound('error');
-                HAPTIC.error();
-                alert('No trades to export'); 
-                return; 
-            }
-            
-            if (format === 'json') {
-                const blob = new Blob([JSON.stringify(trades, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `guap-trades-${new Date().toISOString().split('T')[0]}.json`;
-                a.click();
-            } else if (format === 'csv') {
-                const headers = ['symbol', 'side', 'entryPrice', 'exitPrice', 'positionSize', 'leverage', 'pnl', 'pnlPercent', 'setupType', 'psychology', 'marketCondition', 'timestamp', 'status'];
-                const csv = [headers.join(','), ...trades.map(t => headers.map(h => {
-                    const val = t[h];
-                    return typeof val === 'string' && val.includes(',') ? `"${val}"` : (val || '');
-                }).join(','))].join('\n');
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `guap-trades-${new Date().toISOString().split('T')[0]}.csv`;
-                a.click();
-            }
-        }
-        
-        document.addEventListener('keydown', e => { 
+        // Keyboard nav
+        document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                playSound('hover');
-                HAPTIC.light();
-                closeCoinModal();
-                closeJournalModal();
-                closeCloseTradeModal();
-                closeEditModal();
+                closeModal();
+                closeJournal();
             }
         });
         
-        // ═══════════════════════════════════════════════════════════════
-        // HAPTIC FEEDBACK - Mobile Vibration
-        // ═══════════════════════════════════════════════════════════════
-        
-        const HAPTIC = {
-            enabled: 'vibrate' in navigator,
-            
-            // Short light tap
-            light: () => {
-                if (HAPTIC.enabled) navigator.vibrate(10);
-            },
-            
-            // Medium feedback
-            medium: () => {
-                if (HAPTIC.enabled) navigator.vibrate(20);
-            },
-            
-            // Strong feedback
-            heavy: () => {
-                if (HAPTIC.enabled) navigator.vibrate([30, 50, 30]);
-            },
-            
-            // Success pattern
-            success: () => {
-                if (HAPTIC.enabled) navigator.vibrate([10, 30, 10, 30, 50]);
-            },
-            
-            // Error pattern
-            error: () => {
-                if (HAPTIC.enabled) navigator.vibrate([50, 30, 50, 30, 100]);
-            },
-            
-            // Glitch pattern (rapid stutter)
-            glitch: () => {
-                if (HAPTIC.enabled) navigator.vibrate([5, 5, 5, 5, 5, 5, 10]);
-            },
-            
-            // Typing feedback (very light)
-            type: () => {
-                if (HAPTIC.enabled) navigator.vibrate(3);
-            },
-            
-            // Trade saved - celebration
-            tradeSaved: () => {
-                if (HAPTIC.enabled) navigator.vibrate([10, 20, 10, 20, 10, 50, 100]);
-            },
-            
-            // Trade closed with P&L
-            tradeClosedProfit: (amount) => {
-                if (!HAPTIC.enabled) return;
-                // Scale vibration based on profit size
-                if (amount > 1000) {
-                    // Big win - intense celebration
-                    navigator.vibrate([20, 30, 20, 30, 50, 50, 100, 50, 200]);
-                } else if (amount > 200) {
-                    // Medium win
-                    navigator.vibrate([15, 25, 15, 25, 50, 100]);
-                } else {
-                    // Small win
-                    navigator.vibrate([10, 20, 10, 50]);
-                }
-            },
-            
-            tradeClosedLoss: (amount) => {
-                if (!HAPTIC.enabled) return;
-                // Scale vibration based on loss size
-                if (amount < -1000) {
-                    // Big loss - heavy thud
-                    navigator.vibrate([100, 50, 80, 50, 60]);
-                } else if (amount < -200) {
-                    // Medium loss
-                    navigator.vibrate([60, 40, 50, 40]);
-                } else {
-                    // Small loss - gentle reminder
-                    navigator.vibrate([30, 30, 40]);
-                }
-            },
-            
-            // Trade closed
-            tradeClosed: () => {
-                if (HAPTIC.enabled) navigator.vibrate([20, 30, 40, 50]);
-            },
-            
-            // Heartbeat pattern for open trades
-            heartbeat: () => {
-                if (HAPTIC.enabled) navigator.vibrate([10, 150, 10]);
-            },
-            
-            // Warning pattern
-            warning: () => {
-                if (HAPTIC.enabled) navigator.vibrate([50, 100, 50]);
-            }
-        };
-        
-        // Haptic on page load (subtle confirmation)
-        window.addEventListener('load', () => {
-            setTimeout(() => HAPTIC.light(), 500);
-        });
-        
-        // ═══════════════════════════════════════════════════════════════
-        // AUDIO SYSTEM - Cyberpunk Sound Effects
-        // ═══════════════════════════════════════════════════════════════
-        
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            const filter = audioCtx.createBiquadFilter();
-            
-            oscillator.connect(filter);
-            filter.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            const now = audioCtx.currentTime;
-            
-            switch(type) {
-                case 'hover':
-                    // Short high-tech beep
-                    oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(800, now);
-                    oscillator.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
-                    gainNode.gain.setValueAtTime(0.1, now);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-                    oscillator.start(now);
-                    oscillator.stop(now + 0.05);
-                    break;
-                    
-                case 'click':
-                    // Digital click
-                    oscillator.type = 'square';
-                    oscillator.frequency.setValueAtTime(400, now);
-                    oscillator.frequency.exponentialRampToValueAtTime(200, now + 0.08);
-                    filter.type = 'lowpass';
-                    filter.frequency.setValueAtTime(1000, now);
-                    gainNode.gain.setValueAtTime(0.15, now);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-                    oscillator.start(now);
-                    oscillator.stop(now + 0.08);
-                    break;
-                    
-                case 'success':
-                    // Victory chime
-                    oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(523.25, now); // C5
-                    oscillator.frequency.setValueAtTime(659.25, now + 0.1); // E5
-                    oscillator.frequency.setValueAtTime(783.99, now + 0.2); // G5
-                    gainNode.gain.setValueAtTime(0.2, now);
-                    gainNode.gain.setValueAtTime(0.2, now + 0.2);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-                    oscillator.start(now);
-                    oscillator.stop(now + 0.5);
-                    break;
-                    
-                case 'error':
-                    // Error buzz
-                    oscillator.type = 'sawtooth';
-                    oscillator.frequency.setValueAtTime(150, now);
-                    oscillator.frequency.linearRampToValueAtTime(100, now + 0.2);
-                    gainNode.gain.setValueAtTime(0.2, now);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                    oscillator.start(now);
-                    oscillator.stop(now + 0.2);
-                    break;
-                    
-                case 'typing':
-                    // Mechanical keyboard click
-                    oscillator.type = 'square';
-                    oscillator.frequency.setValueAtTime(200 + Math.random() * 100, now);
-                    gainNode.gain.setValueAtTime(0.05, now);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
-                    oscillator.start(now);
-                    oscillator.stop(now + 0.03);
-                    break;
-                    
-                case 'glitch':
-                    // Glitch noise
-                    oscillator.type = 'sawtooth';
-                    oscillator.frequency.setValueAtTime(800, now);
-                    oscillator.frequency.linearRampToValueAtTime(400, now + 0.1);
-                    filter.type = 'bandpass';
-                    filter.frequency.setValueAtTime(1000, now);
-                    filter.frequency.linearRampToValueAtTime(2000, now + 0.1);
-                    gainNode.gain.setValueAtTime(0.1, now);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                    oscillator.start(now);
-                    oscillator.stop(now + 0.1);
-                    break;
-            }
-        }
-        
-        // Add sound and haptic to all buttons
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.btn, .journal-tab').forEach(btn => {
-                btn.addEventListener('mouseenter', () => {
-                    playSound('hover');
-                    HAPTIC.light();
-                });
-                btn.addEventListener('click', () => {
-                    playSound('click');
-                    HAPTIC.medium();
-                });
-            });
-            
-            document.querySelectorAll('input, select, textarea').forEach(input => {
-                input.addEventListener('keydown', () => {
-                    playSound('typing');
-                    HAPTIC.type();
-                });
-            });
-            
-            document.querySelectorAll('.glitch-hover').forEach(el => {
-                el.addEventListener('mouseenter', () => {
-                    playSound('glitch');
-                    HAPTIC.glitch();
-                });
-            });
-            
-            document.querySelectorAll('.trade-card').forEach(card => {
-                card.addEventListener('mouseenter', () => HAPTIC.light());
-            });
-            
-            // Bubble haptic
-            document.querySelectorAll('.bubble').forEach(bubble => {
-                bubble.addEventListener('click', () => HAPTIC.medium());
-            });
-        });
-        
-        // ═══════════════════════════════════════════════════════════════
-        // PARTICLE BURST EFFECTS
-        // ═══════════════════════════════════════════════════════════════
-        
-        function createParticleBurst(x, y, color = 'green', count = 20) {
-            const container = document.createElement('div');
-            container.className = 'particle-container';
-            container.style.left = x + 'px';
-            container.style.top = y + 'px';
-            document.body.appendChild(container);
-            
-            for (let i = 0; i < count; i++) {
-                const particle = document.createElement('div');
-                particle.className = `particle ${color}`;
-                
-                const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
-                const velocity = 100 + Math.random() * 150;
-                const tx = Math.cos(angle) * velocity;
-                const ty = Math.sin(angle) * velocity;
-                
-                particle.style.setProperty('--tx', tx + 'px');
-                particle.style.setProperty('--ty', ty + 'px');
-                particle.style.animation = `particle-burst ${0.6 + Math.random() * 0.4}s ease-out forwards`;
-                particle.style.animationDelay = Math.random() * 0.1 + 's';
-                
-                container.appendChild(particle);
-            }
-            
-            setTimeout(() => container.remove(), 1000);
-        }
-        
-        function showSuccessCheckmark() {
-            const checkmark = document.createElement('div');
-            checkmark.className = 'success-checkmark';
-            checkmark.innerHTML = `
-                <svg viewBox="0 0 100 100">
-                    <path d="M20 50 L40 70 L80 30"/>
-                </svg>
-            `;
-            document.body.appendChild(checkmark);
-            
-            playSound('success');
-            
-            setTimeout(() => checkmark.remove(), 2000);
-        }
-        
-        function createDigitalRain() {
-            const container = document.createElement('div');
-            container.className = 'digital-rain';
-            document.body.appendChild(container);
-            
-            const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
-            
-            for (let i = 0; i < 30; i++) {
-                const drop = document.createElement('span');
-                drop.className = 'rain-drop';
-                drop.textContent = chars[Math.floor(Math.random() * chars.length)];
-                drop.style.left = Math.random() * 100 + 'vw';
-                drop.style.animationDelay = Math.random() * 0.5 + 's';
-                drop.style.animationDuration = (0.5 + Math.random() * 0.5) + 's';
-                container.appendChild(drop);
-            }
-            
-            setTimeout(() => container.remove(), 1500);
-        }
-        
-        // Override save functions with effects
-        const originalSaveTrade = saveTrade;
-        saveTrade = function() {
-            if (!currentSide) { 
-                playSound('error'); 
-                HAPTIC.error();
-                alert('Selectează LONG sau SHORT'); 
-                return; 
-            }
-            
-            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
-            if (!entryPrice) { 
-                playSound('error'); 
-                HAPTIC.error();
-                alert('Entry price required'); 
-                return; 
-            }
-            
-            // Haptic feedback
-            HAPTIC.tradeSaved();
-            
-            // Create burst at button position
-            const btn = document.querySelector('#tradeForm .btn-full');
-            const rect = btn.getBoundingClientRect();
-            createParticleBurst(rect.left + rect.width/2, rect.top + rect.height/2, 'gold', 30);
-            createDigitalRain();
-            showSuccessCheckmark();
-            
-            setTimeout(() => originalSaveTrade(), 300);
-        };
-        
-        const originalConfirmCloseTrade = confirmCloseTrade;
-        confirmCloseTrade = function() {
-            const exitPrice = parseFloat(document.getElementById('exitPrice').value);
-            if (!exitPrice) { 
-                playSound('error'); 
-                HAPTIC.error();
-                alert('Exit price required'); 
-                return; 
-            }
-            
-            const trade = getTrades().find(t => t.id === closingTradeId);
-            const color = trade.side === 'long' ? 'green' : 'red';
-            
-            // Calculate P&L first to determine haptic
-            const notional = trade.positionSize * trade.leverage;
-            const priceChange = trade.side === 'long' ? (exitPrice - trade.entryPrice) / trade.entryPrice : (trade.entryPrice - exitPrice) / trade.entryPrice;
-            const grossPnl = priceChange * notional;
-            const fees = parseFloat(document.getElementById('exitFees').value) || 0;
-            const pnl = grossPnl - fees;
-            
-            // Haptic feedback based on P&L
-            if (pnl >= 0) {
-                HAPTIC.tradeClosedProfit(pnl);
-            } else {
-                HAPTIC.tradeClosedLoss(pnl);
-            }
-            
-            const btn = document.querySelector('#closeTradeModal .btn.gold');
-            const rect = btn.getBoundingClientRect();
-            createParticleBurst(rect.left + rect.width/2, rect.top + rect.height/2, color, 40);
-            createDigitalRain();
-            showSuccessCheckmark();
-            
-            setTimeout(() => originalConfirmCloseTrade(), 300);
-        };
-        
-        load();
-        setInterval(load, 30000);
-        window.addEventListener('resize', draw);
+        // Init
+        loadData();
+        loadTrades();
+        setInterval(loadData, 30000);
+        setTradeType('long');
     </script>
+</body>
+</html>
 </body>
 </html>
