@@ -9,15 +9,10 @@
     
     <style>
         /* ═════════════════════════════════════════════════════════════════════════════
-           ═════════════════════════════════════════════════════════════════════════════
-           CRYPTO DIVER - RALPH-5 INTEGRATED EDITION
-           Combined: Ralph-1 (Background) + Ralph-2 (Shapes) + Ralph-3 (Physics) + Ralph-4 (Modal)
-           ═════════════════════════════════════════════════════════════════════════════
+           CRYPTO DIVER - RALPH-3 INTEGRATION EDITION
+           Combined: Ralph-1 (Background) + Ralph-2 (Shapes) + Ralph-3 (Filters + Alerts)
            ═════════════════════════════════════════════════════════════════════════════ */
         
-        /* ────────────────────────────────────────────────────────────────────────────
-           CSS VARIABLES - Unified Theme System
-           ──────────────────────────────────────────────────────────────────────────── */
         :root {
             /* Core Background Colors */
             --bg-primary: #050a08;
@@ -60,17 +55,20 @@
             
             /* Layout */
             --header-height: 70px;
+            --filter-bar-height: 110px;
             --bottom-nav-height: 64px;
             --safe-top: env(safe-area-inset-top, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             
-            /* Z-Index Layers (RALPH SPEC) */
+            /* Z-Index Layers */
             --z-background: 1;
             --z-divers: 5;
             --z-dotted-path: 10;
             --z-crypto-icons: 50;
             --z-shapes: 100;
             --z-modal: 200;
+            --z-filter-bar: 90;
+            --z-alert: 95;
         }
 
         /* Light Theme Overrides */
@@ -95,9 +93,7 @@
             --border-secondary: rgba(26, 58, 42, 0.1);
         }
 
-        /* ────────────────────────────────────────────────────────────────────────────
-           BASE STYLES & RESET
-           ──────────────────────────────────────────────────────────────────────────── */
+        /* Base Styles & Reset */
         *, *::before, *::after {
             margin: 0;
             padding: 0;
@@ -121,9 +117,441 @@
             line-height: 1.5;
         }
 
-        /* ────────────────────────────────────────────────────────────────────────────
-           Z-INDEX 1: BACKGROUND GRADIENT SYSTEM (RALPH-1)
+        /* ═════════════════════════════════════════════════════════════════════════════
+           RALPH-1: FILTER SYSTEM
            ──────────────────────────────────────────────────────────────────────────── */
+        .filter-system {
+            position: fixed;
+            top: calc(var(--header-height) + var(--safe-top));
+            left: 0;
+            right: 0;
+            z-index: 90;
+            background: linear-gradient(180deg, 
+                rgba(10, 10, 15, 0.95) 0%, 
+                rgba(10, 10, 15, 0.85) 60%,
+                transparent 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="light"] .filter-system {
+            background: linear-gradient(180deg, 
+                rgba(240, 245, 240, 0.95) 0%, 
+                rgba(240, 245, 240, 0.85) 60%,
+                transparent 100%);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Category Buttons */
+        .category-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .category-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .category-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .category-btn.active {
+            background: linear-gradient(135deg, rgba(184, 41, 221, 0.3), rgba(255, 0, 255, 0.2));
+            border-color: rgba(184, 41, 221, 0.5);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(184, 41, 221, 0.3);
+        }
+
+        .category-btn.gainers.active {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.3), rgba(0, 255, 136, 0.15));
+            border-color: rgba(0, 255, 136, 0.5);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .category-btn.losers.active {
+            background: linear-gradient(135deg, rgba(255, 51, 102, 0.3), rgba(255, 51, 102, 0.15));
+            border-color: rgba(255, 51, 102, 0.5);
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.3);
+        }
+
+        /* Sort Dropdown */
+        .sort-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sort-select {
+            padding: 8px 32px 8px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            transition: all 0.2s ease;
+        }
+
+        .sort-select:hover, .sort-select:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .sort-direction-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sort-direction-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Search Input */
+        .filter-search {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+            max-width: 300px;
+        }
+
+        .filter-search-input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .filter-search-input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(184, 41, 221, 0.5);
+            box-shadow: 0 0 0 3px rgba(184, 41, 221, 0.1);
+        }
+
+        .filter-search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .filter-search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .filter-search-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .filter-search-input:not(:placeholder-shown) + .filter-search-icon + .filter-search-clear,
+        .filter-search-input:not(:placeholder-shown) ~ .filter-search-clear {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .filter-search-clear:hover {
+            background: rgba(255, 51, 102, 0.3);
+            color: var(--accent-red);
+        }
+
+        /* Active Filters Display */
+        .active-filters {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-height: 28px;
+        }
+
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.1));
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 16px;
+            font-size: 12px;
+            color: var(--neon-cyan);
+            animation: chipIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes chipIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .filter-chip.removing {
+            animation: chipOut 0.2s ease forwards;
+        }
+
+        @keyframes chipOut {
+            to {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+        }
+
+        .filter-chip-remove {
+            width: 16px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            color: inherit;
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .filter-chip-remove:hover {
+            background: rgba(255, 51, 102, 0.5);
+            color: #fff;
+        }
+
+        .clear-all-btn {
+            padding: 6px 12px;
+            background: rgba(255, 51, 102, 0.15);
+            border: 1px solid rgba(255, 51, 102, 0.3);
+            border-radius: 16px;
+            color: var(--accent-red);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .clear-all-btn:hover {
+            background: rgba(255, 51, 102, 0.25);
+            box-shadow: 0 0 15px rgba(255, 51, 102, 0.2);
+        }
+
+        /* Bubble Highlight for Search */
+        .bubble-group.highlighted .bubble-spiral {
+            filter: drop-shadow(0 0 30px currentColor) brightness(1.5);
+            animation: highlightPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes highlightPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .bubble-group.dimmed {
+            opacity: 0.2;
+            filter: grayscale(0.8);
+        }
+
+        /* Results count */
+        .results-count {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .filter-system {
+                padding: 10px 16px;
+            }
+
+            .filter-row {
+                gap: 8px;
+            }
+
+            .category-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .filter-search {
+                min-width: 100%;
+                order: -1;
+            }
+
+            .sort-controls {
+                margin-left: auto;
+            }
+        }
+
+        /* ═════════════════════════════════════════════════════════════════════════════
+           ALERT BANNER (RALPH-2 INTEGRATION)
+           ═════════════════════════════════════════════════════════════════════════════ */
+        .alert-banner {
+            position: fixed;
+            top: calc(var(--header-height) + var(--filter-bar-height) - 20px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-200%);
+            background: var(--bg-card);
+            border: 1px solid var(--accent-gold);
+            border-radius: 12px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: var(--z-alert);
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 204, 0, 0.2);
+            min-width: 300px;
+            max-width: 90vw;
+        }
+
+        .alert-banner.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .alert-banner.volume-spike {
+            border-color: var(--accent-red);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 30px var(--glow-red);
+        }
+
+        .alert-banner.volume-spike .alert-icon {
+            animation: pulse-red 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 5px var(--accent-red)); }
+            50% { transform: scale(1.2); filter: drop-shadow(0 0 15px var(--accent-red)); }
+        }
+
+        .alert-icon { 
+            font-size: 20px; 
+            flex-shrink: 0;
+        }
+        
+        .alert-content {
+            flex: 1;
+        }
+        
+        .alert-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+        
+        .alert-banner.volume-spike .alert-title {
+            color: var(--accent-red);
+        }
+        
+        .alert-text { 
+            font-size: 13px; 
+            color: var(--text-secondary); 
+        }
+        
+        .alert-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .alert-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        /* ═════════════════════════════════════════════════════════════════════════════
+           BACKGROUND SYSTEM (RALPH-1)
+           ═════════════════════════════════════════════════════════════════════════════ */
         .bg-system-wrapper {
             position: fixed;
             top: 0;
@@ -141,14 +569,11 @@
             transition: opacity 0.5s ease;
         }
 
-        /* CRYPTO DIVER Deep Sea Gradient */
         .bg-layer-dark {
             background: 
-                /* Deeper abyss gradient */
                 radial-gradient(ellipse at 30% 80%, rgba(0, 50, 100, 0.25) 0%, transparent 50%),
                 radial-gradient(ellipse at 70% 20%, rgba(100, 0, 100, 0.15) 0%, transparent 40%),
                 radial-gradient(ellipse at 50% 50%, rgba(0, 30, 60, 0.4) 0%, transparent 70%),
-                /* Deep ocean colors */
                 linear-gradient(180deg, 
                     #0a0a1a 0%, 
                     #0d1f2d 20%, 
@@ -169,7 +594,6 @@
         [data-theme="light"] .bg-layer-dark { opacity: 0; }
         [data-theme="light"] .bg-layer-light { opacity: 1; }
 
-        /* Animated Particles - Deep Sea Bubbles */
         .bg-particles {
             position: absolute;
             inset: 0;
@@ -187,21 +611,15 @@
         }
 
         @keyframes floatUp {
-            0% { 
-                transform: translateY(100vh) scale(0.5); 
-                opacity: 0; 
-            }
+            0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
             10% { opacity: 0.6; }
             90% { opacity: 0.4; }
-            100% { 
-                transform: translateY(-10vh) scale(1.2); 
-                opacity: 0; 
-            }
+            100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
         }
 
-        /* ────────────────────────────────────────────────────────────────────────────
-           Z-INDEX 5: DIVERS AND CIRCLES (RALPH-1)
-           ──────────────────────────────────────────────────────────────────────────── */
+        /* ═════════════════════════════════════════════════════════════════════════════
+           DIVERS (RALPH-1)
+           ═════════════════════════════════════════════════════════════════════════════ */
         #divers-container {
             position: fixed;
             top: 0;
@@ -218,19 +636,8 @@
             pointer-events: none;
         }
 
-        /* Bull Diver - Green Glow */
-        .diver-group.bull {
-            left: 12%;
-            top: 40%;
-            transform: translate(-50%, -50%);
-        }
-
-        /* Bear Diver - Red Glow */
-        .diver-group.bear {
-            right: 12%;
-            top: 60%;
-            transform: translate(50%, -50%);
-        }
+        .diver-group.bull { left: 12%; top: 40%; transform: translate(-50%, -50%); }
+        .diver-group.bear { right: 12%; top: 60%; transform: translate(50%, -50%); }
 
         .diver-circle {
             position: absolute;
@@ -243,7 +650,6 @@
             display: block !important;
         }
 
-        /* Bull Circles - Deep Sea Green */
         .diver-circle.bull {
             background: radial-gradient(circle, 
                 rgba(0, 255, 136, 0.35) 0%, 
@@ -256,7 +662,6 @@
                 inset 0 0 50px rgba(0, 255, 136, 0.1);
         }
 
-        /* Bear Circles - Deep Sea Red */
         .diver-circle.bear {
             background: radial-gradient(circle, 
                 rgba(255, 51, 102, 0.35) 0%, 
@@ -269,7 +674,6 @@
                 inset 0 0 50px rgba(255, 51, 102, 0.1);
         }
 
-        /* Diver Circle Sizes */
         .diver-group.bull .diver-circle:nth-child(1) { width: 140px; height: 140px; animation: pulse-glow-green 4s ease-in-out infinite; animation-delay: 0s; }
         .diver-group.bull .diver-circle:nth-child(2) { width: 200px; height: 200px; animation: pulse-glow-green 4s ease-in-out infinite; animation-delay: 0.8s; }
         .diver-group.bull .diver-circle:nth-child(3) { width: 260px; height: 260px; animation: pulse-glow-green 4s ease-in-out infinite; animation-delay: 1.6s; }
@@ -290,9 +694,9 @@
             50% { transform: translate(-50%, -50%) scale(1.12); opacity: 0.55; }
         }
 
-        /* ────────────────────────────────────────────────────────────────────────────
-           Z-INDEX 10: DOTTED PATH (Decorative)
-           ──────────────────────────────────────────────────────────────────────────── */
+        /* ═════════════════════════════════════════════════════════════════════════════
+           DOTTED PATH
+           ═════════════════════════════════════════════════════════════════════════════ */
         .dotted-path-container {
             position: fixed;
             top: 0;
@@ -323,14 +727,14 @@
             50% { transform: translateY(-20px); opacity: 0.6; }
         }
 
-        /* ────────────────────────────────────────────────────────────────────────────
-           Z-INDEX 50: CRYPTO ICONS (Bubbles Container)
-           ──────────────────────────────────────────────────────────────────────────── */
+        /* ═════════════════════════════════════════════════════════════════════════════
+           CRYPTO ICONS (BUBBLES)
+           ═════════════════════════════════════════════════════════════════════════════ */
         #bubble-container {
             position: relative;
             z-index: var(--z-crypto-icons);
             width: 100%;
-            min-height: calc(100vh - var(--header-height) - var(--bottom-nav-height) - 40px);
+            min-height: calc(100vh - var(--header-height) - var(--filter-bar-height) - var(--bottom-nav-height) - 40px);
         }
 
         #bubble-container svg {
@@ -340,7 +744,6 @@
             overflow: visible;
         }
 
-        /* Bubble Styles */
         .bubble-group {
             cursor: pointer;
             transform-style: preserve-3d;
@@ -398,9 +801,9 @@
             50% { filter: drop-shadow(0 0 30px currentColor) brightness(1.3); }
         }
 
-        /* ────────────────────────────────────────────────────────────────────────────
-           Z-INDEX 100: GEOMETRIC SHAPES - 50-100 SHAPES (RALPH-2)
-           ──────────────────────────────────────────────────────────────────────────── */
+        /* ═════════════════════════════════════════════════════════════════════════════
+           GEOMETRIC SHAPES (RALPH-2) - WITH FILTER SUPPORT
+           ═════════════════════════════════════════════════════════════════════════════ */
         #geometric-shapes-container {
             position: fixed;
             top: 0;
@@ -416,12 +819,24 @@
             position: absolute;
             pointer-events: auto;
             cursor: pointer;
-            transition: transform 0.3s ease, opacity 0.3s ease;
+            transition: transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
         }
 
         .geo-shape:hover {
             transform: scale(1.2) rotate(5deg);
             opacity: 0.9;
+        }
+
+        .geo-shape.hidden {
+            opacity: 0 !important;
+            pointer-events: none;
+            transform: scale(0.5);
+        }
+
+        .geo-shape.filtered-out {
+            opacity: 0.05 !important;
+            filter: grayscale(100%);
+            pointer-events: none;
         }
 
         .geo-square {
@@ -478,18 +893,9 @@
             box-shadow: 0 0 15px var(--glow-pink);
         }
 
-        /* Shape Animations */
-        .geo-shape.float {
-            animation: shapeFloat 6s ease-in-out infinite;
-        }
-
-        .geo-shape.pulse {
-            animation: shapePulse 3s ease-in-out infinite;
-        }
-
-        .geo-shape.rotate {
-            animation: shapeRotate 10s linear infinite;
-        }
+        .geo-shape.float { animation: shapeFloat 6s ease-in-out infinite; }
+        .geo-shape.pulse { animation: shapePulse 3s ease-in-out infinite; }
+        .geo-shape.rotate { animation: shapeRotate 10s linear infinite; }
 
         @keyframes shapeFloat {
             0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -506,9 +912,9 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* ────────────────────────────────────────────────────────────────────────────
+        /* ═════════════════════════════════════════════════════════════════════════════
            HEADER
-           ──────────────────────────────────────────────────────────────────────────── */
+           ═════════════════════════════════════════════════════════════════════════════ */
         .header {
             position: fixed;
             top: 0;
@@ -558,7 +964,6 @@
             gap: 12px;
         }
 
-        /* Search Box */
         .search-box {
             position: relative;
             flex: 1;
@@ -596,7 +1001,6 @@
             font-size: 14px;
         }
 
-        /* Stats Display */
         .stats {
             display: flex;
             gap: 12px;
@@ -626,7 +1030,6 @@
             letter-spacing: 1px;
         }
 
-        /* Theme Toggle */
         .theme-toggle {
             width: 44px;
             height: 44px;
@@ -646,20 +1049,20 @@
             transform: scale(1.05);
         }
 
-        /* ────────────────────────────────────────────────────────────────────────────
+        /* ═════════════════════════════════════════════════════════════════════════════
            MAIN CONTENT
-           ──────────────────────────────────────────────────────────────────────────── */
+           ═════════════════════════════════════════════════════════════════════════════ */
         .main-content {
             position: relative;
             z-index: var(--z-crypto-icons);
-            padding-top: calc(var(--header-height) + 20px);
+            padding-top: calc(var(--header-height) + var(--filter-bar-height) + 20px);
             padding-bottom: calc(var(--bottom-nav-height) + 20px);
             min-height: 100vh;
         }
 
-        /* ────────────────────────────────────────────────────────────────────────────
-           Z-INDEX 200: MODAL (RALPH-4)
-           ──────────────────────────────────────────────────────────────────────────── */
+        /* ═════════════════════════════════════════════════════════════════════════════
+           MODAL
+           ═════════════════════════════════════════════════════════════════════════════ */
         .enhanced-modal {
             position: fixed;
             top: 0;
@@ -704,7 +1107,6 @@
             transform: translateY(0) scale(1);
         }
 
-        /* Modal gradient border */
         .enhanced-modal-content::before {
             content: '';
             position: absolute;
@@ -715,7 +1117,6 @@
             background: linear-gradient(90deg, var(--accent-green) 0%, var(--accent-red) 100%);
         }
 
-        /* Swipe Handle */
         .modal-swipe-handle {
             width: 100%;
             padding: 12px 0;
@@ -732,7 +1133,6 @@
             border-radius: 2px;
         }
 
-        /* Modal Header */
         .modal-header {
             padding: 0 24px 16px;
             text-align: center;
@@ -818,11 +1218,8 @@
             text-transform: uppercase;
         }
 
-        /* Sparkline Container */
-        .sparkline-container {
-            padding: 0 24px 20px;
-        }
-
+        .sparkline-container { padding: 0 24px 20px; }
+        
         .sparkline-wrapper {
             height: 60px;
             background: rgba(0, 0, 0, 0.3);
@@ -830,39 +1227,15 @@
             padding: 8px;
         }
 
-        .sparkline-svg {
-            width: 100%;
-            height: 100%;
-            overflow: visible;
-        }
+        .sparkline-svg { width: 100%; height: 100%; overflow: visible; }
+        .sparkline-path { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .sparkline-area { stroke: none; }
+        .sparkline-dot { r: 3; stroke: white; stroke-width: 2; }
 
-        .sparkline-path {
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
+        @keyframes drawLine { to { stroke-dashoffset: 0; } }
 
-        .sparkline-area {
-            stroke: none;
-        }
-
-        .sparkline-dot {
-            r: 3;
-            stroke: white;
-            stroke-width: 2;
-        }
-
-        @keyframes drawLine {
-            to { stroke-dashoffset: 0; }
-        }
-
-        /* Price Section */
-        .price-section {
-            padding: 0 24px 20px;
-            text-align: center;
-        }
-
+        .price-section { padding: 0 24px 20px; text-align: center; }
+        
         .price-display {
             font-family: 'Orbitron', sans-serif;
             font-size: 2.8rem;
@@ -894,7 +1267,6 @@
             box-shadow: 0 0 20px var(--glow-red);
         }
 
-        /* Stats Grid */
         .modal-stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -929,11 +1301,8 @@
             font-weight: 600;
         }
 
-        .stat-card-value.highlight {
-            font-size: 1.1rem;
-        }
+        .stat-card-value.highlight { font-size: 1.1rem; }
 
-        /* HL Progress Bar */
         .hl-progress {
             margin-top: 8px;
             height: 4px;
@@ -958,7 +1327,6 @@
             color: var(--text-muted);
         }
 
-        /* Volume Bars */
         .volume-bars {
             display: flex;
             align-items: flex-end;
@@ -974,7 +1342,6 @@
             min-height: 2px;
         }
 
-        /* Action Buttons */
         .modal-actions {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -1009,14 +1376,10 @@
             color: var(--accent-green);
         }
 
-        .action-btn.primary:hover {
-            box-shadow: 0 0 20px var(--glow-green);
-        }
-
+        .action-btn.primary:hover { box-shadow: 0 0 20px var(--glow-green); }
         .action-icon { font-size: 1.3rem; }
         .action-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Toast Notification */
         .modal-toast {
             position: fixed;
             bottom: 100px;
@@ -1044,9 +1407,9 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* ────────────────────────────────────────────────────────────────────────────
+        /* ═════════════════════════════════════════════════════════════════════════════
            BOTTOM NAVIGATION
-           ──────────────────────────────────────────────────────────────────────────── */
+           ═════════════════════════════════════════════════════════════════════════════ */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -1086,18 +1449,12 @@
             transition: all 0.3s ease;
         }
 
-        .bottom-nav-item.active {
-            color: var(--accent-green);
-        }
+        .bottom-nav-item.active { color: var(--accent-green); }
+        .bottom-nav-icon { font-size: 20px; line-height: 1; }
 
-        .bottom-nav-icon {
-            font-size: 20px;
-            line-height: 1;
-        }
-
-        /* ────────────────────────────────────────────────────────────────────────────
+        /* ═════════════════════════════════════════════════════════════════════════════
            LOADING STATE
-           ──────────────────────────────────────────────────────────────────────────── */
+           ═════════════════════════════════════════════════════════════════════════════ */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -1128,9 +1485,7 @@
             animation: spin 1s linear infinite;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .loading-text {
             font-family: 'Orbitron', sans-serif;
@@ -1139,52 +1494,13 @@
             letter-spacing: 2px;
         }
 
-        /* ────────────────────────────────────────────────────────────────────────────
-           ALERT BANNER
-           ──────────────────────────────────────────────────────────────────────────── */
-        .alert-banner {
-            position: fixed;
-            top: calc(var(--header-height) + 10px);
-            left: 50%;
-            transform: translateX(-50%) translateY(-150%);
-            background: var(--bg-card);
-            border: 1px solid var(--border-primary);
-            border-radius: 12px;
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 99;
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .alert-banner.show {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .alert-icon { font-size: 20px; }
-        .alert-text { font-size: 14px; color: var(--text-secondary); }
-        .alert-close {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 18px;
-            padding: 0;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* ────────────────────────────────────────────────────────────────────────────
+        /* ═════════════════════════════════════════════════════════════════════════════
            RESPONSIVE DESIGN
-           ──────────────────────────────────────────────────────────────────────────── */
+           ═════════════════════════════════════════════════════════════════════════════ */
         @media (max-width: 768px) {
             :root {
                 --header-height: 60px;
+                --filter-bar-height: 130px;
             }
 
             .logo { font-size: 1rem; }
@@ -1193,11 +1509,25 @@
             
             .search-box {
                 position: fixed;
-                top: calc(var(--header-height) + 10px);
+                top: calc(var(--header-height) + var(--filter-bar-height) + 10px);
                 left: 16px;
                 right: 16px;
                 max-width: none;
                 z-index: 99;
+            }
+
+            .filter-bar {
+                padding: 0 12px;
+                gap: 8px;
+            }
+            
+            .filter-label {
+                font-size: 10px;
+            }
+            
+            .filter-chip {
+                padding: 5px 10px;
+                font-size: 11px;
             }
 
             .coin-symbol-large { font-size: 2rem; }
@@ -1210,6 +1540,12 @@
             .diver-circle.bull:nth-child(4), .diver-circle.bear:nth-child(4) { display: none !important; }
             
             .geo-shape { transform: scale(0.8); }
+            
+            .alert-banner {
+                min-width: auto;
+                width: calc(100% - 32px);
+                padding: 10px 16px;
+            }
         }
 
         @media (min-width: 769px) {
@@ -1243,28 +1579,21 @@
     </style>
 </head>
 <body data-theme="dark">
-    <!-- ═════════════════════════════════════════════════════════════════════════════
-         Z-INDEX 1: BACKGROUND SYSTEM
-         ═════════════════════════════════════════════════════════════════════════════ -->
+    <!-- BACKGROUND SYSTEM -->
     <div class="bg-system-wrapper">
         <div class="bg-layer bg-layer-dark"></div>
         <div class="bg-layer bg-layer-light"></div>
         <div class="bg-particles" id="bg-particles"></div>
     </div>
 
-    <!-- ═════════════════════════════════════════════════════════════════════════════
-         Z-INDEX 5: DIVERS AND CIRCLES (RALPH-1)
-         ═════════════════════════════════════════════════════════════════════════════ -->
+    <!-- DIVERS -->
     <div id="divers-container">
-        <!-- Bull diver - Green -->
         <div class="diver-group bull">
             <div class="diver-circle bull"></div>
             <div class="diver-circle bull"></div>
             <div class="diver-circle bull"></div>
             <div class="diver-circle bull"></div>
         </div>
-
-        <!-- Bear diver - Red -->
         <div class="diver-group bear">
             <div class="diver-circle bear"></div>
             <div class="diver-circle bear"></div>
@@ -1273,38 +1602,23 @@
         </div>
     </div>
 
-    <!-- ═════════════════════════════════════════════════════════════════════════════
-         Z-INDEX 10: DOTTED PATH (Decorative)
-         ═════════════════════════════════════════════════════════════════════════════ -->
+    <!-- DOTTED PATHS -->
     <div class="dotted-path-container" id="dotted-paths"></div>
 
-    <!-- ═════════════════════════════════════════════════════════════════════════════
-         Z-INDEX 100: GEOMETRIC SHAPES (RALPH-2)
-         ═════════════════════════════════════════════════════════════════════════════ -->
+    <!-- GEOMETRIC SHAPES -->
     <div id="geometric-shapes-container"></div>
 
-    <!-- ═════════════════════════════════════════════════════════════════════════════
-         LOADING OVERLAY
-         ═════════════════════════════════════════════════════════════════════════════ -->
+    <!-- LOADING OVERLAY -->
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-spinner"></div>
         <p class="loading-text">🤿 DIVING INTO MARKET DATA...</p>
     </div>
 
-    <!-- ═════════════════════════════════════════════════════════════════════════════
-         HEADER
-         ═════════════════════════════════════════════════════════════════════════════ -->
+    <!-- HEADER -->
     <header class="header">
         <div class="logo">
             <span>🤿</span>
             <span>CRYPTO DIVER</span>
-        </div>
-        
-        <div class="header-center">
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" id="search-input" placeholder="Search coin...">
-            </div>
         </div>
         
         <div class="header-right">
@@ -1325,15 +1639,65 @@
     </header>
 
     <!-- ═════════════════════════════════════════════════════════════════════════════
-         MAIN CONTENT - CRYPTO ICONS (Z-INDEX 50)
+         RALPH-1: FILTER SYSTEM
          ═════════════════════════════════════════════════════════════════════════════ -->
+    <div class="filter-system" id="filter-system">
+        <div class="filter-container">
+            <div class="filter-row">
+                <!-- Category Buttons -->
+                <div class="category-filters">
+                    <button class="category-btn active" data-category="all">Toate</button>
+                    <button class="category-btn gainers" data-category="gainers">Gainers ▲</button>
+                    <button class="category-btn losers" data-category="losers">Losers ▼</button>
+                    <button class="category-btn" data-category="majors">Majors</button>
+                </div>
+
+                <!-- Sort Controls -->
+                <div class="sort-controls">
+                    <select class="sort-select" id="sort-select">
+                        <option value="volume">Volum</option>
+                        <option value="change">Change %</option>
+                        <option value="price">Preț</option>
+                        <option value="name">Nume</option>
+                    </select>
+                    <button class="sort-direction-btn" id="sort-direction" title="Toggle direction">
+                        ↓
+                    </button>
+                </div>
+
+                <!-- Search -->
+                <div class="filter-search">
+                    <span class="filter-search-icon">🔍</span>
+                    <input type="text" class="filter-search-input" id="filter-search" placeholder="Caută monedă..." autocomplete="off">
+                    <button class="filter-search-clear" id="search-clear">×</button>
+                </div>
+            </div>
+
+            <!-- Active Filters Display -->
+            <div class="active-filters" id="active-filters">
+                <span class="results-count" id="results-count">0 monede</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═════════════════════════════════════════════════════════════════════════════
+         ALERT BANNER (RALPH-2 INTEGRATION)
+         ═════════════════════════════════════════════════════════════════════════════ -->
+    <div class="alert-banner" id="alert-banner">
+        <span class="alert-icon">⚡</span>
+        <div class="alert-content">
+            <div class="alert-title" id="alert-title">Alert</div>
+            <div class="alert-text" id="alert-text">Something happened!</div>
+        </div>
+        <button class="alert-close" id="alert-close">×</button>
+    </div>
+
+    <!-- MAIN CONTENT -->
     <main class="main-content">
         <div id="bubble-container"></div>
     </main>
 
-    <!-- ═════════════════════════════════════════════════════════════════════════════
-         BOTTOM NAVIGATION
-         ═════════════════════════════════════════════════════════════════════════════ -->
+    <!-- BOTTOM NAVIGATION -->
     <nav class="bottom-nav">
         <button class="bottom-nav-item active" data-tab="heatmap">
             <span class="bottom-nav-icon">🌊</span>
@@ -1353,9 +1717,7 @@
         </button>
     </nav>
 
-    <!-- ═════════════════════════════════════════════════════════════════════════════
-         Z-INDEX 200: ENHANCED MODAL (RALPH-4)
-         ═════════════════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL -->
     <div class="enhanced-modal" id="enhanced-modal">
         <div class="enhanced-modal-content">
             <div class="modal-swipe-handle"></div>
@@ -1440,23 +1802,12 @@
         </div>
     </div>
 
-    <!-- ═════════════════════════════════════════════════════════════════════════════
-         ALERT BANNER
-         ═════════════════════════════════════════════════════════════════════════════ -->
-    <div class="alert-banner" id="alert-banner">
-        <span class="alert-icon">⚡</span>
-        <span class="alert-text" id="alert-text">Volume spike detected!</span>
-        <button class="alert-close" onclick="this.parentElement.classList.remove('show')">×</button>
-    </div>
-
-    <!-- ═════════════════════════════════════════════════════════════════════════════
-         JAVASCRIPT - INTEGRATED SYSTEM
-         ═════════════════════════════════════════════════════════════════════════════ -->
+    <!-- JAVASCRIPT -->
     <script>
         /**
          * ═════════════════════════════════════════════════════════════════════════════
-         * CRYPTO DIVER - RALPH-5 INTEGRATED EDITION
-         * Combined: Ralph-1 (Background) + Ralph-2 (Shapes) + Ralph-3 (Physics) + Ralph-4 (Modal)
+         * CRYPTO DIVER - RALPH-3 INTEGRATION
+         * Filters + Alerts working together
          * ═════════════════════════════════════════════════════════════════════════════
          */
 
@@ -1467,9 +1818,10 @@
             API_URL: 'https://api.bybit.com/v5/market/tickers',
             UPDATE_INTERVAL: 30000,
             MAX_BUBBLES: 60,
-            VOLUME_SPIKE_THRESHOLD: 2.5,
-            SHAPE_COUNT: 75, // 50-100 shapes as per spec
+            VOLUME_SPIKE_THRESHOLD: 2.0,
+            SHAPE_COUNT: 75,
             ANIMATION_DURATION: 1000,
+            ALERT_COOLDOWN: 10000, // Don't spam alerts
         };
 
         // ============================================
@@ -1483,28 +1835,34 @@
             volumeHistory: {},
             isLoading: true,
             searchQuery: '',
-            simulation: null,
+            animationId: null,
             shapes: [],
+            activeShapeFilters: new Set(),
+            lastAlertTime: 0,
+            alertQueue: [],
+            // RALPH-1: Filter System State
+            filters: {
+                category: 'all',
+                sortBy: 'volume',
+                sortDesc: true,
+                search: ''
+            },
+            searchDebounceTimer: null
         };
+
+        // Major coins list for filter
+        const MAJOR_COINS = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'AVAX', 'DOT', 'MATIC', 'LINK', 'UNI', 'AAVE', 'ATOM', 'NEAR', 'ALGO', 'VET', 'FIL', 'THETA', 'XTZ', 'XLM', 'LTC', 'BCH', 'ETC', 'XMR', 'EOS', 'TRX', 'NEO', 'DASH', 'ZEC', 'WAVES'];
 
         // ============================================
         // UTILITY FUNCTIONS
         // ============================================
-        
-        /** Format price with appropriate decimals */
         function formatPrice(price) {
-            if (price >= 1000) {
-                return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            } else if (price >= 1) {
-                return price.toFixed(4);
-            } else if (price >= 0.01) {
-                return price.toFixed(6);
-            } else {
-                return price.toFixed(8);
-            }
+            if (price >= 1000) return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (price >= 1) return price.toFixed(4);
+            if (price >= 0.01) return price.toFixed(6);
+            return price.toFixed(8);
         }
 
-        /** Format number to K/M/B */
         function formatNumber(num) {
             if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
             if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
@@ -1512,10 +1870,8 @@
             return num.toFixed(2);
         }
 
-        /** Get bubble color based on price change */
         function getBubbleColor(change24h, theme = 'dark') {
             const isPositive = change24h >= 0;
-            
             if (theme === 'dark') {
                 return isPositive ? {
                     primary: '#00ff41',
@@ -1539,7 +1895,6 @@
             }
         }
 
-        /** Calculate bubble size based on volume */
         function calculateBubbleSize(volume, maxVolume) {
             const minSize = 45;
             const maxSize = 110;
@@ -1548,16 +1903,280 @@
         }
 
         // ============================================
-        // RALPH-1: BACKGROUND SYSTEM
+        // RALPH-1: FILTER SYSTEM FUNCTIONS
         // ============================================
         
-        /** Initialize floating particles */
+        /** Apply all filters and sorting to coins */
+        function applyFilters() {
+            let result = [...state.coins];
+            const filters = state.filters;
+            
+            // Category filter
+            if (filters.category !== 'all') {
+                switch (filters.category) {
+                    case 'gainers':
+                        result = result.filter(c => c.change24h > 0);
+                        break;
+                    case 'losers':
+                        result = result.filter(c => c.change24h < 0);
+                        break;
+                    case 'majors':
+                        result = result.filter(c => MAJOR_COINS.includes(c.symbol));
+                        break;
+                }
+            }
+            
+            // Search filter
+            if (filters.search) {
+                const query = filters.search.toLowerCase();
+                result = result.filter(c => c.symbol.toLowerCase().includes(query));
+            }
+            
+            // Sorting
+            result.sort((a, b) => {
+                let valA, valB;
+                switch (filters.sortBy) {
+                    case 'volume':
+                        valA = a.volume24h;
+                        valB = b.volume24h;
+                        break;
+                    case 'change':
+                        valA = a.change24h;
+                        valB = b.change24h;
+                        break;
+                    case 'price':
+                        valA = a.price;
+                        valB = b.price;
+                        break;
+                    case 'name':
+                        valA = a.symbol.toLowerCase();
+                        valB = b.symbol.toLowerCase();
+                        break;
+                    default:
+                        valA = a.volume24h;
+                        valB = b.volume24h;
+                }
+                
+                if (valA < valB) return filters.sortDesc ? 1 : -1;
+                if (valA > valB) return filters.sortDesc ? -1 : 1;
+                return 0;
+            });
+            
+            state.filteredCoins = result;
+            updateActiveFiltersDisplay();
+            updateResultsCount();
+            renderBubblesWithTransition(result);
+        }
+        
+        /** Render bubbles with smooth transition */
+        function renderBubblesWithTransition(coins) {
+            const container = document.getElementById('bubble-container');
+            const existingGroups = d3.selectAll('.bubble-group');
+            
+            // If no coins, fade out all
+            if (coins.length === 0) {
+                existingGroups.transition()
+                    .duration(300)
+                    .style('opacity', 0)
+                    .remove();
+                return;
+            }
+            
+            // Get current coin symbols
+            const currentSymbols = new Set(coins.map(c => c.symbol));
+            const searchQuery = state.filters.search.toLowerCase();
+            
+            // Update existing bubbles
+            existingGroups.each(function(d) {
+                const group = d3.select(this);
+                const symbol = d.symbol;
+                
+                if (currentSymbols.has(symbol)) {
+                    // Coin should be visible
+                    group.classed('dimmed', false)
+                        .classed('highlighted', searchQuery && symbol.toLowerCase().includes(searchQuery));
+                    
+                    group.transition()
+                        .duration(300)
+                        .style('opacity', 1);
+                } else {
+                    // Coin should be hidden
+                    group.classed('highlighted', false)
+                        .classed('dimmed', true);
+                    
+                    group.transition()
+                        .duration(300)
+                        .style('opacity', 0.15);
+                }
+            });
+            
+            // If first render or empty, do full render
+            if (existingGroups.empty()) {
+                renderBubbles(coins);
+            }
+        }
+        
+        /** Update active filters display (chips) */
+        function updateActiveFiltersDisplay() {
+            const container = document.getElementById('active-filters');
+            const filters = state.filters;
+            
+            // Clear existing chips (except results count)
+            const existingChips = container.querySelectorAll('.filter-chip, .clear-all-btn');
+            existingChips.forEach(chip => chip.remove());
+            
+            const chips = [];
+            
+            // Category chip
+            if (filters.category !== 'all') {
+                const categoryLabels = {
+                    gainers: 'Gainers ▲',
+                    losers: 'Losers ▼',
+                    majors: 'Majors'
+                };
+                chips.push({ type: 'category', label: categoryLabels[filters.category] });
+            }
+            
+            // Sort chip
+            if (filters.sortBy !== 'volume' || !filters.sortDesc) {
+                const sortLabels = { volume: 'Volum', change: 'Change %', price: 'Preț', name: 'Nume' };
+                const direction = filters.sortDesc ? '↓' : '↑';
+                chips.push({ type: 'sort', label: `${sortLabels[filters.sortBy]} ${direction}` });
+            }
+            
+            // Search chip
+            if (filters.search) {
+                chips.push({ type: 'search', label: `Căutare: "${filters.search}"` });
+            }
+            
+            // Add chips before results count
+            const resultsCount = container.querySelector('.results-count');
+            
+            chips.forEach(chipData => {
+                const chip = document.createElement('div');
+                chip.className = 'filter-chip';
+                chip.innerHTML = `
+                    <span>${chipData.label}</span>
+                    <button class="filter-chip-remove" data-type="${chipData.type}"">×</button>
+                `;
+                container.insertBefore(chip, resultsCount);
+                
+                // Add remove handler
+                chip.querySelector('.filter-chip-remove').addEventListener('click', () => {
+                    removeFilter(chipData.type);
+                });
+            });
+            
+            // Add clear all button if any filters active
+            if (chips.length > 0) {
+                const clearBtn = document.createElement('button');
+                clearBtn.className = 'clear-all-btn';
+                clearBtn.textContent = 'Clear All';
+                clearBtn.addEventListener('click', clearAllFilters);
+                container.insertBefore(clearBtn, resultsCount);
+            }
+        }
+        
+        /** Update results count display */
+        function updateResultsCount() {
+            const count = state.filteredCoins.length;
+            const total = state.coins.length;
+            document.getElementById('results-count').textContent = `${count} / ${total} monede`;
+        }
+        
+        /** Remove a specific filter */
+        function removeFilter(type) {
+            switch (type) {
+                case 'category':
+                    state.filters.category = 'all';
+                    document.querySelectorAll('.category-btn').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.category === 'all');
+                    });
+                    break;
+                case 'sort':
+                    state.filters.sortBy = 'volume';
+                    state.filters.sortDesc = true;
+                    document.getElementById('sort-select').value = 'volume';
+                    document.getElementById('sort-direction').textContent = '↓';
+                    break;
+                case 'search':
+                    state.filters.search = '';
+                    document.getElementById('filter-search').value = '';
+                    break;
+            }
+            applyFilters();
+        }
+        
+        /** Clear all filters */
+        function clearAllFilters() {
+            state.filters = {
+                category: 'all',
+                sortBy: 'volume',
+                sortDesc: true,
+                search: ''
+            };
+            
+            // Reset UI
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === 'all');
+            });
+            document.getElementById('sort-select').value = 'volume';
+            document.getElementById('sort-direction').textContent = '↓';
+            document.getElementById('filter-search').value = '';
+            
+            applyFilters();
+        }
+        
+        /** Setup filter event listeners */
+        function setupFilterListeners() {
+            // Category buttons
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.filters.category = btn.dataset.category;
+                    applyFilters();
+                });
+            });
+            
+            // Sort select
+            document.getElementById('sort-select').addEventListener('change', (e) => {
+                state.filters.sortBy = e.target.value;
+                applyFilters();
+            });
+            
+            // Sort direction toggle
+            document.getElementById('sort-direction').addEventListener('click', () => {
+                state.filters.sortDesc = !state.filters.sortDesc;
+                document.getElementById('sort-direction').textContent = state.filters.sortDesc ? '↓' : '↑';
+                applyFilters();
+            });
+            
+            // Search with debounce
+            const searchInput = document.getElementById('filter-search');
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(state.searchDebounceTimer);
+                state.searchDebounceTimer = setTimeout(() => {
+                    state.filters.search = e.target.value;
+                    applyFilters();
+                }, 300);
+            });
+            
+            // Search clear button
+            document.getElementById('search-clear').addEventListener('click', () => {
+                searchInput.value = '';
+                state.filters.search = '';
+                applyFilters();
+            });
+        }
+
+        // ============================================
+        // RALPH-1: BACKGROUND SYSTEM
+        // ============================================
         function initParticles() {
             const container = document.getElementById('bg-particles');
             const isMobile = window.matchMedia('(pointer: coarse)').matches;
             const particleCount = isMobile ? 8 : 20;
-            
-            // Clear existing
             container.innerHTML = '';
             
             for (let i = 0; i < particleCount; i++) {
@@ -1567,7 +2186,6 @@
                 particle.style.animationDelay = Math.random() * -15 + 's';
                 particle.style.animationDuration = (10 + Math.random() * 10) + 's';
                 
-                // Random colors
                 const colors = [
                     'rgba(0, 212, 255, 0.4)',
                     'rgba(0, 255, 136, 0.3)',
@@ -1577,16 +2195,13 @@
                 const color = colors[Math.floor(Math.random() * colors.length)];
                 particle.style.background = color;
                 particle.style.boxShadow = `0 0 8px ${color}`;
-                
                 container.appendChild(particle);
             }
         }
 
-        /** Initialize dotted paths */
         function initDottedPaths() {
             const container = document.getElementById('dotted-paths');
             const pathCount = 5;
-            
             for (let i = 0; i < pathCount; i++) {
                 const path = document.createElement('div');
                 path.className = 'dotted-path';
@@ -1599,17 +2214,80 @@
         }
 
         // ============================================
+        // RALPH-1: FILTER SYSTEM
+        // ============================================
+        function initFilterSystem() {
+            const chips = document.querySelectorAll('.filter-chip');
+            const clearBtn = document.getElementById('clear-filters');
+            
+            chips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const shapeType = chip.dataset.shape;
+                    
+                    if (state.activeShapeFilters.has(shapeType)) {
+                        state.activeShapeFilters.delete(shapeType);
+                        chip.classList.remove('active');
+                    } else {
+                        state.activeShapeFilters.add(shapeType);
+                        chip.classList.add('active');
+                    }
+                    
+                    updateShapeVisibility();
+                    updateClearButton();
+                });
+            });
+            
+            clearBtn.addEventListener('click', () => {
+                state.activeShapeFilters.clear();
+                chips.forEach(chip => chip.classList.remove('active'));
+                updateShapeVisibility();
+                updateClearButton();
+            });
+        }
+
+        function updateShapeVisibility() {
+            const shapes = document.querySelectorAll('.geo-shape');
+            const hasFilters = state.activeShapeFilters.size > 0;
+            
+            shapes.forEach(shape => {
+                const shapeType = getShapeType(shape);
+                
+                if (!hasFilters) {
+                    // No filters = show all
+                    shape.classList.remove('filtered-out', 'hidden');
+                } else if (state.activeShapeFilters.has(shapeType)) {
+                    // Matches filter = show
+                    shape.classList.remove('filtered-out', 'hidden');
+                } else {
+                    // Doesn't match = dim
+                    shape.classList.add('filtered-out');
+                }
+            });
+        }
+
+        function getShapeType(shapeElement) {
+            if (shapeElement.classList.contains('geo-square')) return 'square';
+            if (shapeElement.classList.contains('geo-circle')) return 'circle';
+            if (shapeElement.classList.contains('geo-triangle')) return 'triangle';
+            if (shapeElement.classList.contains('geo-diamond')) return 'diamond';
+            if (shapeElement.classList.contains('geo-hexagon')) return 'hexagon';
+            return 'unknown';
+        }
+
+        function updateClearButton() {
+            const clearBtn = document.getElementById('clear-filters');
+            clearBtn.disabled = state.activeShapeFilters.size === 0;
+        }
+
+        // ============================================
         // RALPH-2: GEOMETRIC SHAPES SYSTEM
         // ============================================
-        
-        /** Generate 50-100 geometric shapes */
         function initGeometricShapes() {
             const container = document.getElementById('geometric-shapes-container');
             const shapeCount = CONFIG.SHAPE_COUNT;
             const shapes = ['square', 'circle', 'triangle', 'diamond', 'hexagon'];
             const animations = ['float', 'pulse', 'rotate'];
             
-            // Clear existing
             container.innerHTML = '';
             state.shapes = [];
             
@@ -1618,10 +2296,10 @@
                 const shape = document.createElement('div');
                 
                 shape.className = `geo-shape geo-${shapeType}`;
+                shape.dataset.shapeType = shapeType;
                 
-                // Random position (avoid center where bubbles are)
-                let x, y;
-                let attempts = 0;
+                // Position avoiding center
+                let x, y, attempts = 0;
                 do {
                     x = Math.random() * 100;
                     y = Math.random() * 100;
@@ -1631,14 +2309,10 @@
                 shape.style.left = x + '%';
                 shape.style.top = y + '%';
                 
-                // Random size
                 const size = 20 + Math.random() * 40;
                 shape.style.width = size + 'px';
-                if (shapeType !== 'triangle') {
-                    shape.style.height = size + 'px';
-                }
+                if (shapeType !== 'triangle') shape.style.height = size + 'px';
                 
-                // Animation
                 if (Math.random() > 0.5) {
                     const anim = animations[Math.floor(Math.random() * animations.length)];
                     shape.classList.add(anim);
@@ -1646,19 +2320,13 @@
                     shape.style.animationDuration = (5 + Math.random() * 5) + 's';
                 }
                 
-                // Random opacity
                 shape.style.opacity = 0.3 + Math.random() * 0.4;
                 
-                // Triangle direction
                 if (shapeType === 'triangle') {
                     shape.classList.add(Math.random() > 0.5 ? 'up' : 'down');
                 }
                 
-                // Click handler for shapes
-                shape.addEventListener('click', () => {
-                    showShapeModal(shapeType);
-                });
-                
+                shape.addEventListener('click', () => showShapeModal(shapeType));
                 container.appendChild(shape);
                 state.shapes.push(shape);
             }
@@ -1666,7 +2334,6 @@
             console.log(`✅ Generated ${shapeCount} geometric shapes`);
         }
 
-        /** Show modal for clicked shape */
         function showShapeModal(shapeType) {
             const messages = {
                 square: '🟩 Square: Stability in the depths',
@@ -1679,18 +2346,102 @@
         }
 
         // ============================================
+        // RALPH-2: VOLUME ALERT SYSTEM
+        // ============================================
+        function checkVolumeSpikes(coins) {
+            const now = Date.now();
+            const alerts = [];
+            
+            coins.forEach(coin => {
+                const symbol = coin.symbol;
+                const currentVolume = coin.volume24h;
+                
+                if (!state.volumeHistory[symbol]) {
+                    state.volumeHistory[symbol] = {
+                        volumes: [currentVolume],
+                        lastAlert: 0
+                    };
+                    return;
+                }
+                
+                const history = state.volumeHistory[symbol];
+                const avgVolume = history.volumes.reduce((a, b) => a + b, 0) / history.volumes.length;
+                
+                if (avgVolume > 0) {
+                    const spikeRatio = currentVolume / avgVolume;
+                    
+                    if (spikeRatio >= CONFIG.VOLUME_SPIKE_THRESHOLD) {
+                        // Check cooldown
+                        if (now - history.lastAlert > CONFIG.ALERT_COOLDOWN) {
+                            alerts.push({
+                                symbol: symbol,
+                                ratio: spikeRatio,
+                                volume: currentVolume
+                            });
+                            history.lastAlert = now;
+                        }
+                    }
+                }
+                
+                // Update history (keep last 5)
+                history.volumes.push(currentVolume);
+                if (history.volumes.length > 5) history.volumes.shift();
+            });
+            
+            // Show alerts
+            alerts.forEach((alert, index) => {
+                setTimeout(() => {
+                    showVolumeAlert(alert);
+                }, index * 500);
+            });
+            
+            return alerts.length > 0;
+        }
+
+        function showVolumeAlert(alert) {
+            const banner = document.getElementById('alert-banner');
+            const title = document.getElementById('alert-title');
+            const text = document.getElementById('alert-text');
+            
+            title.textContent = '🚨 VOLUME SPIKE DETECTED';
+            text.textContent = `${alert.symbol}: ${alert.ratio.toFixed(1)}x average volume ($${formatNumber(alert.volume)})`;
+            
+            banner.classList.add('volume-spike', 'show');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                banner.classList.remove('show');
+            }, 5000);
+        }
+
+        function showAlert(message, type = 'info') {
+            const banner = document.getElementById('alert-banner');
+            const title = document.getElementById('alert-title');
+            const text = document.getElementById('alert-text');
+            
+            title.textContent = type === 'error' ? '⚠️ Error' : type === 'success' ? '🔥 Success' : 'ℹ️ Info';
+            text.textContent = message;
+            
+            banner.classList.remove('volume-spike');
+            banner.classList.add('show');
+            
+            setTimeout(() => {
+                banner.classList.remove('show');
+            }, 4000);
+        }
+
+        function hideAlert() {
+            document.getElementById('alert-banner').classList.remove('show');
+        }
+
+        // ============================================
         // RALPH-3: PHYSICS & BUBBLE SYSTEM
         // ============================================
-        
-        /** Initialize force simulation for bubbles */
-        function initBubbleSimulation(data, svg) {
+        function initBubbleSimulation(data) {
             const container = document.getElementById('bubble-container');
             const width = container.clientWidth;
-            const height = Math.max(window.innerHeight - 200, 800);
-            
             const maxVolume = Math.max(...data.map(c => c.volume24h));
             
-            // Calculate initial positions with grid layout
             const cols = Math.floor(width / 130);
             const spacingX = width / cols;
             const spacingY = 140;
@@ -1699,7 +2450,6 @@
                 const col = i % cols;
                 const row = Math.floor(i / cols);
                 
-                // Add jitter for organic feel
                 const jitterX = (Math.random() - 0.5) * 30;
                 const jitterY = (Math.random() - 0.5) * 30;
                 
@@ -1709,12 +2459,13 @@
                 d.vy = 0;
                 d.size = calculateBubbleSize(d.volume24h, maxVolume);
                 d.mass = d.size / 10;
+                d.gridX = d.x;
+                d.gridY = d.y;
             });
             
             return data;
         }
 
-        /** Run physics simulation step */
         function runPhysicsStep(data) {
             const repulsionStrength = 2000;
             const attractionStrength = 0.01;
@@ -1728,7 +2479,6 @@
             data.forEach((bubble, i) => {
                 let fx = 0, fy = 0;
                 
-                // Repulsion from other bubbles
                 data.forEach((other, j) => {
                     if (i === j) return;
                     
@@ -1744,32 +2494,23 @@
                     }
                 });
                 
-                // Attraction to original position (grid)
-                const gridX = bubble.gridX || bubble.x;
-                const gridY = bubble.gridY || bubble.y;
-                fx += (gridX - bubble.x) * attractionStrength;
-                fy += (gridY - bubble.y) * attractionStrength;
-                
-                // Center attraction (weak)
+                fx += (bubble.gridX - bubble.x) * attractionStrength;
+                fy += (bubble.gridY - bubble.y) * attractionStrength;
                 fx += (centerX - bubble.x) * centerAttraction * 0.1;
                 fy += (centerY - bubble.y) * centerAttraction * 0.1;
                 
-                // Apply force
                 bubble.vx = (bubble.vx + fx / bubble.mass) * damping;
                 bubble.vy = (bubble.vy + fy / bubble.mass) * damping;
                 
-                // Update position
                 bubble.x += bubble.vx;
                 bubble.y += bubble.vy;
                 
-                // Boundary constraints
                 const padding = bubble.size / 2 + 20;
                 bubble.x = Math.max(padding, Math.min(container.clientWidth - padding, bubble.x));
                 bubble.y = Math.max(padding, Math.min(container.clientHeight - padding, bubble.y));
             });
         }
 
-        /** Render bubbles with D3 */
         function renderBubbles(coins) {
             const container = document.getElementById('bubble-container');
             const width = container.clientWidth;
@@ -1783,10 +2524,8 @@
                 .attr('width', width)
                 .attr('height', height);
             
-            // Add defs for filters
             const defs = svg.append('defs');
             
-            // Glow filter
             const filter = defs.append('filter')
                 .attr('id', 'glow')
                 .attr('x', '-50%')
@@ -1802,10 +2541,8 @@
             feMerge.append('feMergeNode').attr('in', 'coloredBlur');
             feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
             
-            // Initialize physics positions
             initBubbleSimulation(coins, svg);
             
-            // Create bubble groups
             const groups = svg.selectAll('.bubble-group')
                 .data(coins)
                 .enter()
@@ -1818,16 +2555,13 @@
             groups.each(function(d) {
                 const g = d3.select(this);
                 const colors = getBubbleColor(d.change24h, state.currentTheme);
-                const isPositive = d.change24h >= 0;
                 
-                // Outer glow
                 g.append('circle')
                     .attr('r', d.size / 2 + 8)
                     .attr('fill', colors.glow)
                     .attr('opacity', 0.3)
                     .attr('filter', 'url(#glow)');
                 
-                // Main bubble
                 g.append('circle')
                     .attr('class', 'bubble-spiral')
                     .attr('r', d.size / 2)
@@ -1836,7 +2570,6 @@
                     .attr('stroke-width', 2)
                     .style('color', colors.primary);
                 
-                // Inner glow ring
                 g.append('circle')
                     .attr('r', d.size / 2 - 5)
                     .attr('fill', 'none')
@@ -1844,13 +2577,11 @@
                     .attr('stroke-width', 1)
                     .attr('opacity', 0.3);
                 
-                // Symbol text
                 g.append('text')
                     .attr('class', 'bubble-label')
                     .attr('dy', '-0.2em')
                     .text(d.symbol);
                 
-                // Change text
                 g.append('text')
                     .attr('class', 'bubble-change')
                     .attr('dy', '1.2em')
@@ -1858,14 +2589,12 @@
                     .text(`${d.change24h >= 0 ? '+' : ''}${d.change24h.toFixed(1)}%`);
             });
             
-            // Animate entrance
             groups.transition()
                 .duration(600)
                 .delay((d, i) => i * 30)
                 .ease(d3.easeBackOut)
                 .style('opacity', 1);
             
-            // Click handlers
             groups.on('click', function(event, d) {
                 const el = d3.select(this);
                 el.classed('spinning', true);
@@ -1873,37 +2602,23 @@
                 openModal(d);
             });
             
-            // Physics animation loop
-            let animationId;
             let frameCount = 0;
-            
             function animate() {
                 frameCount++;
-                // Run physics every 2nd frame for performance (30fps physics)
                 if (frameCount % 2 === 0) {
                     runPhysicsStep(coins);
-                    
-                    // Update DOM positions
                     groups.attr('transform', d => `translate(${d.x.toFixed(1)},${d.y.toFixed(1)})`);
                 }
-                
-                animationId = requestAnimationFrame(animate);
+                state.animationId = requestAnimationFrame(animate);
             }
-            
-            // Start animation
             animate();
-            
-            // Store animation ID for cleanup
-            state.animationId = animationId;
             
             return groups;
         }
 
         // ============================================
-        // RALPH-4: ENHANCED MODAL SYSTEM
+        // RALPH-4: MODAL SYSTEM
         // ============================================
-        
-        /** Open modal with coin data */
         function openModal(coin) {
             state.currentModalIndex = state.coins.findIndex(c => c.symbol === coin.symbol);
             updateModalContent(coin);
@@ -1912,18 +2627,15 @@
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
             
-            // Generate sparkline
             generateSparkline(coin);
         }
 
-        /** Close modal */
         function closeModal() {
             const modal = document.getElementById('enhanced-modal');
             modal.classList.remove('active');
             document.body.style.overflow = '';
         }
 
-        /** Update modal content */
         function updateModalContent(coin) {
             const isPositive = coin.change24h >= 0;
             
@@ -1940,7 +2652,6 @@
             document.getElementById('modal-high').textContent = '$' + formatPrice(coin.high24h);
             document.getElementById('modal-low').textContent = '$' + formatPrice(coin.low24h);
             
-            // Update HL progress
             if (coin.high24h > coin.low24h) {
                 const range = coin.high24h - coin.low24h;
                 const position = ((coin.price - coin.low24h) / range) * 100;
@@ -1950,17 +2661,13 @@
                 document.getElementById('modal-hl-current').textContent = formatNumber(coin.price);
             }
             
-            // Generate volume bars
             generateVolumeBars();
             
-            // Update nav buttons
             document.getElementById('modal-prev').disabled = state.currentModalIndex <= 0;
             document.getElementById('modal-next').disabled = state.currentModalIndex >= state.coins.length - 1;
         }
 
-        /** Generate sparkline chart */
         function generateSparkline(data) {
-            // Generate synthetic price data
             const points = 50;
             const prices = [];
             const change = data ? data.change24h / 100 : 0;
@@ -1981,30 +2688,22 @@
             const maxPrice = Math.max(...prices);
             const range = maxPrice - minPrice || 1;
             
-            // Generate points
             const pathPoints = prices.map((p, i) => {
                 const x = (i / (prices.length - 1)) * width;
                 const y = height - padding - ((p - minPrice) / range) * (height - 2 * padding);
                 return [x, y];
             });
             
-            // Create path
-            const pathD = pathPoints.map((p, i) => 
-                (i === 0 ? 'M' : 'L') + p[0] + ',' + p[1]
-            ).join(' ');
-            
-            // Create area path
+            const pathD = pathPoints.map((p, i) => (i === 0 ? 'M' : 'L') + p[0] + ',' + p[1]).join(' ');
             const areaD = pathD + ` L${width},${height} L0,${height} Z`;
             
             document.getElementById('sparkline-path').setAttribute('d', pathD);
             document.getElementById('sparkline-area').setAttribute('d', areaD);
             
-            // Set colors
             const isPositive = data ? data.change24h >= 0 : true;
             const color = isPositive ? '#00ff41' : '#ff0040';
             document.getElementById('sparkline-path').setAttribute('stroke', color);
             
-            // Position dot at end
             const lastPoint = pathPoints[pathPoints.length - 1];
             const dot = document.getElementById('sparkline-dot');
             dot.setAttribute('cx', lastPoint[0]);
@@ -2012,17 +2711,14 @@
             dot.setAttribute('r', 4);
             dot.setAttribute('fill', color);
             
-            // Animate
-            const pathLength = document.getElementById('sparkline-path').getTotalLength?.() || 300;
             const pathEl = document.getElementById('sparkline-path');
-            pathEl.style.strokeDasharray = pathLength;
-            pathEl.style.strokeDashoffset = pathLength;
+            pathEl.style.strokeDasharray = 300;
+            pathEl.style.strokeDashoffset = 300;
             pathEl.style.animation = 'none';
-            pathEl.offsetHeight; // Force reflow
+            pathEl.offsetHeight;
             pathEl.style.animation = 'drawLine 1s ease-out forwards';
         }
 
-        /** Generate volume bars */
         function generateVolumeBars() {
             const container = document.getElementById('modal-volume-bars');
             container.innerHTML = '';
@@ -2038,7 +2734,6 @@
             }
         }
 
-        /** Navigate modal */
         function navigateModal(direction) {
             const newIndex = state.currentModalIndex + direction;
             if (newIndex >= 0 && newIndex < state.coins.length) {
@@ -2049,8 +2744,7 @@
             }
         }
 
-        /** Show toast notification */
-        function showToast(message, type = 'success') {
+        function showToast(message) {
             const toast = document.getElementById('modal-toast');
             document.getElementById('toast-message').textContent = message;
             toast.classList.add('show');
@@ -2060,35 +2754,15 @@
             }, 2500);
         }
 
-        /** Show alert banner */
-        function showAlert(message, type = 'info') {
-            const banner = document.getElementById('alert-banner');
-            const text = document.getElementById('alert-text');
-            const icon = banner.querySelector('.alert-icon');
-            
-            text.textContent = message;
-            icon.textContent = type === 'error' ? '⚠️' : type === 'success' ? '🔥' : '⚡';
-            
-            banner.classList.add('show');
-            
-            setTimeout(() => {
-                banner.classList.remove('show');
-            }, 4000);
-        }
-
         // ============================================
         // DATA FETCHING
         // ============================================
-        
-        /** Fetch market data from Bybit */
         async function fetchMarketData() {
             try {
                 const response = await fetch(`${CONFIG.API_URL}?category=spot`);
                 const data = await response.json();
                 
-                if (data.retCode !== 0) {
-                    throw new Error(data.retMsg);
-                }
+                if (data.retCode !== 0) throw new Error(data.retMsg);
                 
                 return processMarketData(data.result.list);
             } catch (error) {
@@ -2098,9 +2772,8 @@
             }
         }
 
-        /** Process market data */
         function processMarketData(list) {
-            const processed = list
+            return list
                 .filter(item => item.symbol.endsWith('USDT'))
                 .map(item => ({
                     symbol: item.symbol.replace('USDT', ''),
@@ -2115,11 +2788,8 @@
                 .filter(item => item.price > 0)
                 .sort((a, b) => b.volume24h - a.volume24h)
                 .slice(0, CONFIG.MAX_BUBBLES);
-            
-            return processed;
         }
 
-        /** Update stats display */
         function updateStats(coins) {
             const bullish = coins.filter(c => c.change24h > 0).length;
             const bearish = coins.filter(c => c.change24h < 0).length;
@@ -2128,40 +2798,17 @@
             document.getElementById('stat-bearish').textContent = bearish;
         }
 
-        /** Filter coins by search */
-        function filterCoins(query) {
-            state.searchQuery = query.toLowerCase();
-            if (!state.searchQuery) {
-                state.filteredCoins = state.coins;
-            } else {
-                state.filteredCoins = state.coins.filter(c => 
-                    c.symbol.toLowerCase().includes(state.searchQuery)
-                );
-            }
-            
-            // Cancel existing animation
-            if (state.animationId) {
-                cancelAnimationFrame(state.animationId);
-            }
-            
-            renderBubbles(state.filteredCoins);
-        }
-
         // ============================================
         // THEME MANAGEMENT
         // ============================================
-        
         function toggleTheme() {
             const newTheme = state.currentTheme === 'dark' ? 'light' : 'dark';
             state.currentTheme = newTheme;
             document.body.setAttribute('data-theme', newTheme);
             document.getElementById('theme-icon').textContent = newTheme === 'dark' ? '🌙' : '☀️';
             
-            // Re-render bubbles with new theme colors
             if (state.coins.length > 0) {
-                if (state.animationId) {
-                    cancelAnimationFrame(state.animationId);
-                }
+                if (state.animationId) cancelAnimationFrame(state.animationId);
                 renderBubbles(state.filteredCoins.length > 0 ? state.filteredCoins : state.coins);
             }
             
@@ -2178,16 +2825,11 @@
         // ============================================
         // EVENT HANDLERS
         // ============================================
-        
         function setupEventListeners() {
-            // Theme toggle
+            // Theme
             document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
             
-            // Search
-            const searchInput = document.getElementById('search-input');
-            searchInput.addEventListener('input', (e) => filterCoins(e.target.value));
-            
-            // Modal close
+            // Modal
             document.getElementById('modal-close').addEventListener('click', closeModal);
             document.getElementById('enhanced-modal').addEventListener('click', (e) => {
                 if (e.target.id === 'enhanced-modal') closeModal();
@@ -2200,9 +2842,7 @@
             // Action buttons
             document.getElementById('btn-trade').addEventListener('click', () => {
                 const coin = state.coins[state.currentModalIndex];
-                if (coin) {
-                    window.open(`https://www.bybit.com/trade/usdt/${coin.symbol}USDT`, '_blank');
-                }
+                if (coin) window.open(`https://www.bybit.com/trade/usdt/${coin.symbol}USDT`, '_blank');
             });
             
             document.getElementById('btn-copy').addEventListener('click', async () => {
@@ -2228,25 +2868,24 @@
                     };
                     
                     try {
-                        if (navigator.share) {
-                            await navigator.share(shareData);
-                        } else {
+                        if (navigator.share) await navigator.share(shareData);
+                        else {
                             await navigator.clipboard.writeText(`${shareData.text} - ${shareData.url}`);
                             showToast('Link copied!');
                         }
                     } catch (err) {
-                        if (err.name !== 'AbortError') {
-                            showToast('Share failed');
-                        }
+                        if (err.name !== 'AbortError') showToast('Share failed');
                     }
                 }
             });
             
-            // Keyboard shortcuts
+            // Alert close
+            document.getElementById('alert-close').addEventListener('click', hideAlert);
+            
+            // Keyboard
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    closeModal();
-                } else if (e.key === 'ArrowLeft' && document.getElementById('enhanced-modal').classList.contains('active')) {
+                if (e.key === 'Escape') closeModal();
+                else if (e.key === 'ArrowLeft' && document.getElementById('enhanced-modal').classList.contains('active')) {
                     navigateModal(-1);
                 } else if (e.key === 'ArrowRight' && document.getElementById('enhanced-modal').classList.contains('active')) {
                     navigateModal(1);
@@ -2254,11 +2893,11 @@
                     toggleTheme();
                 } else if ((e.key === '/' || e.key === 's' || e.key === 'S') && e.target.tagName !== 'INPUT') {
                     e.preventDefault();
-                    searchInput.focus();
+                    document.getElementById('filter-search').focus();
                 }
             });
             
-            // Swipe to close modal (mobile)
+            // Swipe to close modal
             let touchStartY = 0;
             const modalContent = document.querySelector('.enhanced-modal-content');
             
@@ -2268,9 +2907,7 @@
             
             modalContent.addEventListener('touchend', (e) => {
                 const touchEndY = e.changedTouches[0].clientY;
-                if (touchEndY - touchStartY > 100) {
-                    closeModal();
-                }
+                if (touchEndY - touchStartY > 100) closeModal();
             }, { passive: true });
             
             // Window resize
@@ -2279,9 +2916,7 @@
                 clearTimeout(resizeTimeout);
                 resizeTimeout = setTimeout(() => {
                     if (state.coins.length > 0) {
-                        if (state.animationId) {
-                            cancelAnimationFrame(state.animationId);
-                        }
+                        if (state.animationId) cancelAnimationFrame(state.animationId);
                         renderBubbles(state.filteredCoins.length > 0 ? state.filteredCoins : state.coins);
                     }
                 }, 250);
@@ -2291,16 +2926,12 @@
         // ============================================
         // INITIALIZATION
         // ============================================
-        
         async function init() {
-            console.log('%c🤿 CRYPTO DIVER - RALPH-5 INTEGRATED', 'color: #00d4ff; font-size: 16px; font-weight: bold;');
-            console.log('%cZ-Layer System:', 'color: #00ff88;');
-            console.log('  z-index 1: Background gradient');
-            console.log('  z-index 5: Divers and circles');
-            console.log('  z-index 10: Dotted path');
-            console.log('  z-index 50: Crypto icons');
-            console.log('  z-index 100: Geometric shapes');
-            console.log('  z-index 200: Modal');
+            console.log('%c🤿 CRYPTO DIVER - RALPH-3 INTEGRATION', 'color: #00d4ff; font-size: 16px; font-weight: bold;');
+            console.log('%cFeatures:', 'color: #00ff88;');
+            console.log('  ✅ Filter System (Shapes)');
+            console.log('  ✅ Volume Spike Alerts');
+            console.log('  ✅ Integrated UI');
             
             // Load saved theme
             loadTheme();
@@ -2309,9 +2940,11 @@
             initParticles();
             initDottedPaths();
             initGeometricShapes();
+            initFilterSystem(); // Ralph-1 integration
             
             // Setup event listeners
             setupEventListeners();
+            setupFilterListeners(); // RALPH-1: Filter System
             
             // Fetch initial data
             const data = await fetchMarketData();
@@ -2330,6 +2963,12 @@
                 // Update stats
                 updateStats(data);
                 
+                // Apply initial filters
+                applyFilters();
+                
+                // Check initial volume spikes
+                checkVolumeSpikes(data);
+                
                 console.log(`✅ Initialized with ${data.length} coins and ${CONFIG.SHAPE_COUNT} shapes`);
                 
                 // Setup auto-refresh
@@ -2337,11 +2976,10 @@
                     const newData = await fetchMarketData();
                     if (newData) {
                         state.coins = newData;
-                        if (!state.searchQuery) {
-                            state.filteredCoins = newData;
-                            // Update existing bubbles without full re-render
-                            updateStats(newData);
-                        }
+                        // Re-apply current filters to new data
+                        applyFilters();
+                        // Check for volume spikes on update
+                        checkVolumeSpikes(newData);
                     }
                 }, CONFIG.UPDATE_INTERVAL);
             }
