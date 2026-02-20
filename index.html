@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BYBIT HEATMAP PRO | Unified 💰</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* ==========================================
            CSS VARIABLES - THEME SYSTEM
            ========================================== */
         :root {
-            /* Default (Dark) */
             --bg-primary: #050a08;
             --bg-secondary: #0a1a0f;
             --bg-gradient-start: rgba(20, 60, 40, 0.4);
@@ -41,8 +39,6 @@
             
             --logo-gradient-start: #00ff88;
             --logo-gradient-end: #00aa55;
-            
-            transition: all 0.5s ease;
         }
 
         [data-theme="light"] {
@@ -77,6 +73,24 @@
             --logo-gradient-end: #1a5a3a;
         }
 
+        /* ==========================================
+           REDUCED MOTION PREFERENCES
+           ========================================== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            .bg-gradient { animation: none !important; }
+            .bg-grid { animation: none !important; }
+            .circle-ring { animation: none !important; }
+            .d-line { animation: none !important; }
+            .particle { animation: none !important; }
+            .loading-spinner { animation: none !important; }
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
@@ -85,11 +99,11 @@
             min-height: 100vh;
             overflow-x: hidden;
             color: var(--text-primary);
-            transition: background 0.5s ease, color 0.5s ease;
+            contain: layout style paint;
         }
 
         /* ==========================================
-           BACKGROUND LAYERS
+           BACKGROUND LAYERS - CSS CONTAINMENT
            ========================================== */
         .bg-container {
             position: fixed;
@@ -100,6 +114,8 @@
             z-index: 0;
             overflow: hidden;
             pointer-events: none;
+            contain: strict;
+            will-change: transform;
         }
 
         .bg-gradient {
@@ -114,6 +130,8 @@
                 var(--bg-gradient-end) 70%,
                 var(--bg-primary) 100%);
             animation: bgPulse 12s ease-in-out infinite;
+            will-change: opacity, transform;
+            contain: strict;
         }
 
         @keyframes bgPulse {
@@ -121,7 +139,6 @@
             50% { opacity: 0.9; transform: scale(1.05); }
         }
 
-        /* Grid - Dark only */
         .bg-grid {
             position: absolute;
             top: 0;
@@ -134,6 +151,8 @@
             background-size: 60px 60px;
             animation: gridMove 20s linear infinite;
             opacity: 1;
+            will-change: transform;
+            contain: strict;
         }
 
         [data-theme="light"] .bg-grid {
@@ -145,13 +164,13 @@
             100% { transform: translate(60px, 60px); }
         }
 
-        /* Circles */
         .bg-circles {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            contain: layout style;
         }
 
         .circle-ring {
@@ -159,9 +178,10 @@
             border-radius: 50%;
             border: 1px solid var(--circle-color);
             animation: circlePulse 6s ease-in-out infinite;
+            will-change: box-shadow, border-color;
+            contain: layout style;
         }
 
-        /* Dark circles - centered */
         [data-theme="dark"] .circle-ring:nth-child(1) { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20%; height: 20%; animation-delay: 0s; }
         [data-theme="dark"] .circle-ring:nth-child(2) { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40%; height: 40%; animation-delay: 1s; }
         [data-theme="dark"] .circle-ring:nth-child(3) { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 60%; animation-delay: 2s; }
@@ -169,7 +189,6 @@
         [data-theme="dark"] .circle-ring:nth-child(5) { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; animation-delay: 4s; }
         [data-theme="dark"] .circle-ring:nth-child(6) { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 120%; height: 120%; animation-delay: 5s; }
 
-        /* Light circles - corners */
         [data-theme="light"] .circle-ring:nth-child(1) { top: 10%; left: 10%; width: 200px; height: 200px; animation-delay: 0s; }
         [data-theme="light"] .circle-ring:nth-child(2) { top: 5%; left: 5%; width: 300px; height: 300px; animation-delay: 1s; }
         [data-theme="light"] .circle-ring:nth-child(3) { top: 0%; left: 0%; width: 400px; height: 400px; animation-delay: 2s; }
@@ -182,7 +201,6 @@
             50% { border-color: rgba(100, 200, 130, 0.25); box-shadow: 0 0 40px var(--glow-green); }
         }
 
-        /* Diagonal lines - Light only */
         .diagonal-lines {
             position: absolute;
             top: 0;
@@ -191,6 +209,7 @@
             height: 100%;
             overflow: hidden;
             opacity: 0;
+            contain: strict;
         }
 
         [data-theme="light"] .diagonal-lines {
@@ -207,6 +226,8 @@
                 transparent 100%);
             transform-origin: left center;
             animation: lineSlide 20s linear infinite;
+            will-change: transform, opacity;
+            contain: strict;
         }
 
         .d-line:nth-child(1) { top: 20%; transform: rotate(25deg); animation-delay: 0s; }
@@ -221,13 +242,13 @@
             100% { transform: rotate(25deg) translateX(100%); opacity: 0; }
         }
 
-        /* Particles - Dark only */
         .particles {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            contain: strict;
         }
 
         .particle {
@@ -237,6 +258,8 @@
             background: var(--particle-color);
             border-radius: 50%;
             animation: float 15s infinite ease-in-out;
+            will-change: transform, opacity;
+            contain: strict;
         }
 
         [data-theme="light"] .particles {
@@ -266,7 +289,8 @@
             align-items: center;
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--grid-color);
-            transition: all 0.5s ease;
+            contain: layout style;
+            will-change: transform;
         }
 
         .logo {
@@ -277,6 +301,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 0 30px var(--glow-green);
+            contain: layout style;
         }
 
         .header-controls {
@@ -295,6 +320,7 @@
             background: var(--grid-color);
             border: 1px solid var(--circle-color);
             border-radius: 20px;
+            contain: layout;
         }
 
         .stat-value {
@@ -317,33 +343,77 @@
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
-            transition: all 0.3s ease;
+            will-change: transform;
+            transform: translateZ(0);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            contain: layout;
         }
 
         .theme-toggle:hover {
-            transform: scale(1.1);
+            transform: scale(1.1) translateZ(0);
             box-shadow: 0 0 20px var(--glow-green);
         }
 
         /* ==========================================
-           BUBBLE CONTAINER
+           VIRTUAL SCROLLING CONTAINER
            ========================================== */
-        #bubble-container {
+        #bubble-viewport {
             width: 100%;
-            min-height: 100vh;
-            padding-top: 100px;
+            height: calc(100vh - 80px);
+            margin-top: 80px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            scroll-snap-type: y proximity;
             position: relative;
             z-index: 10;
+            contain: layout style paint;
         }
 
-        .bubble-group {
+        #bubble-spacer {
+            position: relative;
+            width: 100%;
+            will-change: height;
+            contain: size;
+        }
+
+        #bubble-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            contain: layout style paint;
+        }
+
+        .bubble-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 10px 0;
+            scroll-snap-align: start;
+            contain: layout style paint;
+            will-change: transform;
+        }
+
+        .bubble-item {
+            position: relative;
+            width: 140px;
+            height: 140px;
             cursor: pointer;
-            filter: drop-shadow(0 0 20px var(--glow-green));
-            transition: filter 0.3s ease;
+            contain: layout style paint;
+            will-change: transform;
+            transform: translateZ(0);
         }
 
-        .bubble-group:hover {
-            filter: drop-shadow(0 0 40px var(--glow-green)) brightness(1.2);
+        .bubble-item:hover {
+            filter: brightness(1.2);
+        }
+
+        .bubble-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+            contain: strict;
         }
 
         .bubble-label {
@@ -375,6 +445,7 @@
             transform: translate(-50%, -50%);
             z-index: 50;
             text-align: center;
+            contain: layout style;
         }
 
         .loading-spinner {
@@ -385,6 +456,7 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
+            will-change: transform;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -404,6 +476,7 @@
             display: none;
             justify-content: center;
             align-items: center;
+            contain: layout style;
         }
 
         .modal.active { display: flex; }
@@ -417,11 +490,12 @@
             border: 2px solid var(--modal-border);
             box-shadow: 0 0 60px var(--glow-green);
             animation: modalIn 0.3s ease;
+            contain: layout style;
         }
 
         @keyframes modalIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .modal-close {
@@ -436,6 +510,68 @@
             color: var(--text-primary);
             cursor: pointer;
             font-size: 1.5rem;
+        }
+
+        /* ==========================================
+           PERFORMANCE MONITOR OVERLAY
+           ========================================== */
+        #perf-monitor {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff88;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            z-index: 1001;
+            display: none;
+            contain: layout style;
+        }
+
+        #perf-monitor.visible {
+            display: block;
+        }
+
+        .perf-stat {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .perf-value {
+            color: #fff;
+        }
+
+        /* ==========================================
+           BUBBLE PERFECTION ENHANCEMENTS
+           ========================================== */
+        .bubble-item {
+            cursor: pointer;
+            transition: filter 0.25s ease;
+            will-change: transform, filter;
+        }
+
+        .bubble-item:hover {
+            z-index: 10;
+        }
+
+        .bubble-ripple {
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Ribbon layers for animation */
+        .ribbon-0, .ribbon-1, .ribbon-2 {
+            transform-origin: center;
+            will-change: transform;
+        }
+
+        /* Pause animation on hover */
+        .bubble-item:hover ~ .bubble-ribbons [class^="ribbon-"],
+        .bubble-item:hover .bubble-ribbons [class^="ribbon-"] {
+            animation-play-state: paused !important;
         }
     </style>
 </head>
@@ -499,8 +635,12 @@
         <p style="color: var(--accent-green); font-family: Orbitron;">Încărcare...</p>
     </div>
 
-    <!-- Bubbles -->
-    <div id="bubble-container"></div>
+    <!-- Virtual Scrolling Viewport -->
+    <div id="bubble-viewport">
+        <div id="bubble-spacer">
+            <div id="bubble-container"></div>
+        </div>
+    </div>
 
     <!-- Modal -->
     <div class="modal" id="modal">
@@ -512,111 +652,661 @@
         </div>
     </div>
 
+    <!-- Performance Monitor -->
+    <div id="perf-monitor">
+        <div class="perf-stat"><span>FPS:</span><span class="perf-value" id="perf-fps">-</span></div>
+        <div class="perf-stat"><span>Memory:</span><span class="perf-value" id="perf-mem">-</span></div>
+        <div class="perf-stat"><span>Nodes:</span><span class="perf-value" id="perf-nodes">-</span></div>
+        <div class="perf-stat"><span>Render:</span><span class="perf-value" id="perf-render">-</span></div>
+    </div>
+
     <script>
-        // ==========================================
-        // THEME TOGGLE
-        // ==========================================
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-        const body = document.body;
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = body.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            body.setAttribute('data-theme', newTheme);
-            themeIcon.textContent = newTheme === 'dark' ? '🌙' : '☀️';
-        });
-
-        // Keyboard shortcut
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 't' || e.key === 'T') {
-                themeToggle.click();
-            }
-            if (e.key === 'Escape') {
-                closeModal();
-            }
-        });
-
-        // ==========================================
-        // RIBBON GEOMETRY
-        // ==========================================
-        function rotateZ(point, angle) {
-            const cos = Math.cos(angle), sin = Math.sin(angle);
-            return { x: point.x * cos - point.y * sin, y: point.x * sin + point.y * cos, z: point.z || 0 };
-        }
-
-        function project3D(p, focalLength, center) {
-            const scale = focalLength / (focalLength + p.z);
-            return { x: center.x + p.x * scale, y: center.y + p.y * scale, scale };
-        }
-
-        function createTwistedRibbon(radius, twists, width, segments, options = {}) {
-            const { zSpread = 80, focalLength = 500, innerRadius = 5 } = options;
-            const frontEdge = [], backEdge = [];
+    // ==========================================
+    // PERFORMANCE MONITOR
+    // ==========================================
+    class PerformanceMonitor {
+        constructor() {
+            this.fps = 0;
+            this.frameCount = 0;
+            this.lastTime = performance.now();
+            this.renderTime = 0;
+            this.isVisible = false;
+            this.monitorEl = document.getElementById('perf-monitor');
             
-            for (let i = 0; i <= segments; i++) {
-                const t = i / segments;
-                const r = innerRadius + t * (radius - innerRadius);
-                const angle = t * twists * Math.PI * 2;
-                const z = -zSpread * Math.sin(t * twists * Math.PI);
-                
-                const cx = Math.cos(angle) * r;
-                const cy = Math.sin(angle) * r;
-                const tangentAngle = angle + Math.PI / 2;
-                
-                const twistAngle = t * 3 * Math.PI;
-                const halfWidth = (width * (0.5 + 0.5 * t)) / 2;
-                
-                const wx = Math.cos(tangentAngle) * halfWidth;
-                const wy = Math.sin(tangentAngle) * halfWidth;
-                
-                const front = rotateZ({x: wx, y: wy, z: 0}, twistAngle);
-                const back = rotateZ({x: -wx, y: -wy, z: 0}, twistAngle);
-                
-                frontEdge.push(project3D({x: cx + front.x, y: cy + front.y, z: z + front.z * 0.2}, focalLength, {x: 0, y: 0}));
-                backEdge.push(project3D({x: cx + back.x, y: cy + back.y, z: z + back.z * 0.2}, focalLength, {x: 0, y: 0}));
-            }
-            
-            let path = `M ${frontEdge[0].x.toFixed(1)} ${frontEdge[0].y.toFixed(1)}`;
-            for (let i = 1; i < frontEdge.length; i++) {
-                path += ` L ${frontEdge[i].x.toFixed(1)} ${frontEdge[i].y.toFixed(1)}`;
-            }
-            path += ` L ${backEdge[backEdge.length-1].x.toFixed(1)} ${backEdge[backEdge.length-1].y.toFixed(1)}`;
-            for (let i = backEdge.length - 2; i >= 0; i--) {
-                path += ` L ${backEdge[i].x.toFixed(1)} ${backEdge[i].y.toFixed(1)}`;
-            }
-            path += ' Z';
-            return path;
-        }
-
-        function getBubbleColor(change24h, theme) {
-            if (change24h >= 0) {
-                if (theme === 'dark') {
-                    return { primary: '#00ff88', secondary: '#00aa55', dark: '#004422' };
-                } else {
-                    return { primary: '#2a8a4a', secondary: '#4ab86a', dark: '#1a5a3a' };
+            // Show monitor with Ctrl+Shift+P
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+                    this.isVisible = !this.isVisible;
+                    this.monitorEl.classList.toggle('visible', this.isVisible);
                 }
+            });
+        }
+
+        startMeasure(label) {
+            if (!this.isVisible) return;
+            console.time(label);
+            return performance.now();
+        }
+
+        endMeasure(label, startTime) {
+            if (!this.isVisible) return;
+            console.timeEnd(label);
+            if (startTime) {
+                this.renderTime = performance.now() - startTime;
+            }
+        }
+
+        tick() {
+            this.frameCount++;
+            const now = performance.now();
+            if (now - this.lastTime >= 1000) {
+                this.fps = this.frameCount;
+                this.frameCount = 0;
+                this.lastTime = now;
+                this.updateDisplay();
+            }
+        }
+
+        updateDisplay() {
+            if (!this.isVisible) return;
+            document.getElementById('perf-fps').textContent = this.fps;
+            document.getElementById('perf-render').textContent = this.renderTime.toFixed(1) + 'ms';
+            
+            if (performance.memory) {
+                const memMB = Math.round(performance.memory.usedJSHeapSize / 1048576);
+                document.getElementById('perf-mem').textContent = memMB + 'MB';
+            }
+            
+            const container = document.getElementById('bubble-container');
+            if (container) {
+                const nodes = container.querySelectorAll('.bubble-item').length;
+                document.getElementById('perf-nodes').textContent = nodes;
+            }
+        }
+    }
+
+    const perfMonitor = new PerformanceMonitor();
+
+    // ==========================================
+    // CACHE MANAGER
+    // ==========================================
+    class CacheManager {
+        constructor() {
+            this.cache = new Map();
+            this.timestamps = new Map();
+            this.maxAge = 5 * 60 * 1000; // 5 minutes
+            this.cleanupInterval = setInterval(() => this.cleanup(), 60000); // Cleanup every minute
+        }
+
+        get(key) {
+            const timestamp = this.timestamps.get(key);
+            if (!timestamp) return null;
+            
+            if (Date.now() - timestamp > this.maxAge) {
+                this.delete(key);
+                return null;
+            }
+            return this.cache.get(key);
+        }
+
+        set(key, value) {
+            this.cache.set(key, value);
+            this.timestamps.set(key, Date.now());
+        }
+
+        delete(key) {
+            this.cache.delete(key);
+            this.timestamps.delete(key);
+        }
+
+        cleanup() {
+            const now = Date.now();
+            for (const [key, timestamp] of this.timestamps) {
+                if (now - timestamp > this.maxAge) {
+                    this.delete(key);
+                }
+            }
+        }
+
+        destroy() {
+            clearInterval(this.cleanupInterval);
+            this.cache.clear();
+            this.timestamps.clear();
+        }
+    }
+
+    const cacheManager = new CacheManager();
+
+    // ==========================================
+    // API CLIENT WITH RETRY
+    // ==========================================
+    class ApiClient {
+        constructor() {
+            this.baseUrl = 'https://api.bybit.com/v5';
+            this.retryAttempts = 3;
+            this.retryDelay = 1000;
+        }
+
+        async fetchWithRetry(url, options = {}) {
+            let lastError;
+            let delay = this.retryDelay;
+
+            for (let attempt = 0; attempt < this.retryAttempts; attempt++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    lastError = error;
+                    console.warn(`API attempt ${attempt + 1} failed:`, error.message);
+                    
+                    if (attempt < this.retryAttempts - 1) {
+                        await this.sleep(delay);
+                        delay *= 2; // Exponential backoff
+                    }
+                }
+            }
+
+            throw lastError;
+        }
+
+        async getTickers() {
+            const cacheKey = 'tickers';
+            const cached = cacheManager.get(cacheKey);
+            
+            if (cached) {
+                console.log('[Cache] Using cached tickers');
+                return cached;
+            }
+
+            const data = await this.fetchWithRetry(`${this.baseUrl}/market/tickers?category=linear`);
+            cacheManager.set(cacheKey, data);
+            return data;
+        }
+
+        sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    }
+
+    const apiClient = new ApiClient();
+
+    // ==========================================
+    // VIRTUAL SCROLLER
+    // ==========================================
+    class VirtualScroller {
+        constructor(container, options = {}) {
+            this.container = container;
+            this.spacer = container.querySelector('#bubble-spacer');
+            this.content = container.querySelector('#bubble-container');
+            this.viewport = document.getElementById('bubble-viewport');
+            
+            this.itemHeight = options.itemHeight || 160;
+            this.itemsPerRow = options.itemsPerRow || 6;
+            this.bufferRows = options.bufferRows || 2;
+            this.totalItems = 0;
+            
+            this.visibleStart = 0;
+            this.visibleEnd = 0;
+            this.renderedItems = new Map(); // item index -> DOM element
+            this.data = [];
+            this.pool = []; // Recycled DOM elements
+            
+            this.resizeObserver = null;
+            this.scrollListener = null;
+            this.isDestroyed = false;
+            
+            this.throttledUpdate = this.throttle(() => this.updateVisibleItems(), 16);
+        }
+
+        init(data) {
+            this.data = data;
+            this.totalItems = data.length;
+            this.calculateItemsPerRow();
+            this.calculateTotalHeight();
+            
+            // Setup observers and listeners
+            this.resizeObserver = new ResizeObserver(() => {
+                this.calculateItemsPerRow();
+                this.calculateTotalHeight();
+                this.updateVisibleItems();
+            });
+            this.resizeObserver.observe(this.container);
+            
+            this.scrollListener = () => this.throttledUpdate();
+            this.viewport.addEventListener('scroll', this.scrollListener, { passive: true });
+            
+            // Intersection Observer for visibility tracking
+            this.intersectionObserver = new IntersectionObserver(
+                (entries) => this.handleIntersection(entries),
+                { root: this.viewport, rootMargin: `${this.bufferRows * this.itemHeight}px` }
+            );
+            
+            this.updateVisibleItems();
+        }
+
+        calculateItemsPerRow() {
+            const width = this.container.clientWidth;
+            if (width >= 1200) this.itemsPerRow = 6;
+            else if (width >= 1000) this.itemsPerRow = 5;
+            else if (width >= 800) this.itemsPerRow = 4;
+            else if (width >= 600) this.itemsPerRow = 3;
+            else if (width >= 400) this.itemsPerRow = 2;
+            else this.itemsPerRow = 1;
+        }
+
+        calculateTotalHeight() {
+            const totalRows = Math.ceil(this.totalItems / this.itemsPerRow);
+            const totalHeight = totalRows * this.itemHeight;
+            this.spacer.style.height = `${totalHeight}px`;
+        }
+
+        getVisibleRange() {
+            const scrollTop = this.viewport.scrollTop;
+            const viewportHeight = this.viewport.clientHeight;
+            
+            const startRow = Math.max(0, Math.floor(scrollTop / this.itemHeight) - this.bufferRows);
+            const endRow = Math.min(
+                Math.ceil(this.totalItems / this.itemsPerRow),
+                Math.ceil((scrollTop + viewportHeight) / this.itemHeight) + this.bufferRows
+            );
+            
+            const startIndex = startRow * this.itemsPerRow;
+            const endIndex = Math.min(this.totalItems, endRow * this.itemsPerRow);
+            
+            return { startIndex, endIndex, startRow };
+        }
+
+        updateVisibleItems() {
+            if (this.isDestroyed) return;
+            
+            const measureStart = perfMonitor.startMeasure('updateVisibleItems');
+            const { startIndex, endIndex, startRow } = this.getVisibleRange();
+            
+            // Remove items that are no longer visible
+            for (const [index, element] of this.renderedItems) {
+                if (index < startIndex || index >= endIndex) {
+                    this.recycleElement(element);
+                    this.renderedItems.delete(index);
+                }
+            }
+            
+            // Add new visible items
+            for (let i = startIndex; i < endIndex; i++) {
+                if (!this.renderedItems.has(i)) {
+                    const element = this.getOrCreateElement(i);
+                    this.positionElement(element, i, startRow);
+                    this.content.appendChild(element);
+                    this.renderedItems.set(i, element);
+                }
+            }
+            
+            perfMonitor.endMeasure('updateVisibleItems', measureStart);
+        }
+
+        positionElement(element, index, startRow) {
+            const row = Math.floor(index / this.itemsPerRow);
+            const col = index % this.itemsPerRow;
+            
+            const offsetX = (row % 2) * (140 / 2); // Stagger every other row
+            const x = col * 160 + 80 + offsetX;
+            const y = (row - startRow) * this.itemHeight + 80;
+            
+            element.style.position = 'absolute';
+            element.style.left = `${x}px`;
+            element.style.top = `${row * this.itemHeight}px`;
+            element.style.transform = `translateX(-50%)`;
+        }
+
+        getOrCreateElement(index) {
+            if (this.pool.length > 0) {
+                const element = this.pool.pop();
+                this.updateElementContent(element, index);
+                return element;
+            }
+            return this.createElement(index);
+        }
+
+        createElement(index) {
+            const item = this.data[index];
+            const element = document.createElement('div');
+            element.className = 'bubble-item';
+            element.innerHTML = this.getBubbleHTML(item, index);
+            
+            // Add click handler
+            element.addEventListener('click', () => showModal(item));
+            
+            return element;
+        }
+
+        updateElementContent(element, index) {
+            const item = this.data[index];
+            const svg = element.querySelector('.bubble-svg');
+            if (svg) {
+                // Update the ribbon colors and paths
+                this.updateBubbleSVG(svg, item, index);
+            }
+            
+            // Update click handler
+            element.onclick = () => showModal(item);
+        }
+
+        getBubbleHTML(item, index) {
+            const colors = getBubbleColor(item.change24h, currentTheme);
+            const paths = this.generateRibbonPaths(item.baseRadius, index);
+            
+            return `
+                <svg class="bubble-svg" viewBox="-80 -80 160 160">
+                    <defs>
+                        <linearGradient id="grad-${index}-0" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="${colors.dark}"/>
+                            <stop offset="30%" stop-color="${colors.secondary}"/>
+                            <stop offset="50%" stop-color="#ffffff"/>
+                            <stop offset="70%" stop-color="${colors.secondary}"/>
+                            <stop offset="100%" stop-color="${colors.dark}"/>
+                        </linearGradient>
+                        <linearGradient id="grad-${index}-1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="${colors.dark}"/>
+                            <stop offset="50%" stop-color="${colors.secondary}"/>
+                            <stop offset="100%" stop-color="${colors.dark}"/>
+                        </linearGradient>
+                        <linearGradient id="grad-${index}-2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="${colors.dark}"/>
+                            <stop offset="50%" stop-color="${colors.secondary}"/>
+                            <stop offset="100%" stop-color="${colors.dark}"/>
+                        </linearGradient>
+                        <filter id="glow-${index}">
+                            <feGaussianBlur stdDeviation="3" result="blur"/>
+                            <feFlood flood-color="${colors.primary}" result="color"/>
+                            <feComposite in="color" in2="blur" operator="in" result="glow"/>
+                            <feMerge>
+                                <feMergeNode in="glow"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <g class="bubble-ribbons" data-index="${index}">
+                        <path class="ribbon-0" d="${paths[0]}" fill="url(#grad-${index}-0)" 
+                              stroke="${colors.primary}" stroke-width="2" opacity="0.7"
+                              filter="url(#glow-${index})" transform="rotate(${index * 15})"/>
+                        <path class="ribbon-1" d="${paths[1]}" fill="url(#grad-${index}-1)" 
+                              stroke="${colors.primary}" stroke-width="1" opacity="0.85"
+                              transform="rotate(${45 + index * 15})"/>
+                        <path class="ribbon-2" d="${paths[2]}" fill="url(#grad-${index}-2)" 
+                              stroke="${colors.primary}" stroke-width="1" opacity="1"
+                              transform="rotate(${90 + index * 15})"/>
+                    </g>
+                    <circle r="6" fill="${colors.primary}" 
+                            filter="${currentTheme === 'dark' ? `drop-shadow(0 0 8px ${colors.primary})` : 'none'}"/>
+                    <circle r="3" cx="-2" cy="-2" fill="rgba(255,255,255,0.8)"/>
+                    <text class="bubble-label" dy="-0.5em">${item.symbol}</text>
+                    <text class="bubble-change" dy="1.1em" fill="${colors.primary}">
+                        ${(item.change24h >= 0 ? '+' : '') + item.change24h.toFixed(1)}%
+                    </text>
+                </svg>
+            `;
+        }
+
+        updateBubbleSVG(svg, item, index) {
+            // Update colors
+            const colors = getBubbleColor(item.change24h, currentTheme);
+            const paths = svg.querySelectorAll('path');
+            const circles = svg.querySelectorAll('circle');
+            const texts = svg.querySelectorAll('text');
+            const gradients = svg.querySelectorAll('linearGradient stop');
+            const filter = svg.querySelector('filter feFlood');
+            
+            // Update gradient colors efficiently
+            if (gradients.length >= 5) {
+                gradients[0].setAttribute('stop-color', colors.dark);
+                gradients[1].setAttribute('stop-color', colors.secondary);
+                gradients[3].setAttribute('stop-color', colors.secondary);
+                gradients[4].setAttribute('stop-color', colors.dark);
+            }
+            
+            // Update stroke colors
+            paths.forEach(p => p.setAttribute('stroke', colors.primary));
+            if (filter) filter.setAttribute('flood-color', colors.primary);
+            
+            // Update center circle
+            if (circles[0]) circles[0].setAttribute('fill', colors.primary);
+            
+            // Update text colors
+            const changeText = texts[1];
+            if (changeText) {
+                changeText.setAttribute('fill', colors.primary);
+                changeText.textContent = (item.change24h >= 0 ? '+' : '') + item.change24h.toFixed(1) + '%';
+            }
+        }
+
+        generateRibbonPaths(radius, index) {
+            const ribbons = [
+                { r: radius, w: 12, twist: 2.5 },
+                { r: radius * 0.75, w: 9, twist: 3 },
+                { r: radius * 0.5, w: 6, twist: 3.5 }
+            ];
+            
+            return ribbons.map(r => createTwistedRibbon(r.r, r.twist, r.w, 40, { zSpread: 60, focalLength: 400 }));
+        }
+
+        recycleElement(element) {
+            // Remove event listeners by cloning
+            const cloned = element.cloneNode(false);
+            element.remove();
+            this.pool.push(cloned);
+        }
+
+        handleIntersection(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                } else {
+                    entry.target.classList.remove('visible');
+                }
+            });
+        }
+
+        throttle(fn, wait) {
+            let lastTime = 0;
+            return (...args) => {
+                const now = performance.now();
+                if (now - lastTime >= wait) {
+                    lastTime = now;
+                    fn.apply(this, args);
+                }
+            };
+        }
+
+        destroy() {
+            this.isDestroyed = true;
+            
+            if (this.resizeObserver) {
+                this.resizeObserver.disconnect();
+                this.resizeObserver = null;
+            }
+            
+            if (this.scrollListener) {
+                this.viewport.removeEventListener('scroll', this.scrollListener);
+                this.scrollListener = null;
+            }
+            
+            if (this.intersectionObserver) {
+                this.intersectionObserver.disconnect();
+                this.intersectionObserver = null;
+            }
+            
+            // Clear all elements
+            this.renderedItems.forEach(el => el.remove());
+            this.renderedItems.clear();
+            this.pool = [];
+            this.data = [];
+        }
+
+        refresh(data) {
+            this.data = data;
+            this.totalItems = data.length;
+            this.calculateTotalHeight();
+            
+            // Clear and re-render
+            this.renderedItems.forEach(el => el.remove());
+            this.renderedItems.clear();
+            this.pool = [];
+            
+            this.updateVisibleItems();
+        }
+    }
+
+    // ==========================================
+    // RIBBON GEOMETRY (Optimized)
+    // ==========================================
+    function rotateZ(point, angle) {
+        const cos = Math.cos(angle), sin = Math.sin(angle);
+        return { x: point.x * cos - point.y * sin, y: point.x * sin + point.y * cos, z: point.z || 0 };
+    }
+
+    function project3D(p, focalLength, center) {
+        const scale = focalLength / (focalLength + p.z);
+        return { x: center.x + p.x * scale, y: center.y + p.y * scale, scale };
+    }
+
+    function createTwistedRibbon(radius, twists, width, segments, options = {}) {
+        const { zSpread = 80, focalLength = 500, innerRadius = 5 } = options;
+        const frontEdge = [], backEdge = [];
+        
+        for (let i = 0; i <= segments; i++) {
+            const t = i / segments;
+            const r = innerRadius + t * (radius - innerRadius);
+            const angle = t * twists * Math.PI * 2;
+            const z = -zSpread * Math.sin(t * twists * Math.PI);
+            
+            const cx = Math.cos(angle) * r;
+            const cy = Math.sin(angle) * r;
+            const tangentAngle = angle + Math.PI / 2;
+            
+            const twistAngle = t * 3 * Math.PI;
+            const halfWidth = (width * (0.5 + 0.5 * t)) / 2;
+            
+            const wx = Math.cos(tangentAngle) * halfWidth;
+            const wy = Math.sin(tangentAngle) * halfWidth;
+            
+            const front = rotateZ({x: wx, y: wy, z: 0}, twistAngle);
+            const back = rotateZ({x: -wx, y: -wy, z: 0}, twistAngle);
+            
+            frontEdge.push(project3D({x: cx + front.x, y: cy + front.y, z: z + front.z * 0.2}, focalLength, {x: 0, y: 0}));
+            backEdge.push(project3D({x: cx + back.x, y: cy + back.y, z: z + back.z * 0.2}, focalLength, {x: 0, y: 0}));
+        }
+        
+        let path = `M ${frontEdge[0].x.toFixed(1)} ${frontEdge[0].y.toFixed(1)}`;
+        for (let i = 1; i < frontEdge.length; i++) {
+            path += ` L ${frontEdge[i].x.toFixed(1)} ${frontEdge[i].y.toFixed(1)}`;
+        }
+        path += ` L ${backEdge[backEdge.length-1].x.toFixed(1)} ${backEdge[backEdge.length-1].y.toFixed(1)}`;
+        for (let i = backEdge.length - 2; i >= 0; i--) {
+            path += ` L ${backEdge[i].x.toFixed(1)} ${backEdge[i].y.toFixed(1)}`;
+        }
+        path += ' Z';
+        return path;
+    }
+
+    function getBubbleColor(change24h, theme) {
+        if (change24h >= 0) {
+            if (theme === 'dark') {
+                return { primary: '#00ff88', secondary: '#00aa55', dark: '#004422' };
             } else {
-                if (theme === 'dark') {
-                    return { primary: '#ff3366', secondary: '#cc2255', dark: '#661122' };
-                } else {
-                    return { primary: '#c54a4a', secondary: '#e57a7a', dark: '#8a2a2a' };
-                }
+                return { primary: '#2a8a4a', secondary: '#4ab86a', dark: '#1a5a3a' };
+            }
+        } else {
+            if (theme === 'dark') {
+                return { primary: '#ff3366', secondary: '#cc2255', dark: '#661122' };
+            } else {
+                return { primary: '#c54a4a', secondary: '#e57a7a', dark: '#8a2a2a' };
             }
         }
+    }
 
-        // ==========================================
-        // DATA & RENDERING
-        // ==========================================
-        let bubbleData = [];
-        let currentTheme = 'dark';
+    // ==========================================
+    // MAIN APPLICATION
+    // ==========================================
+    let bubbleData = [];
+    let currentTheme = 'dark';
+    let virtualScroller = null;
+    let animationFrame = null;
+    let themeObserver = null;
+    let resizeThrottle = null;
 
-        async function loadData() {
-            try {
-                const response = await fetch('https://api.bybit.com/v5/market/tickers?category=linear');
-                const data = await response.json();
+    // Theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const body = document.body;
 
-                bubbleData = data.result.list
+    themeToggle.addEventListener('click', () => {
+        const current = body.getAttribute('data-theme');
+        const newTheme = current === 'dark' ? 'light' : 'dark';
+        body.setAttribute('data-theme', newTheme);
+        themeIcon.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+        currentTheme = newTheme;
+        if (virtualScroller) {
+            virtualScroller.refresh(bubbleData);
+        }
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 't' || e.key === 'T') {
+            themeToggle.click();
+        }
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+
+    async function loadData() {
+        const measureStart = perfMonitor.startMeasure('loadData');
+        
+        try {
+            const data = await apiClient.getTickers();
+            
+            bubbleData = data.result.list
+                .filter(item => item.symbol.endsWith('USDT'))
+                .map(item => ({
+                    symbol: item.symbol.replace('USDT', ''),
+                    change24h: parseFloat(item.price24hPcnt) * 100,
+                    price: parseFloat(item.lastPrice),
+                    volume24h: parseFloat(item.volume24h) * parseFloat(item.lastPrice)
+                }))
+                .filter(item => !isNaN(item.change24h))
+                .sort((a, b) => b.volume24h - a.volume24h)
+                .slice(0, 48);
+
+            // Calculate base radius for each bubble
+            bubbleData.forEach(d => {
+                d.baseRadius = 45 + Math.sqrt(d.volume24h) / 80000;
+            });
+
+            updateStats();
+            
+            if (!virtualScroller) {
+                virtualScroller = new VirtualScroller(document.getElementById('bubble-spacer'), {
+                    itemHeight: 160,
+                    bufferRows: 2
+                });
+                virtualScroller.init(bubbleData);
+            } else {
+                virtualScroller.refresh(bubbleData);
+            }
+            
+            document.getElementById('loading').style.display = 'none';
+            startAnimation();
+            
+        } catch (error) {
+            console.error('Error loading data:', error);
+            // Try to use cached data as fallback
+            const cached = cacheManager.get('tickers');
+            if (cached) {
+                console.log('[Fallback] Using cached data');
+                bubbleData = cached.result.list
                     .filter(item => item.symbol.endsWith('USDT'))
                     .map(item => ({
                         symbol: item.symbol.replace('USDT', ''),
@@ -627,171 +1317,107 @@
                     .filter(item => !isNaN(item.change24h))
                     .sort((a, b) => b.volume24h - a.volume24h)
                     .slice(0, 48);
-
-                renderBubbles();
-                updateStats();
-                document.getElementById('loading').style.display = 'none';
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-
-        function updateStats() {
-            const bullish = bubbleData.filter(d => d.change24h >= 0).length;
-            const bearish = bubbleData.filter(d => d.change24h < 0).length;
-            document.getElementById('bullish-count').textContent = bullish;
-            document.getElementById('bearish-count').textContent = bearish;
-        }
-
-        function renderBubbles() {
-            const container = document.getElementById('bubble-container');
-            container.innerHTML = '';
-            
-            const width = Math.min(container.clientWidth - 20, 1400);
-            const cols = Math.floor(width / 160);
-            const spacing = width / cols;
-            const rows = Math.ceil(bubbleData.length / cols);
-            const height = rows * spacing + 100;
-
-            const svg = d3.select('#bubble-container').append('svg')
-                .attr('width', width)
-                .attr('height', height);
-
-            const defs = svg.append('defs');
-            
-            // Neon glow filter for dark, soft shadow for light
-            const filter = defs.append('filter').attr('id', 'bubbleFilter');
-            if (currentTheme === 'dark') {
-                filter.append('feGaussianBlur').attr('stdDeviation', '4').attr('result', 'blur');
-                filter.append('feFlood').attr('flood-color', '#00ff88').attr('result', 'color');
-                filter.append('feComposite').attr('in', 'color').attr('in2', 'blur').attr('operator', 'in').attr('result', 'glow');
-                const merge = filter.append('feMerge');
-                merge.append('feMergeNode').attr('in', 'glow');
-                merge.append('feMergeNode').attr('in', 'SourceGraphic');
-            } else {
-                filter.append('feGaussianBlur').attr('in', 'SourceAlpha').attr('stdDeviation', '3');
-                filter.append('feOffset').attr('dx', '2').attr('dy', '2');
-                filter.append('feFlood').attr('flood-color', 'rgba(0,0,0,0.1)');
-                filter.append('feComposite').attr('operator', 'in');
-                const merge = filter.append('feMerge');
-                merge.append('feMergeNode');
-                merge.append('feMergeNode').attr('in', 'SourceGraphic');
-            }
-
-            bubbleData.forEach((d, i) => {
-                const col = i % cols;
-                const row = Math.floor(i / cols);
-                const offsetX = (row % 2) * (spacing / 2);
-                d.x = col * spacing + spacing / 2 + offsetX;
-                d.y = row * spacing + spacing / 2 + 50;
-                d.baseRadius = 45 + Math.sqrt(d.volume24h) / 80000;
-            });
-
-            const groups = svg.selectAll('.bubble-group')
-                .data(bubbleData)
-                .enter().append('g')
-                .attr('class', 'bubble-group')
-                .attr('transform', d => `translate(${d.x},${d.y})`);
-
-            groups.each(function(d, i) {
-                const g = d3.select(this);
-                const colors = getBubbleColor(d.change24h, currentTheme);
                 
-                const ribbons = [
-                    { radius: d.baseRadius, width: 12, opacity: 0.7, rotation: 0, twist: 2.5 },
-                    { radius: d.baseRadius * 0.75, width: 9, opacity: 0.85, rotation: 45, twist: 3 },
-                    { radius: d.baseRadius * 0.5, width: 6, opacity: 1, rotation: 90, twist: 3.5 }
-                ];
-                
-                ribbons.forEach((ribbon, rIdx) => {
-                    const path = createTwistedRibbon(ribbon.radius, ribbon.twist, ribbon.width, 50, {
-                        zSpread: 60 + rIdx * 15,
-                        focalLength: 400
-                    });
-                    
-                    const gradId = `grad-${i}-${rIdx}`;
-                    const grad = defs.append('linearGradient')
-                        .attr('id', gradId)
-                        .attr('x1', '0%').attr('y1', '0%')
-                        .attr('x2', '100%').attr('y2', '100%');
-                    
-                    grad.append('stop').attr('offset', '0%').attr('stop-color', colors.dark);
-                    grad.append('stop').attr('offset', '30%').attr('stop-color', colors.secondary);
-                    grad.append('stop').attr('offset', '50%').attr('stop-color', '#ffffff');
-                    grad.append('stop').attr('offset', '70%').attr('stop-color', colors.secondary);
-                    grad.append('stop').attr('offset', '100%').attr('stop-color', colors.dark);
-                    
-                    const ribbonEl = g.append('path')
-                        .attr('d', path)
-                        .attr('fill', `url(#${gradId})`)
-                        .attr('stroke', colors.primary)
-                        .attr('stroke-width', rIdx === 0 ? 2 : 1)
-                        .attr('opacity', ribbon.opacity)
-                        .attr('transform', `rotate(${ribbon.rotation + i * 15})`);
-                    
-                    if (rIdx === 0) {
-                        ribbonEl.style('filter', 'url(#bubbleFilter)');
-                    }
-                });
-                
-                g.append('circle').attr('r', 6).attr('fill', colors.primary)
-                    .style('filter', currentTheme === 'dark' 
-                        ? `drop-shadow(0 0 10px ${colors.primary})` 
-                        : 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))');
-                
-                g.append('circle').attr('r', 3).attr('cx', -2).attr('cy', -2)
-                    .attr('fill', 'rgba(255,255,255,0.8)');
-                
-                g.append('text').attr('class', 'bubble-label').attr('dy', '-0.5em').text(d.symbol);
-                g.append('text').attr('class', 'bubble-change').attr('dy', '1.1em')
-                    .style('fill', colors.primary)
-                    .text((d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(1) + '%');
-                
-                g.on('click', () => showModal(d));
-            });
-
-            let time = 0;
-            function animate() {
-                time += 0.025;
-                groups.selectAll('path').attr('transform', function(d, i, nodes) {
-                    const idx = Math.floor(i / 3);
-                    const rIdx = i % 3;
-                    const baseRot = [0, 45, 90][rIdx] + idx * 15;
-                    const float = Math.sin(time + idx * 0.5) * 8;
-                    return `rotate(${baseRot + float})`;
-                });
-                requestAnimationFrame(animate);
-            }
-            animate();
-        }
-
-        function showModal(coin) {
-            document.getElementById('modal-symbol').textContent = coin.symbol;
-            document.getElementById('modal-price').textContent = '$' + coin.price.toFixed(2);
-            const changeEl = document.getElementById('modal-change');
-            changeEl.textContent = (coin.change24h >= 0 ? '+' : '') + coin.change24h.toFixed(2) + '%';
-            changeEl.style.color = coin.change24h >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-            document.getElementById('modal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.remove('active');
-        }
-
-        // Re-render on theme change
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.attributeName === 'data-theme') {
-                    currentTheme = body.getAttribute('data-theme');
-                    renderBubbles();
+                if (!virtualScroller) {
+                    virtualScroller = new VirtualScroller(document.getElementById('bubble-spacer'));
+                    virtualScroller.init(bubbleData);
+                } else {
+                    virtualScroller.refresh(bubbleData);
                 }
-            });
-        });
-        observer.observe(body, { attributes: true });
+            }
+        }
+        
+        perfMonitor.endMeasure('loadData', measureStart);
+    }
 
-        // Init
-        loadData();
-        setInterval(loadData, 30000);
+    function updateStats() {
+        const bullish = bubbleData.filter(d => d.change24h >= 0).length;
+        const bearish = bubbleData.filter(d => d.change24h < 0).length;
+        document.getElementById('bullish-count').textContent = bullish;
+        document.getElementById('bearish-count').textContent = bearish;
+    }
+
+    function startAnimation() {
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        
+        let time = 0;
+        function animate() {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                return;
+            }
+            
+            time += 0.025;
+            perfMonitor.tick();
+            
+            // Animate only visible ribbons
+            const ribbons = document.querySelectorAll('.bubble-ribbons');
+            ribbons.forEach(g => {
+                const idx = parseInt(g.dataset.index);
+                const float = Math.sin(time + idx * 0.5) * 8;
+                
+                const r0 = g.querySelector('.ribbon-0');
+                const r1 = g.querySelector('.ribbon-1');
+                const r2 = g.querySelector('.ribbon-2');
+                
+                if (r0) r0.style.transform = `rotate(${idx * 15 + float}deg)`;
+                if (r1) r1.style.transform = `rotate(${45 + idx * 15 + float}deg)`;
+                if (r2) r2.style.transform = `rotate(${90 + idx * 15 + float}deg)`;
+            });
+            
+            animationFrame = requestAnimationFrame(animate);
+        }
+        animate();
+    }
+
+    function showModal(coin) {
+        document.getElementById('modal-symbol').textContent = coin.symbol;
+        document.getElementById('modal-price').textContent = '$' + coin.price.toFixed(2);
+        const changeEl = document.getElementById('modal-change');
+        changeEl.textContent = (coin.change24h >= 0 ? '+' : '') + coin.change24h.toFixed(2) + '%';
+        changeEl.style.color = coin.change24h >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+        document.getElementById('modal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('modal').classList.remove('active');
+    }
+
+    // Theme observer for auto-refresh
+    themeObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'data-theme') {
+                currentTheme = body.getAttribute('data-theme');
+                if (virtualScroller) {
+                    virtualScroller.refresh(bubbleData);
+                }
+            }
+        });
+    });
+    themeObserver.observe(body, { attributes: true });
+
+    // Handle visibility change to pause/resume animation
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+                animationFrame = null;
+            }
+        } else {
+            startAnimation();
+        }
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (virtualScroller) virtualScroller.destroy();
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        if (themeObserver) themeObserver.disconnect();
+        cacheManager.destroy();
+    });
+
+    // Initialize
+    loadData();
+    setInterval(loadData, 30000);
     </script>
 </body>
 </html>
