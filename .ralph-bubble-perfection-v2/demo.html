@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metallic Shading System Demo</title>
+  <link rel="stylesheet" href="shading-system.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0a0a0f;
+      min-height: 100vh;
+      padding: 40px;
+      color: #fff;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, #b829dd, #ff00ff, #ffffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .demo-section {
+      max-width: 800px;
+      margin: 0 auto 60px;
+      text-align: center;
+    }
+    
+    .demo-section h2 {
+      color: #888;
+      margin-bottom: 24px;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .ribbon-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    
+    .price-display {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 32px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .price-label {
+      color: #888;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .price-value {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .svg-ribbon-wrapper {
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .slider-container {
+      max-width: 400px;
+      margin: 30px auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+    }
+    
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      color: #888;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, #ff4444, #b829dd, #00ff88);
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    
+    .code-preview {
+      background: #111;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 30px;
+      text-align: left;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #aaa;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .code-preview code {
+      color: #e050ff;
+    }
+    
+    .size-demos {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Metallic Shading System</h1>
+  
+  <!-- Base Ribbons -->
+  <div class="demo-section">
+    <h2>Base Metallic Ribbons</h2>
+    <div class="ribbon-row">
+      <div class="metallic-ribbon">NEUTRAL</div>
+      <div class="metallic-ribbon positive">+5.42%</div>
+      <div class="metallic-ribbon negative">-2.18%</div>
+    </div>
+    
+    <div class="ribbon-row">
+      <div class="metallic-ribbon animated">Animated</div>
+      <div class="metallic-ribbon curved">Curved</div>
+    </div>
+  </div>
+  
+  <!-- Size Variants -->
+  <div class="demo-section">
+    <h2>Size Variants</h2>
+    <div class="size-demos">
+      <div class="metallic-ribbon small">Small</div>
+      <div class="metallic-ribbon">Default</div>
+      <div class="metallic-ribbon large">Large</div>
+    </div>
+  </div>
+  
+  <!-- Dynamic Price Demo -->
+  <div class="demo-section">
+    <h2>Dynamic Price Ribbon</h2>
+    <div class="price-display">
+      <span class="price-label">BTC/USD</span>
+      <span class="price-value" id="price-value">$67,420.50</span>
+      <div class="metallic-ribbon" id="price-ribbon">+0.00%</div>
+    </div>
+    
+    <div class="slider-container">
+      <div class="slider-label">
+        <span>-10%</span>
+        <span>Price Change</span>
+        <span>+10%</span>
+      </div>
+      <input type="range" id="price-slider" min="-10" max="10" step="0.1" value="0">
+    </div>
+  </div>
+  
+  <!-- SVG Ribbons -->
+  <div class="demo-section">
+    <h2>SVG Metallic Ribbons</h2>
+    <div class="svg-container" id="svg-container">
+      <!-- SVGs will be injected here by JS -->
+    </div>
+  </div>
+  
+  <!-- Code Preview -->
+  <div class="demo-section">
+    <h2>Quick Start</h2>
+    <div class="code-preview">
+<pre>// Initialize the shading system
+const shading = new MetallicShadingSystem();
+
+// Generate a 5-stop metallic gradient
+const gradient = shading.generateMetallicGradient('#b829dd', 1.2);
+
+// Calculate surface shading
+const shading = shading.calculateSurfaceShading(45, {x: 0.3, y: -0.5});
+
+// Apply dynamic color based on price change
+const color = shading.applyDynamicColor('#b829dd', 5.42);
+
+// Create SVG ribbon gradient
+const svgGradient = shading.createRibbonGradient(gradient, null, 'ribbon-grad');
+
+// Create complete metallic ribbon SVG
+const svg = shading.createMetallicRibbon(300, 60, '#b829dd', 5.42);</pre>
+    </div>
+  </div>
+
+  <script src="metallic-shading.js"></script>
+  <script>
+    // Dynamic price ribbon demo
+    const slider = document.getElementById('price-slider');
+    const priceRibbon = document.getElementById('price-ribbon');
+    const priceValue = document.getElementById('price-value');
+    const basePrice = 67420.50;
+    
+    slider.addEventListener('input', (e) => {
+      const change = parseFloat(e.target.value);
+      const newPrice = basePrice * (1 + change / 100);
+      
+      // Update ribbon text
+      const sign = change >= 0 ? '+' : '';
+      priceRibbon.textContent = `${sign}${change.toFixed(2)}%`;
+      
+      // Update price display
+      priceValue.textContent = `$${newPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      
+      // Update ribbon styling
+      priceRibbon.classList.remove('positive', 'negative');
+      if (change > 0.5) {
+        priceRibbon.classList.add('positive');
+      } else if (change < -0.5) {
+        priceRibbon.classList.add('negative');
+      }
+    });
+    
+    // Generate SVG ribbons
+    const svgContainer = document.getElementById('svg-container');
+    
+    const ribbons = [
+      { label: 'Neutral', change: 0 },
+      { label: 'Positive', change: 5.5 },
+      { label: 'Negative', change: -3.2 }
+    ];
+    
+    ribbons.forEach(({ label, change }) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'svg-ribbon-wrapper';
+      
+      const svgString = window.MetallicShading.createMetallicRibbon(280, 50, '#b829dd', change);
+      const div = document.createElement('div');
+      div.innerHTML = svgString;
+      
+      const labelEl = document.createElement('div');
+      labelEl.style.cssText = 'margin-top: 10px; color: #888; font-size: 12px; text-transform: uppercase;';
+      labelEl.textContent = `${label} (${change >= 0 ? '+' : ''}${change}%)`;
+      
+      wrapper.appendChild(div);
+      wrapper.appendChild(labelEl);
+      svgContainer.appendChild(wrapper);
+    });
+  </script>
+</body>
+</html>

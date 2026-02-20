@@ -1,0 +1,341 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;">
+  <defs>
+    <!-- ============================================
+         METALLIC NEON BUBBLE FILTERS
+         For Ralph-1 Bubble Perfection System
+         ============================================ -->
+
+    <!-- FILTER 1: metallicGlow - Chrome/Metallic Specular Effect -->
+    <filter id="metallicGlow" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <!-- Turbulence for metallic surface texture -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.015 0.008" numOctaves="3" seed="5" result="noise"/>
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.4 0" in="noise" result="noiseAlpha"/>
+      
+      <!-- Blur source for smooth specular -->
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" result="blurredSource"/>
+      
+      <!-- Specular lighting for chrome effect -->
+      <feSpecularLighting in="blurredSource" surfaceScale="18" specularConstant="2.2" specularExponent="45" lighting-color="#ffffff" result="specular">
+        <fePointLight x="-100" y="-200" z="400"/>
+      </feSpecularLighting>
+      
+      <!-- Second specular for multi-angle reflection -->
+      <feSpecularLighting in="blurredSource" surfaceScale="12" specularConstant="1.8" specularExponent="25" lighting-color="#ffccff" result="specular2">
+        <fePointLight x="300" y="-100" z="250"/>
+      </feSpecularLighting>
+      
+      <!-- Third specular for rim light -->
+      <feSpecularLighting in="blurredSource" surfaceScale="15" specularConstant="1.5" specularExponent="30" lighting-color="#aa88ff" result="rimLight">
+        <fePointLight x="0" y="300" z="150"/>
+      </feSpecularLighting>
+      
+      <!-- Composite specular layers -->
+      <feComposite in="specular" in2="blurredSource" operator="in" result="specularClipped"/>
+      <feComposite in="specular2" in2="blurredSource" operator="in" result="specular2Clipped"/>
+      <feComposite in="rimLight" in2="blurredSource" operator="in" result="rimClipped"/>
+      
+      <!-- Blend specular layers with arithmetic -->
+      <feComposite in="specularClipped" in2="specular2Clipped" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="combinedSpecular"/>
+      <feComposite in="combinedSpecular" in2="rimClipped" operator="arithmetic" k1="0" k2="1" k3="0.7" k4="0" result="allSpecular"/>
+      
+      <!-- Add noise texture to specular -->
+      <feComposite in="allSpecular" in2="noiseAlpha" operator="arithmetic" k1="0" k2="1" k3="0.3" k4="0" result="texturedSpecular"/>
+      
+      <!-- Final blend with source -->
+      <feComposite in="texturedSpecular" in2="SourceGraphic" operator="arithmetic" k1="0" k2="0.3" k3="1" k4="0" result="metallicBase"/>
+      
+      <!-- Enhance contrast -->
+      <feComponentTransfer in="metallicBase" result="finalMetallic">
+        <feFuncR type="gamma" amplitude="1.3" exponent="0.9" offset="0"/>
+        <feFuncG type="gamma" amplitude="1.3" exponent="0.9" offset="0"/>
+        <feFuncB type="gamma" amplitude="1.3" exponent="0.9" offset="0"/>
+      </feComponentTransfer>
+    </filter>
+
+    <!-- FILTER 2: neonEdge - Multi-layer Purple/Pink Glow -->
+    <filter id="neonEdge" x="-100%" y="-100%" width="300%" height="300%" color-interpolation-filters="sRGB">
+      <!-- Extract edges using morphological operations -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.8" result="blur1"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="dilated"/>
+      <feComposite in="dilated" in2="SourceAlpha" operator="out" result="edgeMask"/>
+      
+      <!-- Outer glow layer 1 (deep purple) -->
+      <feGaussianBlur in="edgeMask" stdDeviation="25" result="glowOuter"/>
+      <feFlood flood-color="#440066" flood-opacity="0.8" result="purpleDeep"/>
+      <feComposite in="purpleDeep" in2="glowOuter" operator="in" result="purpleGlowOuter"/>
+      
+      <!-- Outer glow layer 2 (vibrant purple) -->
+      <feGaussianBlur in="edgeMask" stdDeviation="15" result="glowMid"/>
+      <feFlood flood-color="#8800ff" flood-opacity="0.9" result="purpleVibrant"/>
+      <feComposite in="purpleVibrant" in2="glowMid" operator="in" result="purpleGlowMid"/>
+      
+      <!-- Inner glow layer (hot pink) -->
+      <feGaussianBlur in="edgeMask" stdDeviation="6" result="glowInner"/>
+      <feFlood flood-color="#ff00cc" flood-opacity="1" result="pinkHot"/>
+      <feComposite in="pinkHot" in2="glowInner" operator="in" result="pinkGlowInner"/>
+      
+      <!-- Core highlight (white-pink) -->
+      <feGaussianBlur in="edgeMask" stdDeviation="2" result="glowCore"/>
+      <feFlood flood-color="#ff88ff" flood-opacity="1" result="whitePink"/>
+      <feComposite in="whitePink" in2="glowCore" operator="in" result="coreGlow"/>
+      
+      <!-- Merge all glow layers -->
+      <feMerge result="allGlow">
+        <feMergeNode in="purpleGlowOuter"/>
+        <feMergeNode in="purpleGlowMid"/>
+        <feMergeNode in="pinkGlowInner"/>
+        <feMergeNode in="coreGlow"/>
+      </feMerge>
+      
+      <!-- Blend with source using arithmetic for neon effect -->
+      <feComposite in="allGlow" in2="SourceGraphic" operator="arithmetic" k1="0" k2="1" k3="1.5" k4="0" result="neonResult"/>
+      
+      <!-- Final saturation boost -->
+      <feColorMatrix type="saturate" values="1.8" in="neonResult" result="finalNeon"/>
+    </filter>
+
+    <!-- FILTER 3: depthShadow - 3D Depth with Shadow -->
+    <filter id="depthShadow" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <!-- Create depth shadow offset -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blurAlpha"/>
+      <feOffset in="blurAlpha" dx="8" dy="12" result="offsetBlur"/>
+      <feFlood flood-color="#000000" flood-opacity="0.6" result="shadowColor"/>
+      <feComposite in="shadowColor" in2="offsetBlur" operator="in" result="shadow"/>
+      
+      <!-- Second layer for deeper shadow -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="12" result="blurAlpha2"/>
+      <feOffset in="blurAlpha2" dx="15" dy="25" result="offsetBlur2"/>
+      <feFlood flood-color="#1a0033" flood-opacity="0.4" result="shadowColor2"/>
+      <feComposite in="shadowColor2" in2="offsetBlur2" operator="in" result="shadow2"/>
+      
+      <!-- Third layer for ambient occlusion feel -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="25" result="blurAlpha3"/>
+      <feOffset in="blurAlpha3" dx="20" dy="35" result="offsetBlur3"/>
+      <feFlood flood-color="#330055" flood-opacity="0.2" result="shadowColor3"/>
+      <feComposite in="shadowColor3" in2="offsetBlur3" operator="in" result="shadow3"/>
+      
+      <!-- Inner shadow for depth (dark center effect) -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="innerBlur"/>
+      <feComposite in="innerBlur" in2="SourceAlpha" operator="out" result="innerShadowMask"/>
+      <feFlood flood-color="#000000" flood-opacity="0.5" result="innerColor"/>
+      <feComposite in="innerColor" in2="innerShadowMask" operator="in" result="innerShadow"/>
+      <feComposite in="innerShadow" in2="SourceGraphic" operator="atop" result="innerShadowApplied"/>
+      
+      <!-- Merge shadows -->
+      <feMerge result="allShadows">
+        <feMergeNode in="shadow3"/>
+        <feMergeNode in="shadow2"/>
+        <feMergeNode in="shadow"/>
+        <feMergeNode in="innerShadowApplied"/>
+      </feMerge>
+      
+      <!-- Vignette effect for dark center -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="30" result="vignetteMask"/>
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 -0.6 0.6" in="vignetteMask" result="vignette"/>
+      <feComposite in="vignette" in2="allShadows" operator="atop" result="withVignette"/>
+      
+      <!-- Final merge with source -->
+      <feMerge result="finalDepth">
+        <feMergeNode in="shadow3"/>
+        <feMergeNode in="shadow2"/>
+        <feMergeNode in="shadow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- FILTER 4: colorShift - Dynamic Color Matrix Shifting -->
+    <filter id="colorShift" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <!-- Base color matrix for purple enhancement -->
+      <feColorMatrix type="matrix" 
+        values="1.3 0.1 0   0 0
+                0.1 0.9 0.1 0 0
+                0.2 0   1.4 0 0
+                0   0   0   1 0" 
+        in="SourceGraphic" result="purpleBase"/>
+      
+      <!-- Red shift version -->
+      <feColorMatrix type="matrix" 
+        values="1.5 0.3 0.1 0 0
+                0.2 0.6 0.1 0 0
+                0.1 0   0.8 0 0
+                0   0   0   1 0" 
+        in="SourceGraphic" result="redShift"/>
+      
+      <!-- Green shift version -->
+      <feColorMatrix type="matrix" 
+        values="0.6 0.2 0   0 0
+                0.3 1.4 0.2 0 0
+                0.1 0.2 0.9 0 0
+                0   0   0   1 0" 
+        in="SourceGraphic" result="greenShift"/>
+      
+      <!-- Blue/Cyan shift version -->
+      <feColorMatrix type="matrix" 
+        values="0.7 0   0.2 0 0
+                0.1 0.9 0.3 0 0
+                0.2 0.1 1.5 0 0
+                0   0   0   1 0" 
+        in="SourceGraphic" result="blueShift"/>
+      
+      <!-- Saturation and hue rotate for animation potential -->
+      <feColorMatrix type="hueRotate" values="0" in="purpleBase" result="hueRotated"/>
+      <feColorMatrix type="saturate" values="1.5" in="hueRotated" result="saturated"/>
+      
+      <!-- Contrast enhancement -->
+      <feComponentTransfer in="saturated" result="contrastEnhanced">
+        <feFuncR type="linear" slope="1.2" intercept="-0.1"/>
+        <feFuncG type="linear" slope="1.2" intercept="-0.1"/>
+        <feFuncB type="linear" slope="1.2" intercept="-0.1"/>
+      </feComponentTransfer>
+      
+      <!-- Brightness adjustment for neon effect -->
+      <feComponentTransfer in="contrastEnhanced" result="finalColorShift">
+        <feFuncR type="gamma" amplitude="1.1" exponent="0.85" offset="0.05"/>
+        <feFuncG type="gamma" amplitude="1.05" exponent="0.9" offset="0.02"/>
+        <feFuncB type="gamma" amplitude="1.2" exponent="0.8" offset="0.08"/>
+      </feComponentTransfer>
+    </filter>
+
+    <!-- ============================================
+         COMBINED MASTER FILTERS
+         ============================================ -->
+
+    <!-- MASTER FILTER: metallicNeonBubble - All effects combined -->
+    <filter id="metallicNeonBubble" x="-100%" y="-100%" width="300%" height="300%" color-interpolation-filters="sRGB">
+      <!-- Step 1: Apply color shift base -->
+      <feColorMatrix type="matrix" 
+        values="1.2 0.1 0   0 0
+                0.1 0.8 0.1 0 0
+                0.3 0   1.3 0 0
+                0   0   0   1 0" 
+        in="SourceGraphic" result="coloredBase"/>
+      
+      <!-- Step 2: Metallic specular lighting -->
+      <feGaussianBlur in="coloredBase" stdDeviation="0.3" result="smoothBase"/>
+      <feSpecularLighting in="smoothBase" surfaceScale="20" specularConstant="2.5" specularExponent="50" lighting-color="#ffffff" result="specular1">
+        <fePointLight x="-150" y="-250" z="500"/>
+      </feSpecularLighting>
+      <feSpecularLighting in="smoothBase" surfaceScale="15" specularConstant="2" specularExponent="35" lighting-color="#ffccff" result="specular2">
+        <fePointLight x="400" y="-150" z="300"/>
+      </feSpecularLighting>
+      <feSpecularLighting in="smoothBase" surfaceScale="18" specularConstant="1.8" specularExponent="40" lighting-color="#aa66ff" result="specular3">
+        <fePointLight x="0" y="400" z="200"/>
+      </feSpecularLighting>
+      
+      <!-- Composite speculars -->
+      <feComposite in="specular1" in2="smoothBase" operator="in" result="spec1"/>
+      <feComposite in="specular2" in2="smoothBase" operator="in" result="spec2"/>
+      <feComposite in="specular3" in2="smoothBase" operator="in" result="spec3"/>
+      <feComposite in="spec1" in2="spec2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="spec12"/>
+      <feComposite in="spec12" in2="spec3" operator="arithmetic" k1="0" k2="1" k3="0.8" k4="0" result="allSpec"/>
+      <feComposite in="allSpec" in2="coloredBase" operator="arithmetic" k1="0" k2="0.4" k3="1" k4="0" result="metallic"/>
+      
+      <!-- Step 3: Neon edge glow (multi-layer) -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="0.5" result="edgeBlur"/>
+      <feMorphology in="SourceAlpha" operator="dilate" radius="1" result="dilatedEdge"/>
+      <feComposite in="dilatedEdge" in2="SourceAlpha" operator="out" result="edgeMask"/>
+      
+      <!-- Deep purple outer glow -->
+      <feGaussianBlur in="edgeMask" stdDeviation="20" result="glow1"/>
+      <feFlood flood-color="#3a0066" flood-opacity="0.9" result="c1"/>
+      <feComposite in="c1" in2="glow1" operator="in" result="glowPurple"/>
+      
+      <!-- Vibrant purple mid glow -->
+      <feGaussianBlur in="edgeMask" stdDeviation="10" result="glow2"/>
+      <feFlood flood-color="#9900ff" flood-opacity="1" result="c2"/>
+      <feComposite in="c2" in2="glow2" operator="in" result="glowVibrant"/>
+      
+      <!-- Hot pink inner glow -->
+      <feGaussianBlur in="edgeMask" stdDeviation="4" result="glow3"/>
+      <feFlood flood-color="#ff00aa" flood-opacity="1" result="c3"/>
+      <feComposite in="c3" in2="glow3" operator="in" result="glowPink"/>
+      
+      <!-- White core glow -->
+      <feGaussianBlur in="edgeMask" stdDeviation="1.5" result="glow4"/>
+      <feFlood flood-color="#ffccff" flood-opacity="1" result="c4"/>
+      <feComposite in="c4" in2="glow4" operator="in" result="glowCore"/>
+      
+      <!-- Merge glows -->
+      <feMerge result="neonGlow">
+        <feMergeNode in="glowPurple"/>
+        <feMergeNode in="glowVibrant"/>
+        <feMergeNode in="glowPink"/>
+        <feMergeNode in="glowCore"/>
+      </feMerge>
+      
+      <!-- Step 4: Depth shadows -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="8" result="shadowBlur1"/>
+      <feOffset in="shadowBlur1" dx="10" dy="18" result="shadow1"/>
+      <feFlood flood-color="#000000" flood-opacity="0.7" result="sc1"/>
+      <feComposite in="sc1" in2="shadow1" operator="in" result="dropShadow1"/>
+      
+      <feGaussianBlur in="SourceAlpha" stdDeviation="20" result="shadowBlur2"/>
+      <feOffset in="shadowBlur2" dx="20" dy="35" result="shadow2"/>
+      <feFlood flood-color="#1a0033" flood-opacity="0.5" result="sc2"/>
+      <feComposite in="sc2" in2="shadow2" operator="in" result="dropShadow2"/>
+      
+      <!-- Step 5: Inner shadow for depth -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="innerBlur"/>
+      <feComposite in="innerBlur" in2="SourceAlpha" operator="out" result="innerMask"/>
+      <feFlood flood-color="#000000" flood-opacity="0.6" result="innerColor"/>
+      <feComposite in="innerColor" in2="innerMask" operator="in" result="innerShadowBase"/>
+      <feComposite in="innerShadowBase" in2="metallic" operator="atop" result="withInnerShadow"/>
+      
+      <!-- Step 6: Turbulence texture overlay -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.01" numOctaves="4" seed="7" result="texture"/>
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.15 0" in="texture" result="textureAlpha"/>
+      <feComposite in="textureAlpha" in2="withInnerShadow" operator="atop" result="textured"/>
+      
+      <!-- Step 7: Final composition -->
+      <feMerge result="finalResult">
+        <feMergeNode in="dropShadow2"/>
+        <feMergeNode in="dropShadow1"/>
+        <feMergeNode in="neonGlow"/>
+        <feMergeNode in="textured"/>
+      </feMerge>
+      
+      <!-- Step 8: Final color enhancement -->
+      <feColorMatrix type="saturate" values="1.6" in="finalResult" result="saturatedFinal"/>
+      <feComponentTransfer in="saturatedFinal" result="finalBubble">
+        <feFuncR type="gamma" amplitude="1.15" exponent="0.88" offset="0.03"/>
+        <feFuncG type="gamma" amplitude="1.08" exponent="0.92" offset="0.01"/>
+        <feFuncB type="gamma" amplitude="1.25" exponent="0.85" offset="0.05"/>
+      </feComponentTransfer>
+    </filter>
+
+    <!-- QUICK FILTER: bubblePreset - Simplified all-in-one -->
+    <filter id="bubblePreset" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" result="blur"/>
+      <feSpecularLighting in="blur" surfaceScale="15" specularConstant="2" specularExponent="40" lighting-color="#ffffff" result="spec">
+        <fePointLight x="-100" y="-100" z="300"/>
+      </feSpecularLighting>
+      <feComposite in="spec" in2="blur" operator="in" result="specOut"/>
+      <feGaussianBlur in="SourceAlpha" stdDeviation="12" result="glowBlur"/>
+      <feFlood flood-color="#9900ff" flood-opacity="0.8" result="glowColor"/>
+      <feComposite in="glowColor" in2="glowBlur" operator="in" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="specOut"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- GRADIENT DEFINITIONS FOR USE WITH FILTERS -->
+    <linearGradient id="metallicGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1"/>
+      <stop offset="30%" style="stop-color:#ffccff;stop-opacity:1"/>
+      <stop offset="50%" style="stop-color:#cc88ff;stop-opacity:1"/>
+      <stop offset="70%" style="stop-color:#ff66cc;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:1"/>
+    </linearGradient>
+
+    <radialGradient id="bubbleGradient" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.9"/>
+      <stop offset="20%" style="stop-color:#ffccff;stop-opacity:0.8"/>
+      <stop offset="40%" style="stop-color:#cc66ff;stop-opacity:0.9"/>
+      <stop offset="70%" style="stop-color:#6600cc;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#220044;stop-opacity:1"/>
+    </radialGradient>
+
+  </defs>
+</svg>

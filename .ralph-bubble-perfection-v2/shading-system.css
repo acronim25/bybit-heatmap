@@ -1,0 +1,262 @@
+/**
+ * Shading System CSS
+ * Metallic ribbon styling with dynamic color variables
+ * Chrome/polished metal effect with neon glow
+ */
+
+:root {
+  /* Base metallic colors */
+  --ribbon-base: #b829dd;
+  --ribbon-highlight: #ffffff;
+  --ribbon-shadow: #4a0e5c;
+  --neon-glow: #ff00ff;
+  
+  /* Dynamic state colors */
+  --ribbon-positive: #00ff88;
+  --ribbon-negative: #ff4444;
+  --ribbon-neutral: #b829dd;
+  
+  /* Metallic gradient stops */
+  --metal-stop-1: var(--ribbon-shadow);
+  --metal-stop-2: #7a1a99;
+  --metal-stop-3: var(--ribbon-base);
+  --metal-stop-4: #e050ff;
+  --metal-stop-5: var(--ribbon-highlight);
+  
+  /* Shadow depths */
+  --shadow-soft: 0 4px 20px rgba(74, 14, 92, 0.4);
+  --shadow-glow: 0 0 30px rgba(255, 0, 255, 0.5), 0 0 60px rgba(184, 41, 221, 0.3);
+  --shadow-inner: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+  
+  /* Animation timing */
+  --transition-fast: 150ms ease-out;
+  --transition-normal: 300ms ease-out;
+  --transition-slow: 500ms ease-in-out;
+}
+
+/* Base metallic ribbon container */
+.metallic-ribbon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 32px;
+  border-radius: 12px;
+  
+  /* Metallic gradient background */
+  background: linear-gradient(
+    180deg,
+    var(--metal-stop-5) 0%,
+    var(--metal-stop-4) 20%,
+    var(--metal-stop-3) 50%,
+    var(--metal-stop-2) 80%,
+    var(--metal-stop-1) 100%
+  );
+  
+  /* Chrome edge effect */
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    var(--shadow-soft),
+    var(--shadow-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  
+  /* Text styling */
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  
+  /* Smooth transitions */
+  transition: all var(--transition-normal);
+}
+
+/* Specular highlight overlay */
+.metallic-ribbon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 12px;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 65%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Inner edge highlight for depth */
+.metallic-ribbon::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+}
+
+/* Positive state (green shift) */
+.metallic-ribbon.positive {
+  --ribbon-base: var(--ribbon-positive);
+  --metal-stop-1: #004d2a;
+  --metal-stop-2: #008f4d;
+  --metal-stop-3: var(--ribbon-positive);
+  --metal-stop-4: #66ffb3;
+  --metal-stop-5: #ccffe6;
+  --neon-glow: #00ff88;
+  --shadow-glow: 0 0 30px rgba(0, 255, 136, 0.5), 0 0 60px rgba(0, 255, 136, 0.3);
+}
+
+/* Negative state (red shift) */
+.metallic-ribbon.negative {
+  --ribbon-base: var(--ribbon-negative);
+  --metal-stop-1: #661111;
+  --metal-stop-2: #aa2222;
+  --metal-stop-3: var(--ribbon-negative);
+  --metal-stop-4: #ff8888;
+  --metal-stop-5: #ffdddd;
+  --neon-glow: #ff4444;
+  --shadow-glow: 0 0 30px rgba(255, 68, 68, 0.5), 0 0 60px rgba(255, 68, 68, 0.3);
+}
+
+/* Hover effect - enhanced glow */
+.metallic-ribbon:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    var(--shadow-soft),
+    0 0 40px rgba(255, 0, 255, 0.6),
+    0 0 80px rgba(184, 41, 221, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.metallic-ribbon.positive:hover {
+  box-shadow: 
+    var(--shadow-soft),
+    0 0 40px rgba(0, 255, 136, 0.6),
+    0 0 80px rgba(0, 255, 136, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.metallic-ribbon.negative:hover {
+  box-shadow: 
+    var(--shadow-soft),
+    0 0 40px rgba(255, 68, 68, 0.6),
+    0 0 80px rgba(255, 68, 68, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Active/pressed state */
+.metallic-ribbon:active {
+  transform: translateY(1px);
+  box-shadow: 
+    0 2px 10px rgba(74, 14, 92, 0.4),
+    0 0 20px rgba(255, 0, 255, 0.3),
+    inset 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Animated light reflection */
+@keyframes lightSweep {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+.metallic-ribbon.animated::before {
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.5) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: lightSweep 3s ease-in-out infinite;
+}
+
+/* Curved ribbon variant (for chart ribbons) */
+.metallic-ribbon-curved {
+  position: relative;
+  border-radius: 50px;
+  background: linear-gradient(
+    90deg,
+    var(--metal-stop-1) 0%,
+    var(--metal-stop-2) 25%,
+    var(--metal-stop-3) 50%,
+    var(--metal-stop-4) 75%,
+    var(--metal-stop-5) 100%
+  );
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    0 0 25px rgba(255, 0, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Vertical ribbon variant */
+.metallic-ribbon-vertical {
+  background: linear-gradient(
+    180deg,
+    var(--metal-stop-5) 0%,
+    var(--metal-stop-4) 20%,
+    var(--metal-stop-3) 50%,
+    var(--metal-stop-2) 80%,
+    var(--metal-stop-1) 100%
+  );
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+  .metallic-ribbon {
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .metallic-ribbon,
+  .metallic-ribbon::before {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* Size variants */
+.metallic-ribbon.small {
+  padding: 8px 20px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+.metallic-ribbon.large {
+  padding: 16px 48px;
+  font-size: 16px;
+  border-radius: 16px;
+}
+
+/* SVG ribbon styles */
+.svg-ribbon {
+  filter: drop-shadow(0 4px 10px rgba(74, 14, 92, 0.4))
+          drop-shadow(0 0 20px rgba(255, 0, 255, 0.3));
+}
+
+.svg-ribbon.positive {
+  filter: drop-shadow(0 4px 10px rgba(0, 77, 42, 0.4))
+          drop-shadow(0 0 20px rgba(0, 255, 136, 0.3));
+}
+
+.svg-ribbon.negative {
+  filter: drop-shadow(0 4px 10px rgba(102, 17, 17, 0.4))
+          drop-shadow(0 0 20px rgba(255, 68, 68, 0.3));
+}

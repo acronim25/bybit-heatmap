@@ -1,0 +1,342 @@
+/**
+ * Animation Keyframes - Ralph-4 Animation Polish
+ * Premium 3D bubble animations
+ * 
+ * Inspired by: flowing metallic ribbons, purple neon edges
+ * The bubble must feel ALIVE and PREMIUM
+ */
+
+/* ============================================
+   BASE BUBBLE STYLES
+   ============================================ */
+
+.bubble {
+  /* Essential 3D setup */
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  will-change: transform, filter;
+  
+  /* Default appearance matching reference */
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.1) 0%,
+    rgba(236, 72, 153, 0.2) 50%,
+    rgba(139, 92, 246, 0.1) 100%
+  );
+  border: 2px solid rgba(236, 72, 153, 0.6);
+  box-shadow: 
+    0 0 20px rgba(236, 72, 153, 0.4),
+    inset 0 0 30px rgba(139, 92, 246, 0.1);
+  
+  /* Smooth transitions for property changes */
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease;
+}
+
+/* ============================================
+   1. metallicPulse - Breathing glow effect
+   Subtle opacity + blur oscillation
+   ============================================ */
+
+@keyframes metallicPulse {
+  0%, 100% {
+    opacity: 0.85;
+    filter: blur(0px) brightness(1);
+    box-shadow: 
+      0 0 20px rgba(236, 72, 153, 0.4),
+      0 0 40px rgba(236, 72, 153, 0.2),
+      inset 0 0 30px rgba(139, 92, 246, 0.1);
+  }
+  
+  50% {
+    opacity: 1;
+    filter: blur(0.5px) brightness(1.15);
+    box-shadow: 
+      0 0 30px rgba(236, 72, 153, 0.7),
+      0 0 60px rgba(236, 72, 153, 0.4),
+      0 0 90px rgba(139, 92, 246, 0.2),
+      inset 0 0 40px rgba(139, 92, 246, 0.2);
+  }
+}
+
+/* ============================================
+   2. twistSpin - True 3D rotation
+   Multi-axis rotation with perspective
+   ============================================ */
+
+@keyframes twistSpin {
+  0% {
+    transform: 
+      rotateX(0deg) 
+      rotateY(0deg) 
+      rotateZ(0deg)
+      scale3d(1, 1, 1);
+  }
+  
+  25% {
+    transform: 
+      rotateX(15deg) 
+      rotateY(90deg) 
+      rotateZ(5deg)
+      scale3d(1.02, 1.02, 1.02);
+  }
+  
+  50% {
+    transform: 
+      rotateX(0deg) 
+      rotateY(180deg) 
+      rotateZ(0deg)
+      scale3d(1, 1, 1);
+  }
+  
+  75% {
+    transform: 
+      rotateX(-15deg) 
+      rotateY(270deg) 
+      rotateZ(-5deg)
+      scale3d(1.02, 1.02, 1.02);
+  }
+  
+  100% {
+    transform: 
+      rotateX(0deg) 
+      rotateY(360deg) 
+      rotateZ(0deg)
+      scale3d(1, 1, 1);
+  }
+}
+
+/* Alternative: Single axis clean spin with depth */
+@keyframes twistSpinSimple {
+  0% {
+    transform: 
+      perspective(1000px)
+      rotateY(0deg)
+      rotateX(10deg);
+  }
+  
+  100% {
+    transform: 
+      perspective(1000px)
+      rotateY(360deg)
+      rotateX(10deg);
+  }
+}
+
+/* ============================================
+   3. expandPop - Elastic entrance
+   Scale + brightness with elastic easing
+   ============================================ */
+
+@keyframes expandPop {
+  0% {
+    transform: scale3d(0, 0, 0) rotateZ(-180deg);
+    opacity: 0;
+    filter: brightness(2) blur(10px);
+  }
+  
+  40% {
+    transform: scale3d(1.15, 1.15, 1.15) rotateZ(10deg);
+    opacity: 0.9;
+    filter: brightness(1.5) blur(2px);
+  }
+  
+  60% {
+    transform: scale3d(0.95, 0.95, 0.95) rotateZ(-5deg);
+    opacity: 1;
+    filter: brightness(1.2) blur(0px);
+  }
+  
+  80% {
+    transform: scale3d(1.02, 1.02, 1.02) rotateZ(2deg);
+    filter: brightness(1.1);
+  }
+  
+  100% {
+    transform: scale3d(1, 1, 1) rotateZ(0deg);
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+/* ============================================
+   4. shimmer - Gradient position movement
+   Liquid metal flow across surface
+   ============================================ */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% -200%;
+    background-size: 200% 200%;
+  }
+  
+  25% {
+    background-position: 100% -100%;
+  }
+  
+  50% {
+    background-position: 200% 200%;
+  }
+  
+  75% {
+    background-position: -100% 100%;
+  }
+  
+  100% {
+    background-position: -200% -200%;
+    background-size: 200% 200%;
+  }
+}
+
+/* Enhanced shimmer with color shift */
+@keyframes shimmerColor {
+  0% {
+    background-position: 0% 50%;
+    filter: hue-rotate(0deg);
+  }
+  
+  50% {
+    background-position: 100% 50%;
+    filter: hue-rotate(15deg);
+  }
+  
+  100% {
+    background-position: 0% 50%;
+    filter: hue-rotate(0deg);
+  }
+}
+
+/* ============================================
+   5. hoverLift - Interactive response
+   ============================================ */
+
+.bubble-hover-lift {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.4s ease;
+  cursor: pointer;
+}
+
+.bubble-hover-lift:hover {
+  transform: 
+    translateY(-10px) 
+    translateZ(20px)
+    scale(1.05);
+  box-shadow: 
+    0 20px 40px rgba(236, 72, 153, 0.3),
+    0 0 50px rgba(236, 72, 153, 0.5),
+    0 0 80px rgba(139, 92, 246, 0.3),
+    inset 0 0 50px rgba(139, 92, 246, 0.2);
+}
+
+.bubble-hover-lift:hover::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(236, 72, 153, 0.8) 0%,
+    rgba(139, 92, 246, 0.8) 50%,
+    rgba(236, 72, 153, 0.8) 100%
+  );
+  z-index: -1;
+  filter: blur(10px);
+  opacity: 0.6;
+  animation: borderRotate 2s linear infinite;
+}
+
+@keyframes borderRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ============================================
+   BONUS ANIMATIONS - Extra premium feel
+   ============================================ */
+
+/* Floating idle motion */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-10px) translateX(5px);
+  }
+  50% {
+    transform: translateY(-5px) translateX(-5px);
+  }
+  75% {
+    transform: translateY(-15px) translateX(3px);
+  }
+}
+
+/* Jiggle on attention */
+@keyframes jiggle {
+  0%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(-3deg); }
+  20% { transform: rotate(3deg); }
+  30% { transform: rotate(-2deg); }
+  40% { transform: rotate(2deg); }
+  50% { transform: rotate(-1deg); }
+  60% { transform: rotate(1deg); }
+  70% { transform: rotate(0deg); }
+}
+
+/* Pulse ring effect for attention */
+@keyframes pulseRing {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.anim-infinite { animation-iteration-count: infinite; }
+.anim-once { animation-iteration-count: 1; }
+.anim-paused { animation-play-state: paused; }
+.anim-running { animation-play-state: running; }
+
+/* Elastic timing function shorthand */
+.elastic { 
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); 
+}
+
+/* 3D depth boost */
+.depth-boost {
+  transform: translateZ(50px);
+}
+
+/* Glow intensify utility */
+.glow-intense {
+  box-shadow: 
+    0 0 30px rgba(236, 72, 153, 0.8),
+    0 0 60px rgba(236, 72, 153, 0.5),
+    0 0 90px rgba(139, 92, 246, 0.3);
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble,
+  .bubble-hover-lift,
+  .bubble-hover-lift:hover {
+    animation: none !important;
+    transition: opacity 0.2s ease !important;
+    transform: none !important;
+  }
+}
+
+/* GPU acceleration hints */
+.bubble {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
