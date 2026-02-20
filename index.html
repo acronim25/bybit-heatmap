@@ -1823,6 +1823,9 @@
             ANIMATION_DURATION: 1000,
             ALERT_COOLDOWN: 10000, // Don't spam alerts
         };
+        
+        console.log('🚀 Crypto Diver initializing...');
+        console.log('📡 API Endpoint:', CONFIG.API_URL + '?category=linear');
 
         // ============================================
         // STATE MANAGEMENT
@@ -2755,19 +2758,214 @@
         }
 
         // ============================================
-        // DATA FETCHING
+        // ERROR HANDLING - API WRAPPER & FALLBACK
+        // ============================================
+        
+        /**
+         * Fetch with timeout support to prevent hanging requests
+         */
+        async function fetchWithTimeout(url, timeout = 10000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                throw error;
+            }
+        }
+        
+        /**
+         * Load data with proper error handling and fallback
+         */
+        async function loadData() {
+            try {
+                const response = await fetchWithTimeout(`${CONFIG.API_URL}?category=spot`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.retCode !== 0) {
+                    throw new Error(data.retMsg || 'API returned error');
+                }
+                
+                const processed = processMarketData(data.result.list);
+                renderShapes(processed);
+                return processed;
+            } catch (error) {
+                console.error('API failed:', error);
+                renderDemoData(); // Fallback
+                return null;
+            } finally {
+                hideLoading(); // ALWAYS hide loading
+            }
+        }
+        
+        /**
+         * Hide loading overlay - ALWAYS called
+         */
+        function hideLoading() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('hidden');
+            }
+            state.isLoading = false;
+        }
+        
+        /**
+         * Render shapes with live data
+         */
+        function renderShapes(data) {
+            if (!data || data.length === 0) return;
+            
+            state.coins = data;
+            state.filteredCoins = data;
+            
+            // Render bubbles
+            renderBubbles(data);
+            
+            // Update stats
+            updateStats(data);
+            
+            // Apply initial filters
+            applyFilters();
+            
+            // Check initial volume spikes
+            checkVolumeSpikes(data);
+            
+            console.log(`✅ Rendered ${data.length} coins from API`);
+        }
+        
+        /**
+         * Render demo data as fallback
+         */
+        function renderDemoData() {
+            console.warn('⚠️ Rendering DEMO DATA fallback');
+            
+            const demoData = generateDemoData();
+            state.coins = demoData;
+            state.filteredCoins = demoData;
+            
+            // Render bubbles
+            renderBubbles(demoData);
+            
+            // Update stats
+            updateStats(demoData);
+            
+            // Apply initial filters
+            applyFilters();
+            
+            // Show error UI with retry
+            showErrorUI('Could not connect to Bybit API. Check your internet connection or try again later.', () => {
+                // Retry - reload page or re-fetch
+                window.location.reload();
+            });
+            
+            console.log(`✅ Rendered ${demoData.length} demo coins`);
+        }
+        
+        /**
+         * Generate 20 demo coins with realistic data
+         */
+        function generateDemoData() {
+            const demoCoins = [
+                { symbol: 'BTC', fullSymbol: 'BTCUSDT', price: 67432.50, change24h: 2.35, volume24h: 28500000000, turnover24h: 1920000000000, high24h: 68200.00, low24h: 65800.00 },
+                { symbol: 'ETH', fullSymbol: 'ETHUSDT', price: 3456.78, change24h: 1.82, volume24h: 15200000000, turnover24h: 525000000000, high24h: 3520.00, low24h: 3380.00 },
+                { symbol: 'SOL', fullSymbol: 'SOLUSDT', price: 178.45, change24h: 5.67, volume24h: 3200000000, turnover24h: 57000000000, high24h: 185.20, low24h: 168.90 },
+                { symbol: 'BNB', fullSymbol: 'BNBUSDT', price: 598.30, change24h: -0.45, volume24h: 1800000000, turnover24h: 107600000000, high24h: 610.00, low24h: 590.00 },
+                { symbol: 'XRP', fullSymbol: 'XRPUSDT', price: 0.6234, change24h: -2.15, volume24h: 2100000000, turnover24h: 1309000000, high24h: 0.6450, low24h: 0.6100 },
+                { symbol: 'ADA', fullSymbol: 'ADAUSDT', price: 0.5890, change24h: 3.21, volume24h: 890000000, turnover24h: 524210000, high24h: 0.6020, low24h: 0.5680 },
+                { symbol: 'AVAX', fullSymbol: 'AVAXUSDT', price: 42.15, change24h: 7.45, volume24h: 650000000, turnover24h: 27397500000, high24h: 44.80, low24h: 39.20 },
+                { symbol: 'DOT', fullSymbol: 'DOTUSDT', price: 8.92, change24h: -1.30, volume24h: 420000000, turnover24h: 3746400000, high24h: 9.15, low24h: 8.75 },
+                { symbol: 'MATIC', fullSymbol: 'MATICUSDT', price: 0.7250, change24h: 4.50, volume24h: 380000000, turnover24h: 275500000, high24h: 0.7480, low24h: 0.6900 },
+                { symbol: 'LINK', fullSymbol: 'LINKUSDT', price: 18.45, change24h: 6.20, volume24h: 520000000, turnover24h: 9594000000, high24h: 19.20, low24h: 17.30 },
+                { symbol: 'UNI', fullSymbol: 'UNIUSDT', price: 12.30, change24h: -3.45, volume24h: 280000000, turnover24h: 3444000000, high24h: 12.85, low24h: 11.80 },
+                { symbol: 'AAVE', fullSymbol: 'AAVEUSDT', price: 145.60, change24h: 8.90, volume24h: 190000000, turnover24h: 27664000000, high24h: 152.00, low24h: 132.50 },
+                { symbol: 'ATOM', fullSymbol: 'ATOMUSDT', price: 9.85, change24h: 2.10, volume24h: 220000000, turnover24h: 2167000000, high24h: 10.20, low24h: 9.55 },
+                { symbol: 'NEAR', fullSymbol: 'NEARUSDT', price: 6.78, change24h: 12.50, volume24h: 450000000, turnover24h: 3051000000, high24h: 7.25, low24h: 5.95 },
+                { symbol: 'ALGO', fullSymbol: 'ALGOUSDT', price: 0.2340, change24h: -5.20, volume24h: 150000000, turnover24h: 35100000, high24h: 0.2510, low24h: 0.2280 },
+                { symbol: 'VET', fullSymbol: 'VETUSDT', price: 0.0398, change24h: 1.50, volume24h: 120000000, turnover24h: 4776000, high24h: 0.0412, low24h: 0.0385 },
+                { symbol: 'FIL', fullSymbol: 'FILUSDT', price: 8.45, change24h: -2.80, volume24h: 180000000, turnover24h: 1521000000, high24h: 8.90, low24h: 8.15 },
+                { symbol: 'THETA', fullSymbol: 'THETAUSDT', price: 2.85, change24h: 15.20, volume24h: 280000000, turnover24h: 798000000, high24h: 3.15, low24h: 2.42 },
+                { symbol: 'XTZ', fullSymbol: 'XTZUSDT', price: 1.25, change24h: -1.50, volume24h: 85000000, turnover24h: 106250000, high24h: 1.30, low24h: 1.18 },
+                { symbol: 'XLM', fullSymbol: 'XLMUSDT', price: 0.1250, change24h: 0.80, volume24h: 95000000, turnover24h: 11875000, high24h: 0.1290, low24h: 0.1220 }
+            ];
+            
+            // Sort by volume descending
+            return demoCoins.sort((a, b) => b.volume24h - a.volume24h);
+        }
+        
+        /**
+         * Show error UI with retry button
+         */
+        function showErrorUI(message, onRetry) {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (!loadingOverlay) return;
+            
+            loadingOverlay.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                    <p style="font-family: 'Orbitron', sans-serif; font-size: 16px; color: var(--accent-red); margin-bottom: 8px;">Connection Error</p>
+                    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; max-width: 300px; line-height: 1.5;">${message}</p>
+                    <button id="retry-btn" style="
+                        padding: 12px 32px;
+                        background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 212, 255, 0.1));
+                        border: 1px solid rgba(0, 255, 136, 0.4);
+                        border-radius: 12px;
+                        color: var(--accent-green);
+                        font-family: 'Orbitron', sans-serif;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        margin-bottom: 12px;
+                    ">🔄 Retry Connection</button>
+                    <p style="font-size: 12px; color: var(--text-muted);">Showing demo data</p>
+                </div>
+            `;
+            
+            // Show the overlay (it was hidden by hideLoading, so we need to show it again for the error)
+            loadingOverlay.classList.remove('hidden');
+            
+            // Add retry handler
+            const retryBtn = document.getElementById('retry-btn');
+            if (retryBtn && onRetry) {
+                retryBtn.addEventListener('click', onRetry);
+            }
+        }
+
+        // ============================================
+        // LEGACY DATA FETCHING (for auto-refresh)
         // ============================================
         async function fetchMarketData() {
+            console.log('🌊 Fetching market data from Bybit API...');
+            
             try {
-                const response = await fetch(`${CONFIG.API_URL}?category=spot`);
+                const response = await fetchWithTimeout(`${CONFIG.API_URL}?category=linear`, 10000);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.retCode !== 0) throw new Error(data.retMsg);
                 
+                console.log('✅ Data fetched successfully:', data.result.list.length, 'tickers');
                 return processMarketData(data.result.list);
             } catch (error) {
-                console.error('Error fetching data:', error);
-                showAlert('Failed to load market data', 'error');
+                console.error('❌ Error fetching data:', error);
+                
+                if (error.name === 'AbortError') {
+                    console.warn('⏱️ API call timed out after 10 seconds');
+                }
+                
                 return null;
             }
         }
@@ -2932,6 +3130,7 @@
             console.log('  ✅ Filter System (Shapes)');
             console.log('  ✅ Volume Spike Alerts');
             console.log('  ✅ Integrated UI');
+            console.log('  ✅ Robust Error Handling');
             
             // Load saved theme
             loadTheme();
@@ -2940,46 +3139,35 @@
             initParticles();
             initDottedPaths();
             initGeometricShapes();
-            initFilterSystem(); // Ralph-1 integration
+            initFilterSystem();
             
             // Setup event listeners
             setupEventListeners();
-            setupFilterListeners(); // RALPH-1: Filter System
+            setupFilterListeners();
             
-            // Fetch initial data
-            const data = await fetchMarketData();
+            // Load data with error handling and fallback
+            console.log('📡 Loading market data...');
+            await loadData();
             
-            if (data) {
-                state.coins = data;
-                state.filteredCoins = data;
-                
-                // Hide loading
-                document.getElementById('loading-overlay').classList.add('hidden');
-                state.isLoading = false;
-                
-                // Render bubbles
-                renderBubbles(data);
-                
-                // Update stats
-                updateStats(data);
-                
-                // Apply initial filters
-                applyFilters();
-                
-                // Check initial volume spikes
-                checkVolumeSpikes(data);
-                
-                console.log(`✅ Initialized with ${data.length} coins and ${CONFIG.SHAPE_COUNT} shapes`);
-                
-                // Setup auto-refresh
+            // Setup auto-refresh (only if using live data)
+            if (state.coins.length > 0) {
                 setInterval(async () => {
-                    const newData = await fetchMarketData();
-                    if (newData) {
-                        state.coins = newData;
-                        // Re-apply current filters to new data
-                        applyFilters();
-                        // Check for volume spikes on update
-                        checkVolumeSpikes(newData);
+                    console.log('🔄 Auto-refreshing data...');
+                    try {
+                        const response = await fetchWithTimeout(`${CONFIG.API_URL}?category=linear`, 10000);
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.retCode === 0) {
+                                const newData = processMarketData(data.result.list);
+                                if (newData) {
+                                    state.coins = newData;
+                                    applyFilters();
+                                    checkVolumeSpikes(newData);
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.warn('Auto-refresh failed:', err);
                     }
                 }, CONFIG.UPDATE_INTERVAL);
             }
