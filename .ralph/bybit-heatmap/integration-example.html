@@ -1,0 +1,136 @@
+<!-- ============================================
+     3D METALLIC BUBBLE SYSTEM - Integration Demo
+     Shows how to integrate with bybit-heatmap.html
+     ============================================ -->
+
+<!-- Add these lines in the <head> section of bybit-heatmap.html -->
+<link rel="stylesheet" href=".ralph/bybit-heatmap/bubble-3d-system.css">
+
+<!-- Add this before closing </body> tag -->
+<script src=".ralph/bybit-heatmap/bubble-3d-system.js"></script>
+
+<script>
+// ==========================================
+// INTEGRATION EXAMPLE
+// Replace the existing bubble creation code with:
+// ==========================================
+
+// Initialize the 3D metallic bubble system
+const bubbleSystem = new MetallicBubbleSystem({
+  baseSize: 60,
+  glowIntensity: 1,
+  onHover: (data) => {
+    console.log('Hover:', data.symbol);
+  },
+  onClick: (data) => {
+    openCoinModal(data); // Your existing modal function
+  }
+});
+
+// Create bubbles from your data
+function createBubbles(data) {
+  const container = document.getElementById('bubble-container');
+  
+  data.forEach((coin, index) => {
+    // Determine size based on market cap/volume
+    let size = 'md';
+    if (coin.marketCap > 100000000000) size = 'xl';
+    else if (coin.marketCap > 50000000000) size = 'lg';
+    else if (coin.marketCap > 10000000000) size = 'md';
+    else if (coin.marketCap > 1000000000) size = 'sm';
+    else size = 'xs';
+    
+    // Create the 3D metallic bubble
+    const bubble = bubbleSystem.createBubble({
+      symbol: coin.symbol,
+      name: coin.name,
+      change24h: coin.change24h,
+      volume: coin.volume,
+      marketCap: coin.marketCap,
+      size: size
+    });
+    
+    // Position using D3 force layout (your existing code)
+    // Add to your bubble group
+    bubble.style.position = 'absolute';
+    bubble.style.left = coin.x + 'px';
+    bubble.style.top = coin.y + 'px';
+    
+    container.appendChild(bubble);
+  });
+}
+
+// Update bubbles with new price data
+function updateBubblePrices(updates) {
+  updates.forEach(update => {
+    bubbleSystem.updateBubble(update.symbol, {
+      change24h: update.change24h,
+      volume: update.volume,
+      alert: update.significantChange // triggers pulse animation
+    });
+  });
+}
+
+// Set volume alerts
+function setVolumeAlert(symbol, level) {
+  bubbleSystem.setAlert(symbol, level); // 'high' or 'medium'
+}
+
+// Remove alert
+function clearVolumeAlert(symbol) {
+  bubbleSystem.clearAlert(symbol);
+}
+
+// ==========================================
+// ALTERNATIVE: Direct SVG Bubble (simpler)
+// ==========================================
+
+// If you prefer to use D3 to create the bubbles directly:
+function createBubbleWithD3(selection, data) {
+  const colors = {
+    up: { primary: '#00ff41', secondary: '#39ff14', glow: 'rgba(0,255,65,0.6)' },
+    down: { primary: '#ff0040', secondary: '#ff1744', glow: 'rgba(255,0,64,0.6)' },
+    neutral: { primary: '#ffd700', secondary: '#ffa500', glow: 'rgba(255,215,0,0.5)' }
+  };
+  
+  const change = parseFloat(data.change24h);
+  const colorSet = change > 0 ? colors.up : change < 0 ? colors.down : colors.neutral;
+  
+  const group = selection.append('g')
+    .attr('class', 'metallic-bubble')
+    .style('--ribbon-glow', colorSet.glow);
+  
+  // Add glow background
+  group.append('circle')
+    .attr('r', 35)
+    .attr('fill', colorSet.glow)
+    .attr('opacity', 0.3)
+    .attr('filter', 'url(#neonGlow)');
+  
+  // Create twisted ribbon paths (simplified)
+  for (let i = 0; i < 3; i++) {
+    group.append('path')
+      .attr('class', `ribbon-path ${['outer','middle','inner'][i]}`)
+      .attr('stroke', i === 2 ? '#ffffff' : colorSet.primary)
+      .attr('stroke-width', [12, 6, 3][i])
+      .attr('fill', 'none')
+      .attr('stroke-linecap', 'round')
+      .attr('filter', i === 0 ? 'url(#metallicBevel)' : null);
+  }
+  
+  // Add labels
+  group.append('text')
+    .attr('class', 'bubble-symbol')
+    .attr('text-anchor', 'middle')
+    .attr('dy', '-0.2em')
+    .text(data.symbol);
+  
+  group.append('text')
+    .attr('class', 'bubble-change-text')
+    .attr('text-anchor', 'middle')
+    .attr('dy', '1em')
+    .text(`${change > 0 ? '+' : ''}${change.toFixed(2)}%`);
+  
+  return group;
+}
+</script>

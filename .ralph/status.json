@@ -1,0 +1,53 @@
+{
+  "project": "bookclub-static",
+  "last_update": "2026-02-20T13:55:00+01:00",
+  "status": "completed",
+  "features": [
+    {
+      "name": "persistent_session",
+      "status": "completed",
+      "files": ["index.html"],
+      "description": "Auto-login with 7-day session persistence via localStorage"
+    },
+    {
+      "name": "shared_notes",
+      "status": "completed",
+      "files": ["notes.html"],
+      "description": "Notes visible for both users with Alex (green) / Dhianna (red) color coding"
+    },
+    {
+      "name": "simplified_flow",
+      "status": "completed",
+      "files": ["index.html", "chapter.html", "quiz.html"],
+      "description": "Elimină butoanele Mark Alex/Dhianna - capitolul se marchează automat la submit quiz"
+    }
+  ],
+  "commits": [
+    {
+      "hash": "629e557",
+      "message": "Book Club: Elimină butoanele Mark Alex/Dhianna din lista de capitole (index.html)",
+      "timestamp": "2026-02-20T13:45:00+01:00",
+      "files": ["index.html"]
+    },
+    {
+      "hash": "e239d94",
+      "message": "Book Club: Elimină butoanele Mark din chapter.html (doar status indicator)",
+      "timestamp": "2026-02-20T13:50:00+01:00",
+      "files": ["chapter.html"]
+    },
+    {
+      "hash": "a45a690",
+      "message": "Book Club: Adaugă auto-mark la submit quiz - capitolul e automat marcat ca completat",
+      "timestamp": "2026-02-20T13:55:00+01:00",
+      "files": ["quiz.html"]
+    }
+  ],
+  "tests": {
+    "session_persistence": "ready_to_test",
+    "shared_notes_visibility": "ready_to_test",
+    "simplified_flow": "ready_to_test",
+    "auto_mark_on_quiz": "ready_to_test"
+  },
+  "pending_push": true,
+  "notes": "Push manual required - git credentials not configured in this environment"
+}
