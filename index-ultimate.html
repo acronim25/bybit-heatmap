@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BYBIT HEATMAP PRO | Ultimate Perfect Ribbons 💰</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #020204;
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: #fff;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 25px;
+            background: linear-gradient(180deg, rgba(2,2,4,0.95) 0%, transparent 100%);
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #b829dd, #ff00ff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(184, 41, 221, 0.5);
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat {
+            padding: 8px 15px;
+            background: rgba(184, 41, 221, 0.1);
+            border: 1px solid rgba(184, 41, 221, 0.3);
+            border-radius: 20px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .stat-value.positive { color: #00ff88; text-shadow: 0 0 15px #00ff88; }
+        .stat-value.negative { color: #ff3366; text-shadow: 0 0 15px #ff3366; }
+
+        #bubble-container {
+            width: 100%;
+            min-height: 100vh;
+            padding-top: 80px;
+            position: relative;
+        }
+
+        .bubble-group {
+            cursor: pointer;
+            filter: drop-shadow(0 0 20px rgba(184, 41, 221, 0.3));
+            transition: filter 0.3s ease;
+        }
+
+        .bubble-group:hover {
+            filter: drop-shadow(0 0 40px rgba(255, 0, 255, 0.6));
+        }
+
+        .bubble-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            text-anchor: middle;
+            pointer-events: none;
+            fill: #ffffff;
+            text-shadow: 0 0 15px rgba(184, 41, 221, 0.9);
+            letter-spacing: 1px;
+        }
+
+        .bubble-change {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">💰 BYBIT HEATMAP PRO</div>
+        <div class="stats">
+            <div class="stat">
+                <div style="font-size:0.7rem;opacity:0.6;">BULLISH</div>
+                <div class="stat-value positive" id="bullish-count">-</div>
+            </div>
+            <div class="stat">
+                <div style="font-size:0.7rem;opacity:0.6;">BEARISH</div>
+                <div class="stat-value negative" id="bearish-count">-</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+            <defs>
+                <linearGradient id="loaderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#b829dd;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#ff00ff;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#1a0a2e" stroke-width="6"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="url(#loaderGrad)" stroke-width="6" 
+                stroke-dasharray="200" stroke-dashoffset="200" stroke-linecap="round">
+                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="1.5s" repeatCount="indefinite"/>
+                <animate attributeName="stroke-dashoffset" values="200;50;200" dur="2s" repeatCount="indefinite"/>
+            </circle>
+        </svg>
+        <p style="color: #b829dd; font-family: Orbitron; margin-top: 10px;">Încărcare date...</p>
+    </div>
+
+    <div id="bubble-container"></div>
+
+    <script>
+        // ==========================================
+        // PERFECT TWISTED RIBBON GEOMETRY
+        // ==========================================
+        function rotateZ(point, angle) {
+            const cos = Math.cos(angle), sin = Math.sin(angle);
+            return {
+                x: point.x * cos - point.y * sin,
+                y: point.x * sin + point.y * cos,
+                z: point.z || 0
+            };
+        }
+
+        function project3D(p, focalLength, center) {
+            const scale = focalLength / (focalLength + p.z);
+            return {
+                x: center.x + p.x * scale,
+                y: center.y + p.y * scale,
+                scale: scale
+            };
+        }
+
+        function createPerfectRibbon(radius, twists, width, segments, options = {}) {
+            const { zSpread = 80, focalLength = 500, innerRadius = 5 } = options;
+            const frontEdge = [], backEdge = [];
+            
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const r = innerRadius + t * (radius - innerRadius);
+                const angle = t * twists * Math.PI * 2;
+                const z = -zSpread * Math.sin(t * twists * Math.PI);
+                
+                const cx = Math.cos(angle) * r;
+                const cy = Math.sin(angle) * r;
+                const tangentAngle = angle + Math.PI / 2;
+                
+                const twistAngle = t * 3 * Math.PI;
+                const halfWidth = (width * (0.5 + 0.5 * t)) / 2;
+                
+                const wx = Math.cos(tangentAngle) * halfWidth;
+                const wy = Math.sin(tangentAngle) * halfWidth;
+                
+                const front = rotateZ({x: wx, y: wy, z: 0}, twistAngle);
+                const back = rotateZ({x: -wx, y: -wy, z: 0}, twistAngle);
+                
+                frontEdge.push(project3D({x: cx + front.x, y: cy + front.y, z: z + front.z * 0.2}, focalLength, {x: 0, y: 0}));
+                backEdge.push(project3D({x: cx + back.x, y: cy + back.y, z: z + back.z * 0.2}, focalLength, {x: 0, y: 0}));
+            }
+            
+            let path = `M ${frontEdge[0].x.toFixed(1)} ${frontEdge[0].y.toFixed(1)}`;
+            for (let i = 1; i < frontEdge.length; i++) {
+                const cp = frontEdge[i - 1];
+                const p = frontEdge[i];
+                const cpx = (cp.x + p.x) / 2;
+                const cpy = (cp.y + p.y) / 2;
+                path += ` Q ${cpx.toFixed(1)} ${cpy.toFixed(1)} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+            }
+            
+            path += ` L ${backEdge[backEdge.length-1].x.toFixed(1)} ${backEdge[backEdge.length-1].y.toFixed(1)}`;
+            for (let i = backEdge.length - 2; i >= 0; i--) {
+                const cp = backEdge[i + 1];
+                const p = backEdge[i];
+                const cpx = (cp.x + p.x) / 2;
+                const cpy = (cp.y + p.y) / 2;
+                path += ` Q ${cpx.toFixed(1)} ${cpy.toFixed(1)} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+            }
+            path += ' Z';
+            
+            return path;
+        }
+
+        // ==========================================
+        // COLOR FUNCTIONS
+        // ==========================================
+        function getBubbleColor(change24h) {
+            if (change24h >= 0) {
+                return { primary: '#00ff88', secondary: '#00aa55', dark: '#004422' };
+            } else {
+                return { primary: '#ff3366', secondary: '#cc2255', dark: '#661122' };
+            }
+        }
+
+        // ==========================================
+        // MAIN
+        // ==========================================
+        let bubbleData = [];
+
+        async function loadData() {
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                const response = await fetch('https://api.bybit.com/v5/market/tickers?category=linear');
+                const data = await response.json();
+
+                if (data.retCode !== 0) throw new Error('API error');
+
+                bubbleData = data.result.list
+                    .filter(item => item.symbol.endsWith('USDT'))
+                    .map(item => {
+                        const price = parseFloat(item.lastPrice);
+                        return {
+                            symbol: item.symbol.replace('USDT', ''),
+                            change24h: parseFloat(item.price24hPcnt) * 100,
+                            price: price,
+                            volume24h: parseFloat(item.volume24h) * price
+                        };
+                    })
+                    .filter(item => !isNaN(item.change24h))
+                    .sort((a, b) => b.volume24h - a.volume24h)
+                    .slice(0, 56);
+
+                renderBubbles();
+                updateStats();
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function updateStats() {
+            const bullish = bubbleData.filter(d => d.change24h >= 0).length;
+            const bearish = bubbleData.filter(d => d.change24h < 0).length;
+            document.getElementById('bullish-count').textContent = bullish;
+            document.getElementById('bearish-count').textContent = bearish;
+        }
+
+        function renderBubbles() {
+            const container = document.getElementById('bubble-container');
+            container.innerHTML = '';
+            
+            const width = Math.min(container.clientWidth - 20, 1400);
+            const cols = Math.floor(width / 140);
+            const spacing = width / cols;
+            const rows = Math.ceil(bubbleData.length / cols);
+            const height = rows * spacing + 100;
+
+            const svg = d3.select('#bubble-container').append('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            // Defs
+            const defs = svg.append('defs');
+            
+            // Neon glow filter
+            const filter = defs.append('filter').attr('id', 'neonGlow').attr('x', '-100%').attr('y', '-100%').attr('width', '300%').attr('height', '300%');
+            filter.append('feGaussianBlur').attr('stdDeviation', '3').attr('result', 'blur');
+            filter.append('feFlood').attr('flood-color', '#b829dd').attr('result', 'color');
+            filter.append('feComposite').attr('in', 'color').attr('in2', 'blur').attr('operator', 'in').attr('result', 'glow');
+            const merge = filter.append('feMerge');
+            merge.append('feMergeNode').attr('in', 'glow');
+            merge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+            // Position bubbles
+            bubbleData.forEach((d, i) => {
+                const col = i % cols;
+                const row = Math.floor(i / cols);
+                const offsetX = (row % 2) * (spacing / 2);
+                d.x = col * spacing + spacing / 2 + offsetX;
+                d.y = row * spacing + spacing / 2 + 50;
+                d.baseRadius = 40 + Math.sqrt(d.volume24h) / 100000;
+            });
+
+            const groups = svg.selectAll('.bubble-group')
+                .data(bubbleData)
+                .enter().append('g')
+                .attr('class', 'bubble-group')
+                .attr('transform', d => `translate(${d.x},${d.y})`);
+
+            groups.each(function(d, i) {
+                const g = d3.select(this);
+                const colors = getBubbleColor(d.change24h);
+                
+                // Create 3 layered ribbons
+                const ribbons = [
+                    { radius: d.baseRadius, width: 12, opacity: 0.7, rotation: 0, twist: 2.5 },
+                    { radius: d.baseRadius * 0.75, width: 9, opacity: 0.85, rotation: 45, twist: 3 },
+                    { radius: d.baseRadius * 0.5, width: 6, opacity: 1, rotation: 90, twist: 3.5 }
+                ];
+                
+                ribbons.forEach((ribbon, rIdx) => {
+                    const path = createPerfectRibbon(ribbon.radius, ribbon.twist, ribbon.width, 50, {
+                        zSpread: 60 + rIdx * 15,
+                        focalLength: 400
+                    });
+                    
+                    // Gradient for this ribbon
+                    const gradId = `grad-${i}-${rIdx}`;
+                    const grad = defs.append('linearGradient')
+                        .attr('id', gradId)
+                        .attr('x1', '0%').attr('y1', '0%')
+                        .attr('x2', '100%').attr('y2', '100%');
+                    
+                    grad.append('stop').attr('offset', '0%').attr('stop-color', colors.dark);
+                    grad.append('stop').attr('offset', '30%').attr('stop-color', colors.secondary);
+                    grad.append('stop').attr('offset', '50%').attr('stop-color', '#ffffff');
+                    grad.append('stop').attr('offset', '70%').attr('stop-color', colors.secondary);
+                    grad.append('stop').attr('offset', '100%').attr('stop-color', colors.dark);
+                    
+                    // Draw ribbon
+                    const ribbonEl = g.append('path')
+                        .attr('d', path)
+                        .attr('fill', `url(#${gradId})`)
+                        .attr('stroke', colors.primary)
+                        .attr('stroke-width', rIdx === 0 ? 2 : 1)
+                        .attr('stroke-opacity', 0.9)
+                        .attr('opacity', ribbon.opacity)
+                        .attr('transform', `rotate(${ribbon.rotation + i * 15})`);
+                    
+                    // Add glow to outer ribbon
+                    if (rIdx === 0) {
+                        ribbonEl.style('filter', 'url(#neonGlow)');
+                    }
+                });
+                
+                // Center orb with glow
+                g.append('circle')
+                    .attr('r', 6)
+                    .attr('fill', colors.primary)
+                    .style('filter', `drop-shadow(0 0 10px ${colors.primary})`);
+                
+                // Inner white highlight
+                g.append('circle')
+                    .attr('r', 3)
+                    .attr('cx', -2)
+                    .attr('cy', -2)
+                    .attr('fill', 'rgba(255,255,255,0.8)');
+                
+                // Symbol label
+                g.append('text')
+                    .attr('class', 'bubble-label')
+                    .attr('dy', '-0.5em')
+                    .text(d.symbol);
+                
+                // Change percentage
+                g.append('text')
+                    .attr('class', 'bubble-change')
+                    .attr('dy', '1.1em')
+                    .style('fill', colors.primary)
+                    .text((d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(1) + '%');
+                
+                // Interaction
+                g.on('click', function() {
+                    d3.select(this).selectAll('path')
+                        .transition().duration(300)
+                        .attr('transform', function() {
+                            const current = d3.select(this).attr('transform') || 'rotate(0)';
+                            return current + ' scale(1.3)';
+                        });
+                    
+                    setTimeout(() => {
+                        d3.select(this).selectAll('path')
+                            .transition().duration(300)
+                            .attr('transform', function(d, i) {
+                                return `rotate(${ribbons[i % 3].rotation + 15 * Math.floor(i/3)})`;
+                            });
+                    }, 300);
+                });
+            });
+
+            // Idle animation
+            let time = 0;
+            function animate() {
+                time += 0.025;
+                groups.selectAll('path').attr('transform', function(d, i, nodes) {
+                    const idx = Math.floor(i / 3);
+                    const rIdx = i % 3;
+                    const ribbons = [
+                        { rotation: 0 },
+                        { rotation: 45 },
+                        { rotation: 90 }
+                    ];
+                    const baseRot = ribbons[rIdx].rotation + idx * 15;
+                    const float = Math.sin(time + idx * 0.5 + rIdx * 0.3) * 8;
+                    return `rotate(${baseRot + float})`;
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        loadData();
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>
