@@ -9,58 +9,51 @@
     
     <style>
         /* ═════════════════════════════════════════════════════════════════════════════
-           CRYPTO DIVER - RALPH-3 INTEGRATION EDITION
-           Combined: Ralph-1 (Background) + Ralph-2 (Shapes) + Ralph-3 (Filters + Alerts)
+           CRYPTO DIVER - PRODUCTION EDITION
+           Version: Ralph-8 Final Integration
+           Date: 2026-02-20
+           Features: Filter System, Geometric Shapes, Volume Alerts, Theme Toggle
+           Fixes: Null references, Loading flow, API fallback, Console errors
            ═════════════════════════════════════════════════════════════════════════════ */
         
         :root {
-            /* Core Background Colors */
             --bg-primary: #050a08;
             --bg-secondary: #0a1a0f;
             --bg-tertiary: #0d2418;
             --bg-card: rgba(10, 26, 15, 0.85);
             --bg-overlay: rgba(0, 0, 0, 0.8);
             
-            /* Text Colors */
             --text-primary: #ffffff;
             --text-secondary: rgba(255, 255, 255, 0.7);
             --text-muted: rgba(255, 255, 255, 0.5);
             
-            /* Accent Colors */
             --accent-green: #00ff88;
-            --accent-green-light: #4dffb3;
             --accent-red: #ff3366;
-            --accent-red-light: #ff6688;
             --accent-blue: #33ccff;
             --accent-gold: #ffcc00;
             --accent-purple: #b829dd;
             --neon-cyan: #00d4ff;
             --neon-pink: #ff00ff;
             
-            /* Glow Effects */
             --glow-green: rgba(0, 255, 136, 0.5);
             --glow-red: rgba(255, 51, 102, 0.5);
             --glow-purple: rgba(184, 41, 221, 0.6);
             --glow-pink: rgba(255, 0, 255, 0.8);
             --glow-cyan: rgba(0, 212, 255, 0.5);
             
-            /* Border Colors */
             --border-primary: rgba(0, 255, 136, 0.3);
             --border-secondary: rgba(255, 255, 255, 0.1);
             
-            /* Transitions */
             --transition-fast: 0.15s ease;
             --transition-base: 0.3s ease;
             --transition-slow: 0.5s ease;
             
-            /* Layout */
             --header-height: 70px;
             --filter-bar-height: 110px;
             --bottom-nav-height: 64px;
             --safe-top: env(safe-area-inset-top, 0px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             
-            /* Z-Index Layers */
             --z-background: 1;
             --z-divers: 5;
             --z-dotted-path: 10;
@@ -71,7 +64,6 @@
             --z-alert: 95;
         }
 
-        /* Light Theme Overrides */
         [data-theme="light"] {
             --bg-primary: #f0f5f0;
             --bg-secondary: #e8f0e8;
@@ -93,7 +85,6 @@
             --border-secondary: rgba(26, 58, 42, 0.1);
         }
 
-        /* Base Styles & Reset */
         *, *::before, *::after {
             margin: 0;
             padding: 0;
@@ -118,8 +109,8 @@
         }
 
         /* ═════════════════════════════════════════════════════════════════════════════
-           RALPH-1: FILTER SYSTEM
-           ──────────────────────────────────────────────────────────────────────────── */
+           FILTER SYSTEM
+           ═════════════════════════════════════════════════════════════════════════════ */
         .filter-system {
             position: fixed;
             top: calc(var(--header-height) + var(--safe-top));
@@ -160,7 +151,6 @@
             flex-wrap: wrap;
         }
 
-        /* Category Buttons */
         .category-filters {
             display: flex;
             gap: 8px;
@@ -208,7 +198,6 @@
             box-shadow: 0 0 20px rgba(255, 51, 102, 0.3);
         }
 
-        /* Sort Dropdown */
         .sort-controls {
             display: flex;
             align-items: center;
@@ -257,7 +246,6 @@
             border-color: rgba(255, 255, 255, 0.2);
         }
 
-        /* Search Input */
         .filter-search {
             position: relative;
             flex: 1;
@@ -318,7 +306,6 @@
             justify-content: center;
         }
 
-        .filter-search-input:not(:placeholder-shown) + .filter-search-icon + .filter-search-clear,
         .filter-search-input:not(:placeholder-shown) ~ .filter-search-clear {
             opacity: 1;
             visibility: visible;
@@ -329,7 +316,6 @@
             color: var(--accent-red);
         }
 
-        /* Active Filters Display */
         .active-filters {
             display: flex;
             align-items: center;
@@ -352,25 +338,8 @@
         }
 
         @keyframes chipIn {
-            from {
-                opacity: 0;
-                transform: scale(0.8) translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        .filter-chip.removing {
-            animation: chipOut 0.2s ease forwards;
-        }
-
-        @keyframes chipOut {
-            to {
-                opacity: 0;
-                transform: scale(0.8);
-            }
+            from { opacity: 0; transform: scale(0.8) translateY(-10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .filter-chip-remove {
@@ -411,7 +380,6 @@
             box-shadow: 0 0 15px rgba(255, 51, 102, 0.2);
         }
 
-        /* Bubble Highlight for Search */
         .bubble-group.highlighted .bubble-spiral {
             filter: drop-shadow(0 0 30px currentColor) brightness(1.5);
             animation: highlightPulse 1.5s ease-in-out infinite;
@@ -427,40 +395,22 @@
             filter: grayscale(0.8);
         }
 
-        /* Results count */
         .results-count {
             font-size: 12px;
             color: var(--text-muted);
             margin-left: auto;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
-            .filter-system {
-                padding: 10px 16px;
-            }
-
-            .filter-row {
-                gap: 8px;
-            }
-
-            .category-btn {
-                padding: 6px 12px;
-                font-size: 12px;
-            }
-
-            .filter-search {
-                min-width: 100%;
-                order: -1;
-            }
-
-            .sort-controls {
-                margin-left: auto;
-            }
+            .filter-system { padding: 10px 16px; }
+            .filter-row { gap: 8px; }
+            .category-btn { padding: 6px 12px; font-size: 12px; }
+            .filter-search { min-width: 100%; order: -1; }
+            .sort-controls { margin-left: auto; }
         }
 
         /* ═════════════════════════════════════════════════════════════════════════════
-           ALERT BANNER (RALPH-2 INTEGRATION)
+           ALERT BANNER
            ═════════════════════════════════════════════════════════════════════════════ */
         .alert-banner {
             position: fixed;
@@ -499,15 +449,8 @@
             50% { transform: scale(1.2); filter: drop-shadow(0 0 15px var(--accent-red)); }
         }
 
-        .alert-icon { 
-            font-size: 20px; 
-            flex-shrink: 0;
-        }
-        
-        .alert-content {
-            flex: 1;
-        }
-        
+        .alert-icon { font-size: 20px; flex-shrink: 0; }
+        .alert-content { flex: 1; }
         .alert-title {
             font-family: 'Orbitron', sans-serif;
             font-size: 12px;
@@ -517,16 +460,8 @@
             letter-spacing: 1px;
             margin-bottom: 2px;
         }
-        
-        .alert-banner.volume-spike .alert-title {
-            color: var(--accent-red);
-        }
-        
-        .alert-text { 
-            font-size: 13px; 
-            color: var(--text-secondary); 
-        }
-        
+        .alert-banner.volume-spike .alert-title { color: var(--accent-red); }
+        .alert-text { font-size: 13px; color: var(--text-secondary); }
         .alert-close {
             background: none;
             border: none;
@@ -543,14 +478,10 @@
             transition: all 0.2s ease;
             flex-shrink: 0;
         }
-
-        .alert-close:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-primary);
-        }
+        .alert-close:hover { background: rgba(255, 255, 255, 0.1); color: var(--text-primary); }
 
         /* ═════════════════════════════════════════════════════════════════════════════
-           BACKGROUND SYSTEM (RALPH-1)
+           BACKGROUND SYSTEM
            ═════════════════════════════════════════════════════════════════════════════ */
         .bg-system-wrapper {
             position: fixed;
@@ -574,12 +505,7 @@
                 radial-gradient(ellipse at 30% 80%, rgba(0, 50, 100, 0.25) 0%, transparent 50%),
                 radial-gradient(ellipse at 70% 20%, rgba(100, 0, 100, 0.15) 0%, transparent 40%),
                 radial-gradient(ellipse at 50% 50%, rgba(0, 30, 60, 0.4) 0%, transparent 70%),
-                linear-gradient(180deg, 
-                    #0a0a1a 0%, 
-                    #0d1f2d 20%, 
-                    #051015 50%, 
-                    #020508 80%,
-                    #000000 100%);
+                linear-gradient(180deg, #0a0a1a 0%, #0d1f2d 20%, #051015 50%, #020508 80%, #000000 100%);
             opacity: 1;
         }
 
@@ -618,7 +544,7 @@
         }
 
         /* ═════════════════════════════════════════════════════════════════════════════
-           DIVERS (RALPH-1)
+           DIVERS (Bull/Bear Circles)
            ═════════════════════════════════════════════════════════════════════════════ */
         #divers-container {
             position: fixed;
@@ -645,33 +571,18 @@
             transform: translate(-50%, -50%);
             left: 50%;
             top: 50%;
-            opacity: 1 !important;
-            visibility: visible !important;
-            display: block !important;
         }
 
         .diver-circle.bull {
-            background: radial-gradient(circle, 
-                rgba(0, 255, 136, 0.35) 0%, 
-                rgba(0, 255, 136, 0.12) 40%, 
-                rgba(0, 255, 136, 0) 70%);
+            background: radial-gradient(circle, rgba(0, 255, 136, 0.35) 0%, rgba(0, 255, 136, 0.12) 40%, rgba(0, 255, 136, 0) 70%);
             border: 2px solid rgba(0, 255, 136, 0.7);
-            box-shadow: 
-                0 0 50px rgba(0, 255, 136, 0.5),
-                0 0 100px rgba(0, 255, 136, 0.25),
-                inset 0 0 50px rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.5), 0 0 100px rgba(0, 255, 136, 0.25), inset 0 0 50px rgba(0, 255, 136, 0.1);
         }
 
         .diver-circle.bear {
-            background: radial-gradient(circle, 
-                rgba(255, 51, 102, 0.35) 0%, 
-                rgba(255, 51, 102, 0.12) 40%, 
-                rgba(255, 51, 102, 0) 70%);
+            background: radial-gradient(circle, rgba(255, 51, 102, 0.35) 0%, rgba(255, 51, 102, 0.12) 40%, rgba(255, 51, 102, 0) 70%);
             border: 2px solid rgba(255, 51, 102, 0.7);
-            box-shadow: 
-                0 0 50px rgba(255, 51, 102, 0.5),
-                0 0 100px rgba(255, 51, 102, 0.25),
-                inset 0 0 50px rgba(255, 51, 102, 0.1);
+            box-shadow: 0 0 50px rgba(255, 51, 102, 0.5), 0 0 100px rgba(255, 51, 102, 0.25), inset 0 0 50px rgba(255, 51, 102, 0.1);
         }
 
         .diver-group.bull .diver-circle:nth-child(1) { width: 140px; height: 140px; animation: pulse-glow-green 4s ease-in-out infinite; animation-delay: 0s; }
@@ -695,7 +606,7 @@
         }
 
         /* ═════════════════════════════════════════════════════════════════════════════
-           DOTTED PATH
+           DOTTED PATHS
            ═════════════════════════════════════════════════════════════════════════════ */
         .dotted-path-container {
             position: fixed;
@@ -712,13 +623,7 @@
             position: absolute;
             width: 2px;
             height: 200px;
-            background: repeating-linear-gradient(
-                to bottom,
-                rgba(0, 212, 255, 0.3) 0px,
-                rgba(0, 212, 255, 0.3) 4px,
-                transparent 4px,
-                transparent 12px
-            );
+            background: repeating-linear-gradient(to bottom, rgba(0, 212, 255, 0.3) 0px, rgba(0, 212, 255, 0.3) 4px, transparent 4px, transparent 12px);
             animation: pathFloat 8s ease-in-out infinite;
         }
 
@@ -802,7 +707,7 @@
         }
 
         /* ═════════════════════════════════════════════════════════════════════════════
-           GEOMETRIC SHAPES (RALPH-2) - WITH FILTER SUPPORT
+           GEOMETRIC SHAPES
            ═════════════════════════════════════════════════════════════════════════════ */
         #geometric-shapes-container {
             position: fixed;
@@ -865,7 +770,7 @@
             border-bottom-width: 26px;
             border-left-color: transparent;
             border-right-color: transparent;
-            border-bottom-color: var(--accent-cyan);
+            border-bottom-color: var(--neon-cyan);
             border-top: none;
         }
 
@@ -962,43 +867,6 @@
             display: flex;
             align-items: center;
             gap: 12px;
-        }
-
-        .search-box {
-            position: relative;
-            flex: 1;
-            max-width: 250px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 10px 16px 10px 40px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-secondary);
-            border-radius: 12px;
-            color: var(--text-primary);
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 14px;
-            outline: none;
-            transition: var(--transition-base);
-        }
-
-        .search-input:focus {
-            border-color: var(--accent-purple);
-            box-shadow: 0 0 0 3px rgba(184, 41, 221, 0.2);
-        }
-
-        .search-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 14px;
         }
 
         .stats {
@@ -1182,9 +1050,7 @@
             opacity: 0;
         }
 
-        .enhanced-modal-content:hover .modal-nav {
-            opacity: 1;
-        }
+        .enhanced-modal-content:hover .modal-nav { opacity: 1; }
 
         .modal-nav:hover {
             background: var(--bg-secondary);
@@ -1408,6 +1274,62 @@
         }
 
         /* ═════════════════════════════════════════════════════════════════════════════
+           LOADING STATE - WITH GUARANTEED HIDE MECHANISM
+           ═════════════════════════════════════════════════════════════════════════════ */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid var(--border-secondary);
+            border-top-color: var(--accent-purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+        }
+
+        .loading-error {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 13px;
+            color: var(--accent-red);
+            text-align: center;
+            max-width: 300px;
+            padding: 0 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-error.show { opacity: 1; }
+
+        /* ═════════════════════════════════════════════════════════════════════════════
            BOTTOM NAVIGATION
            ═════════════════════════════════════════════════════════════════════════════ */
         .bottom-nav {
@@ -1453,48 +1375,6 @@
         .bottom-nav-icon { font-size: 20px; line-height: 1; }
 
         /* ═════════════════════════════════════════════════════════════════════════════
-           LOADING STATE
-           ═════════════════════════════════════════════════════════════════════════════ */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--bg-primary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            z-index: 9999;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-
-        .loading-overlay.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 3px solid var(--border-secondary);
-            border-top-color: var(--accent-purple);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .loading-text {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
-            color: var(--text-secondary);
-            letter-spacing: 2px;
-        }
-
-        /* ═════════════════════════════════════════════════════════════════════════════
            RESPONSIVE DESIGN
            ═════════════════════════════════════════════════════════════════════════════ */
         @media (max-width: 768px) {
@@ -1507,29 +1387,6 @@
             .header-center { display: none; }
             .stats { display: none; }
             
-            .search-box {
-                position: fixed;
-                top: calc(var(--header-height) + var(--filter-bar-height) + 10px);
-                left: 16px;
-                right: 16px;
-                max-width: none;
-                z-index: 99;
-            }
-
-            .filter-bar {
-                padding: 0 12px;
-                gap: 8px;
-            }
-            
-            .filter-label {
-                font-size: 10px;
-            }
-            
-            .filter-chip {
-                padding: 5px 10px;
-                font-size: 11px;
-            }
-
             .coin-symbol-large { font-size: 2rem; }
             .price-display { font-size: 2.2rem; }
             .modal-stats-grid { grid-template-columns: 1fr; }
@@ -1568,7 +1425,6 @@
             .logo { font-size: 1.2rem; }
         }
 
-        /* Reduced Motion */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
@@ -1611,7 +1467,8 @@
     <!-- LOADING OVERLAY -->
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-spinner"></div>
-        <p class="loading-text">🤿 DIVING INTO MARKET DATA...</p>
+        <p class="loading-text" id="loading-text">🤿 DIVING INTO MARKET DATA...</p>
+        <p class="loading-error" id="loading-error">⚠️ Using fallback data - API unavailable</p>
     </div>
 
     <!-- HEADER -->
@@ -1638,51 +1495,41 @@
         </div>
     </header>
 
-    <!-- ═════════════════════════════════════════════════════════════════════════════
-         RALPH-1: FILTER SYSTEM
-         ═════════════════════════════════════════════════════════════════════════════ -->
+    <!-- FILTER SYSTEM -->
     <div class="filter-system" id="filter-system">
         <div class="filter-container">
             <div class="filter-row">
-                <!-- Category Buttons -->
                 <div class="category-filters">
-                    <button class="category-btn active" data-category="all">Toate</button>
+                    <button class="category-btn active" data-category="all">All</button>
                     <button class="category-btn gainers" data-category="gainers">Gainers ▲</button>
                     <button class="category-btn losers" data-category="losers">Losers ▼</button>
                     <button class="category-btn" data-category="majors">Majors</button>
                 </div>
 
-                <!-- Sort Controls -->
                 <div class="sort-controls">
                     <select class="sort-select" id="sort-select">
-                        <option value="volume">Volum</option>
+                        <option value="volume">Volume</option>
                         <option value="change">Change %</option>
-                        <option value="price">Preț</option>
-                        <option value="name">Nume</option>
+                        <option value="price">Price</option>
+                        <option value="name">Name</option>
                     </select>
-                    <button class="sort-direction-btn" id="sort-direction" title="Toggle direction">
-                        ↓
-                    </button>
+                    <button class="sort-direction-btn" id="sort-direction" title="Toggle direction">↓</button>
                 </div>
 
-                <!-- Search -->
                 <div class="filter-search">
                     <span class="filter-search-icon">🔍</span>
-                    <input type="text" class="filter-search-input" id="filter-search" placeholder="Caută monedă..." autocomplete="off">
+                    <input type="text" class="filter-search-input" id="filter-search" placeholder="Search coin..." autocomplete="off">
                     <button class="filter-search-clear" id="search-clear">×</button>
                 </div>
             </div>
 
-            <!-- Active Filters Display -->
             <div class="active-filters" id="active-filters">
-                <span class="results-count" id="results-count">0 monede</span>
+                <span class="results-count" id="results-count">0 coins</span>
             </div>
         </div>
     </div>
 
-    <!-- ═════════════════════════════════════════════════════════════════════════════
-         ALERT BANNER (RALPH-2 INTEGRATION)
-         ═════════════════════════════════════════════════════════════════════════════ -->
+    <!-- ALERT BANNER -->
     <div class="alert-banner" id="alert-banner">
         <span class="alert-icon">⚡</span>
         <div class="alert-content">
@@ -1802,13 +1649,11 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT -->
     <script>
         /**
-         * ═════════════════════════════════════════════════════════════════════════════
-         * CRYPTO DIVER - RALPH-3 INTEGRATION
-         * Filters + Alerts working together
-         * ═════════════════════════════════════════════════════════════════════════════
+         * CRYPTO DIVER - PRODUCTION EDITION
+         * Ralph-8 Final Integration
+         * All fixes merged: Null references, Loading flow, API, Console errors
          */
 
         // ============================================
@@ -1821,11 +1666,41 @@
             VOLUME_SPIKE_THRESHOLD: 2.0,
             SHAPE_COUNT: 75,
             ANIMATION_DURATION: 1000,
-            ALERT_COOLDOWN: 10000, // Don't spam alerts
+            ALERT_COOLDOWN: 10000,
+            LOADING_TIMEOUT: 8000,
+            FALLBACK_DATA: [
+                { symbol: 'BTC', fullSymbol: 'BTCUSDT', price: 67543.21, change24h: 2.34, volume24h: 28500000000, turnover24h: 1920000000000, high24h: 68200.00, low24h: 65800.00 },
+                { symbol: 'ETH', fullSymbol: 'ETHUSDT', price: 3542.18, change24h: 1.87, volume24h: 15200000000, turnover24h: 538000000000, high24h: 3580.50, low24h: 3450.20 },
+                { symbol: 'BNB', fullSymbol: 'BNBUSDT', price: 612.45, change24h: -0.52, volume24h: 890000000, turnover24h: 545000000, high24h: 618.90, low24h: 605.10 },
+                { symbol: 'SOL', fullSymbol: 'SOLUSDT', price: 178.92, change24h: 5.23, volume24h: 4200000000, turnover24h: 752000000, high24h: 182.40, low24h: 168.70 },
+                { symbol: 'XRP', fullSymbol: 'XRPUSDT', price: 0.6234, change24h: -1.25, volume24h: 2100000000, turnover24h: 1310000000, high24h: 0.6345, low24h: 0.6123 },
+                { symbol: 'ADA', fullSymbol: 'ADAUSDT', price: 0.5845, change24h: 0.89, volume24h: 680000000, turnover24h: 397000000, high24h: 0.5923, low24h: 0.5767 },
+                { symbol: 'AVAX', fullSymbol: 'AVAXUSDT', price: 42.18, change24h: 3.45, volume24h: 890000000, turnover24h: 375000000, high24h: 43.25, low24h: 40.65 },
+                { symbol: 'DOT', fullSymbol: 'DOTUSDT', price: 8.92, change24h: -2.14, volume24h: 420000000, turnover24h: 374000000, high24h: 9.15, low24h: 8.71 },
+                { symbol: 'MATIC', fullSymbol: 'MATICUSDT', price: 0.7856, change24h: 1.23, volume24h: 380000000, turnover24h: 298000000, high24h: 0.8023, low24h: 0.7734 },
+                { symbol: 'LINK', fullSymbol: 'LINKUSDT', price: 18.45, change24h: 4.56, volume24h: 620000000, turnover24h: 1140000000, high24h: 18.92, low24h: 17.58 },
+                { symbol: 'UNI', fullSymbol: 'UNIUSDT', price: 12.34, change24h: -3.21, volume24h: 280000000, turnover24h: 345000000, high24h: 12.85, low24h: 11.92 },
+                { symbol: 'AAVE', fullSymbol: 'AAVEUSDT', price: 145.67, change24h: 2.78, volume24h: 180000000, turnover24h: 262000000, high24h: 149.20, low24h: 141.35 },
+                { symbol: 'ATOM', fullSymbol: 'ATOMUSDT', price: 9.87, change24h: -1.45, volume24h: 240000000, turnover24h: 237000000, high24h: 10.12, low24h: 9.68 },
+                { symbol: 'NEAR', fullSymbol: 'NEARUSDT', price: 6.54, change24h: 6.78, volume24h: 450000000, turnover24h: 294000000, high24h: 6.82, low24h: 6.08 },
+                { symbol: 'ALGO', fullSymbol: 'ALGOUSDT', price: 0.2345, change24h: -5.43, volume24h: 120000000, turnover24h: 28100000, high24h: 0.2490, low24h: 0.2280 },
+                { symbol: 'VET', fullSymbol: 'VETUSDT', price: 0.0456, change24h: 0.45, volume24h: 89000000, turnover24h: 4050000, high24h: 0.0468, low24h: 0.0445 },
+                { symbol: 'FIL', fullSymbol: 'FILUSDT', price: 8.23, change24h: 1.12, volume24h: 156000000, turnover24h: 128000000, high24h: 8.45, low24h: 8.08 },
+                { symbol: 'THETA', fullSymbol: 'THETAUSDT', price: 2.45, change24h: -0.89, volume24h: 67000000, turnover24h: 164000000, high24h: 2.52, low24h: 2.41 },
+                { symbol: 'XTZ', fullSymbol: 'XTZUSDT', price: 1.23, change24h: 2.34, volume24h: 45000000, turnover24h: 55300000, high24h: 1.28, low24h: 1.19 },
+                { symbol: 'XLM', fullSymbol: 'XLMUSDT', price: 0.1234, change24h: -2.56, volume24h: 78000000, turnover24h: 9620000, high24h: 0.1278, low24h: 0.1198 },
+                { symbol: 'LTC', fullSymbol: 'LTCUSDT', price: 78.90, change24h: 0.67, volume24h: 340000000, turnover24h: 268000000, high24h: 80.45, low24h: 77.82 },
+                { symbol: 'BCH', fullSymbol: 'BCHUSDT', price: 456.78, change24h: 1.23, volume24h: 280000000, turnover24h: 127900000, high24h: 465.20, low24h: 448.50 },
+                { symbol: 'ETC', fullSymbol: 'ETCUSDT', price: 28.45, change24h: -1.78, volume24h: 190000000, turnover24h: 54000000, high24h: 29.20, low24h: 27.85 },
+                { symbol: 'XMR', fullSymbol: 'XMRUSDT', price: 165.30, change24h: 0.34, volume24h: 78000000, turnover24h: 128000000, high24h: 168.45, low24h: 162.80 },
+                { symbol: 'EOS', fullSymbol: 'EOSUSDT', price: 0.89, change24h: -4.56, volume24h: 120000000, turnover24h: 106800000, high24h: 0.94, low24h: 0.85 },
+                { symbol: 'TRX', fullSymbol: 'TRXUSDT', price: 0.1234, change24h: 1.45, volume24h: 230000000, turnover24h: 28300000, high24h: 0.1267, low24h: 0.1209 },
+                { symbol: 'NEO', fullSymbol: 'NEOUSDT', price: 16.78, change24h: 3.21, volume24h: 89000000, turnover24h: 149000000, high24h: 17.25, low24h: 16.15 },
+                { symbol: 'DASH', fullSymbol: 'DASHUSDT', price: 34.56, change24h: -0.78, volume24h: 56000000, turnover24h: 19300000, high24h: 35.20, low24h: 34.10 },
+                { symbol: 'ZEC', fullSymbol: 'ZECUSDT', price: 28.90, change24h: 0.89, volume24h: 45000000, turnover24h: 13000000, high24h: 29.45, low24h: 28.45 },
+                { symbol: 'WAVES', fullSymbol: 'WAVESUSDT', price: 2.34, change24h: -6.54, volume24h: 34000000, turnover24h: 79500000, high24h: 2.52, low24h: 2.21 }
+            ]
         };
-        
-        console.log('🚀 Crypto Diver initializing...');
-        console.log('📡 API Endpoint:', CONFIG.API_URL + '?category=linear');
 
         // ============================================
         // STATE MANAGEMENT
@@ -1843,23 +1718,24 @@
             activeShapeFilters: new Set(),
             lastAlertTime: 0,
             alertQueue: [],
-            // RALPH-1: Filter System State
             filters: {
                 category: 'all',
                 sortBy: 'volume',
                 sortDesc: true,
                 search: ''
             },
-            searchDebounceTimer: null
+            searchDebounceTimer: null,
+            loadingStartTime: null,
+            isUsingFallback: false
         };
 
-        // Major coins list for filter
         const MAJOR_COINS = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'AVAX', 'DOT', 'MATIC', 'LINK', 'UNI', 'AAVE', 'ATOM', 'NEAR', 'ALGO', 'VET', 'FIL', 'THETA', 'XTZ', 'XLM', 'LTC', 'BCH', 'ETC', 'XMR', 'EOS', 'TRX', 'NEO', 'DASH', 'ZEC', 'WAVES'];
 
         // ============================================
         // UTILITY FUNCTIONS
         // ============================================
         function formatPrice(price) {
+            if (!price || isNaN(price)) return '0.00';
             if (price >= 1000) return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             if (price >= 1) return price.toFixed(4);
             if (price >= 0.01) return price.toFixed(6);
@@ -1867,15 +1743,17 @@
         }
 
         function formatNumber(num) {
+            if (!num || isNaN(num)) return '0';
             if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
             if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
             if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
             return num.toFixed(2);
         }
 
-        function getBubbleColor(change24h, theme = 'dark') {
-            const isPositive = change24h >= 0;
-            if (theme === 'dark') {
+        function getBubbleColor(change24h, theme) {
+            const isPositive = (change24h || 0) >= 0;
+            const safeTheme = theme || 'dark';
+            if (safeTheme === 'dark') {
                 return isPositive ? {
                     primary: '#00ff41',
                     glow: 'rgba(0, 255, 65, 0.6)',
@@ -1885,58 +1763,125 @@
                     glow: 'rgba(255, 0, 64, 0.6)',
                     text: '#ff0040'
                 };
-            } else {
-                return isPositive ? {
-                    primary: '#2a8a4a',
-                    glow: 'rgba(42, 138, 74, 0.3)',
-                    text: '#2a8a4a'
-                } : {
-                    primary: '#c54a4a',
-                    glow: 'rgba(197, 74, 74, 0.3)',
-                    text: '#c54a4a'
-                };
             }
+            return isPositive ? {
+                primary: '#2a8a4a',
+                glow: 'rgba(42, 138, 74, 0.3)',
+                text: '#2a8a4a'
+            } : {
+                primary: '#c54a4a',
+                glow: 'rgba(197, 74, 74, 0.3)',
+                text: '#c54a4a'
+            };
         }
 
         function calculateBubbleSize(volume, maxVolume) {
+            const safeVolume = volume || 0;
+            const safeMaxVolume = maxVolume || 1;
             const minSize = 45;
             const maxSize = 110;
-            const normalized = Math.log10(volume + 1) / Math.log10(maxVolume + 1);
+            const normalized = Math.log10(safeVolume + 1) / Math.log10(safeMaxVolume + 1);
             return minSize + normalized * (maxSize - minSize);
         }
 
         // ============================================
-        // RALPH-1: FILTER SYSTEM FUNCTIONS
+        // SAFE DOM HELPER (RALPH-1: Null Reference Fix)
         // ============================================
-        
-        /** Apply all filters and sorting to coins */
+        function safeAddEventListener(selector, event, handler) {
+            const element = typeof selector === 'string' ? document.getElementById(selector) : selector;
+            if (element) {
+                element.addEventListener(event, handler);
+                return true;
+            }
+            return false;
+        }
+
+        function safeQuerySelector(selector) {
+            try {
+                return document.querySelector(selector);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function safeQuerySelectorAll(selector) {
+            try {
+                return document.querySelectorAll(selector);
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function safeSetText(id, text) {
+            const element = document.getElementById(id);
+            if (element) element.textContent = text;
+        }
+
+        // ============================================
+        // LOADING SCREEN MANAGEMENT (RALPH-2: Loading Flow Fix)
+        // ============================================
+        function hideLoading(showError) {
+            const overlay = document.getElementById('loading-overlay');
+            const errorText = document.getElementById('loading-error');
+            
+            if (overlay) {
+                if (showError && errorText) {
+                    errorText.classList.add('show');
+                    setTimeout(function() {
+                        overlay.style.display = 'none';
+                        overlay.classList.add('hidden');
+                        state.isLoading = false;
+                    }, 800);
+                } else {
+                    overlay.style.display = 'none';
+                    overlay.classList.add('hidden');
+                    state.isLoading = false;
+                }
+            }
+            state.isLoading = false;
+        }
+
+        function startLoadingTimeout() {
+            setTimeout(function() {
+                if (state.isLoading) {
+                    hideLoading(true);
+                    state.isUsingFallback = true;
+                }
+            }, CONFIG.LOADING_TIMEOUT);
+        }
+
+        // Force hide loading after 15 seconds (backup)
+        setTimeout(function() {
+            if (state.isLoading) hideLoading();
+        }, 15000);
+
+        // ============================================
+        // FILTER SYSTEM FUNCTIONS
+        // ============================================
         function applyFilters() {
-            let result = [...state.coins];
+            let result = state.coins.slice();
             const filters = state.filters;
             
-            // Category filter
             if (filters.category !== 'all') {
                 switch (filters.category) {
                     case 'gainers':
-                        result = result.filter(c => c.change24h > 0);
+                        result = result.filter(function(c) { return c.change24h > 0; });
                         break;
                     case 'losers':
-                        result = result.filter(c => c.change24h < 0);
+                        result = result.filter(function(c) { return c.change24h < 0; });
                         break;
                     case 'majors':
-                        result = result.filter(c => MAJOR_COINS.includes(c.symbol));
+                        result = result.filter(function(c) { return MAJOR_COINS.indexOf(c.symbol) !== -1; });
                         break;
                 }
             }
             
-            // Search filter
             if (filters.search) {
                 const query = filters.search.toLowerCase();
-                result = result.filter(c => c.symbol.toLowerCase().includes(query));
+                result = result.filter(function(c) { return c.symbol.toLowerCase().indexOf(query) !== -1; });
             }
             
-            // Sorting
-            result.sort((a, b) => {
+            result.sort(function(a, b) {
                 let valA, valB;
                 switch (filters.sortBy) {
                     case 'volume':
@@ -1971,12 +1916,12 @@
             renderBubblesWithTransition(result);
         }
         
-        /** Render bubbles with smooth transition */
         function renderBubblesWithTransition(coins) {
             const container = document.getElementById('bubble-container');
+            if (!container) return;
+            
             const existingGroups = d3.selectAll('.bubble-group');
             
-            // If no coins, fade out all
             if (coins.length === 0) {
                 existingGroups.transition()
                     .duration(300)
@@ -1985,92 +1930,68 @@
                 return;
             }
             
-            // Get current coin symbols
-            const currentSymbols = new Set(coins.map(c => c.symbol));
-            const searchQuery = state.filters.search.toLowerCase();
+            const currentSymbols = {};
+            coins.forEach(function(c) { currentSymbols[c.symbol] = true; });
+            const searchQuery = (state.filters.search || '').toLowerCase();
             
-            // Update existing bubbles
             existingGroups.each(function(d) {
                 const group = d3.select(this);
                 const symbol = d.symbol;
                 
-                if (currentSymbols.has(symbol)) {
-                    // Coin should be visible
+                if (currentSymbols[symbol]) {
                     group.classed('dimmed', false)
-                        .classed('highlighted', searchQuery && symbol.toLowerCase().includes(searchQuery));
-                    
-                    group.transition()
-                        .duration(300)
-                        .style('opacity', 1);
+                        .classed('highlighted', searchQuery && symbol.toLowerCase().indexOf(searchQuery) !== -1);
+                    group.transition().duration(300).style('opacity', 1);
                 } else {
-                    // Coin should be hidden
-                    group.classed('highlighted', false)
-                        .classed('dimmed', true);
-                    
-                    group.transition()
-                        .duration(300)
-                        .style('opacity', 0.15);
+                    group.classed('highlighted', false).classed('dimmed', true);
+                    group.transition().duration(300).style('opacity', 0.15);
                 }
             });
             
-            // If first render or empty, do full render
             if (existingGroups.empty()) {
                 renderBubbles(coins);
             }
         }
         
-        /** Update active filters display (chips) */
         function updateActiveFiltersDisplay() {
             const container = document.getElementById('active-filters');
+            if (!container) return;
+            
             const filters = state.filters;
             
-            // Clear existing chips (except results count)
             const existingChips = container.querySelectorAll('.filter-chip, .clear-all-btn');
-            existingChips.forEach(chip => chip.remove());
+            existingChips.forEach(function(chip) { chip.remove(); });
             
             const chips = [];
             
-            // Category chip
             if (filters.category !== 'all') {
-                const categoryLabels = {
-                    gainers: 'Gainers ▲',
-                    losers: 'Losers ▼',
-                    majors: 'Majors'
-                };
+                const categoryLabels = { gainers: 'Gainers ▲', losers: 'Losers ▼', majors: 'Majors' };
                 chips.push({ type: 'category', label: categoryLabels[filters.category] });
             }
             
-            // Sort chip
             if (filters.sortBy !== 'volume' || !filters.sortDesc) {
-                const sortLabels = { volume: 'Volum', change: 'Change %', price: 'Preț', name: 'Nume' };
+                const sortLabels = { volume: 'Volume', change: 'Change %', price: 'Price', name: 'Name' };
                 const direction = filters.sortDesc ? '↓' : '↑';
-                chips.push({ type: 'sort', label: `${sortLabels[filters.sortBy]} ${direction}` });
+                chips.push({ type: 'sort', label: sortLabels[filters.sortBy] + ' ' + direction });
             }
             
-            // Search chip
             if (filters.search) {
-                chips.push({ type: 'search', label: `Căutare: "${filters.search}"` });
+                chips.push({ type: 'search', label: 'Search: "' + filters.search + '"' });
             }
             
-            // Add chips before results count
             const resultsCount = container.querySelector('.results-count');
             
-            chips.forEach(chipData => {
+            chips.forEach(function(chipData) {
                 const chip = document.createElement('div');
                 chip.className = 'filter-chip';
-                chip.innerHTML = `
-                    <span>${chipData.label}</span>
-                    <button class="filter-chip-remove" data-type="${chipData.type}"">×</button>
-                `;
+                chip.innerHTML = '<span>' + chipData.label + '</span><button class="filter-chip-remove" data-type="' + chipData.type + '">×</button>';
                 container.insertBefore(chip, resultsCount);
                 
-                // Add remove handler
-                chip.querySelector('.filter-chip-remove').addEventListener('click', () => {
+                chip.querySelector('.filter-chip-remove').addEventListener('click', function() {
                     removeFilter(chipData.type);
                 });
             });
             
-            // Add clear all button if any filters active
             if (chips.length > 0) {
                 const clearBtn = document.createElement('button');
                 clearBtn.className = 'clear-all-btn';
@@ -2080,37 +2001,36 @@
             }
         }
         
-        /** Update results count display */
         function updateResultsCount() {
             const count = state.filteredCoins.length;
             const total = state.coins.length;
-            document.getElementById('results-count').textContent = `${count} / ${total} monede`;
+            safeSetText('results-count', count + ' / ' + total + ' coins');
         }
         
-        /** Remove a specific filter */
         function removeFilter(type) {
             switch (type) {
                 case 'category':
                     state.filters.category = 'all';
-                    document.querySelectorAll('.category-btn').forEach(btn => {
+                    safeQuerySelectorAll('.category-btn').forEach(function(btn) {
                         btn.classList.toggle('active', btn.dataset.category === 'all');
                     });
                     break;
                 case 'sort':
                     state.filters.sortBy = 'volume';
                     state.filters.sortDesc = true;
-                    document.getElementById('sort-select').value = 'volume';
-                    document.getElementById('sort-direction').textContent = '↓';
+                    const sortSelect = document.getElementById('sort-select');
+                    if (sortSelect) sortSelect.value = 'volume';
+                    safeSetText('sort-direction', '↓');
                     break;
                 case 'search':
                     state.filters.search = '';
-                    document.getElementById('filter-search').value = '';
+                    const searchInput = document.getElementById('filter-search');
+                    if (searchInput) searchInput.value = '';
                     break;
             }
             applyFilters();
         }
         
-        /** Clear all filters */
         function clearAllFilters() {
             state.filters = {
                 category: 'all',
@@ -2119,65 +2039,64 @@
                 search: ''
             };
             
-            // Reset UI
-            document.querySelectorAll('.category-btn').forEach(btn => {
+            safeQuerySelectorAll('.category-btn').forEach(function(btn) {
                 btn.classList.toggle('active', btn.dataset.category === 'all');
             });
-            document.getElementById('sort-select').value = 'volume';
-            document.getElementById('sort-direction').textContent = '↓';
-            document.getElementById('filter-search').value = '';
+            
+            const sortSelect = document.getElementById('sort-select');
+            if (sortSelect) sortSelect.value = 'volume';
+            safeSetText('sort-direction', '↓');
+            
+            const filterSearch = document.getElementById('filter-search');
+            if (filterSearch) filterSearch.value = '';
             
             applyFilters();
         }
         
-        /** Setup filter event listeners */
         function setupFilterListeners() {
-            // Category buttons
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            safeQuerySelectorAll('.category-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    safeQuerySelectorAll('.category-btn').forEach(function(b) { b.classList.remove('active'); });
                     btn.classList.add('active');
                     state.filters.category = btn.dataset.category;
                     applyFilters();
                 });
             });
             
-            // Sort select
-            document.getElementById('sort-select').addEventListener('change', (e) => {
+            safeAddEventListener('sort-select', 'change', function(e) {
                 state.filters.sortBy = e.target.value;
                 applyFilters();
             });
             
-            // Sort direction toggle
-            document.getElementById('sort-direction').addEventListener('click', () => {
+            safeAddEventListener('sort-direction', 'click', function() {
                 state.filters.sortDesc = !state.filters.sortDesc;
-                document.getElementById('sort-direction').textContent = state.filters.sortDesc ? '↓' : '↑';
+                safeSetText('sort-direction', state.filters.sortDesc ? '↓' : '↑');
                 applyFilters();
             });
             
-            // Search with debounce
-            const searchInput = document.getElementById('filter-search');
-            searchInput.addEventListener('input', (e) => {
+            safeAddEventListener('filter-search', 'input', function(e) {
                 clearTimeout(state.searchDebounceTimer);
-                state.searchDebounceTimer = setTimeout(() => {
+                state.searchDebounceTimer = setTimeout(function() {
                     state.filters.search = e.target.value;
                     applyFilters();
                 }, 300);
             });
             
-            // Search clear button
-            document.getElementById('search-clear').addEventListener('click', () => {
-                searchInput.value = '';
+            safeAddEventListener('search-clear', 'click', function() {
+                const searchInput = document.getElementById('filter-search');
+                if (searchInput) searchInput.value = '';
                 state.filters.search = '';
                 applyFilters();
             });
         }
 
         // ============================================
-        // RALPH-1: BACKGROUND SYSTEM
+        // BACKGROUND SYSTEM
         // ============================================
         function initParticles() {
             const container = document.getElementById('bg-particles');
+            if (!container) return;
+            
             const isMobile = window.matchMedia('(pointer: coarse)').matches;
             const particleCount = isMobile ? 8 : 20;
             container.innerHTML = '';
@@ -2197,13 +2116,15 @@
                 ];
                 const color = colors[Math.floor(Math.random() * colors.length)];
                 particle.style.background = color;
-                particle.style.boxShadow = `0 0 8px ${color}`;
+                particle.style.boxShadow = '0 0 8px ' + color;
                 container.appendChild(particle);
             }
         }
 
         function initDottedPaths() {
             const container = document.getElementById('dotted-paths');
+            if (!container) return;
+            
             const pathCount = 5;
             for (let i = 0; i < pathCount; i++) {
                 const path = document.createElement('div');
@@ -2217,76 +2138,12 @@
         }
 
         // ============================================
-        // RALPH-1: FILTER SYSTEM
-        // ============================================
-        function initFilterSystem() {
-            const chips = document.querySelectorAll('.filter-chip');
-            const clearBtn = document.getElementById('clear-filters');
-            
-            chips.forEach(chip => {
-                chip.addEventListener('click', () => {
-                    const shapeType = chip.dataset.shape;
-                    
-                    if (state.activeShapeFilters.has(shapeType)) {
-                        state.activeShapeFilters.delete(shapeType);
-                        chip.classList.remove('active');
-                    } else {
-                        state.activeShapeFilters.add(shapeType);
-                        chip.classList.add('active');
-                    }
-                    
-                    updateShapeVisibility();
-                    updateClearButton();
-                });
-            });
-            
-            clearBtn.addEventListener('click', () => {
-                state.activeShapeFilters.clear();
-                chips.forEach(chip => chip.classList.remove('active'));
-                updateShapeVisibility();
-                updateClearButton();
-            });
-        }
-
-        function updateShapeVisibility() {
-            const shapes = document.querySelectorAll('.geo-shape');
-            const hasFilters = state.activeShapeFilters.size > 0;
-            
-            shapes.forEach(shape => {
-                const shapeType = getShapeType(shape);
-                
-                if (!hasFilters) {
-                    // No filters = show all
-                    shape.classList.remove('filtered-out', 'hidden');
-                } else if (state.activeShapeFilters.has(shapeType)) {
-                    // Matches filter = show
-                    shape.classList.remove('filtered-out', 'hidden');
-                } else {
-                    // Doesn't match = dim
-                    shape.classList.add('filtered-out');
-                }
-            });
-        }
-
-        function getShapeType(shapeElement) {
-            if (shapeElement.classList.contains('geo-square')) return 'square';
-            if (shapeElement.classList.contains('geo-circle')) return 'circle';
-            if (shapeElement.classList.contains('geo-triangle')) return 'triangle';
-            if (shapeElement.classList.contains('geo-diamond')) return 'diamond';
-            if (shapeElement.classList.contains('geo-hexagon')) return 'hexagon';
-            return 'unknown';
-        }
-
-        function updateClearButton() {
-            const clearBtn = document.getElementById('clear-filters');
-            clearBtn.disabled = state.activeShapeFilters.size === 0;
-        }
-
-        // ============================================
-        // RALPH-2: GEOMETRIC SHAPES SYSTEM
+        // GEOMETRIC SHAPES SYSTEM
         // ============================================
         function initGeometricShapes() {
             const container = document.getElementById('geometric-shapes-container');
+            if (!container) return;
+            
             const shapeCount = CONFIG.SHAPE_COUNT;
             const shapes = ['square', 'circle', 'triangle', 'diamond', 'hexagon'];
             const animations = ['float', 'pulse', 'rotate'];
@@ -2298,10 +2155,9 @@
                 const shapeType = shapes[Math.floor(Math.random() * shapes.length)];
                 const shape = document.createElement('div');
                 
-                shape.className = `geo-shape geo-${shapeType}`;
+                shape.className = 'geo-shape geo-' + shapeType;
                 shape.dataset.shapeType = shapeType;
                 
-                // Position avoiding center
                 let x, y, attempts = 0;
                 do {
                     x = Math.random() * 100;
@@ -2329,12 +2185,10 @@
                     shape.classList.add(Math.random() > 0.5 ? 'up' : 'down');
                 }
                 
-                shape.addEventListener('click', () => showShapeModal(shapeType));
+                shape.addEventListener('click', function() { showShapeModal(shapeType); });
                 container.appendChild(shape);
                 state.shapes.push(shape);
             }
-            
-            console.log(`✅ Generated ${shapeCount} geometric shapes`);
         }
 
         function showShapeModal(shapeType) {
@@ -2345,57 +2199,45 @@
                 diamond: '💎 Diamond: Hidden treasures',
                 hexagon: '⬡ Hexagon: Structure of the sea'
             };
-            showToast(messages[shapeType] || 'Shape clicked!', 'success');
+            showToast(messages[shapeType] || 'Shape clicked!');
         }
 
         // ============================================
-        // RALPH-2: VOLUME ALERT SYSTEM
+        // VOLUME ALERT SYSTEM
         // ============================================
         function checkVolumeSpikes(coins) {
             const now = Date.now();
             const alerts = [];
             
-            coins.forEach(coin => {
+            coins.forEach(function(coin) {
                 const symbol = coin.symbol;
                 const currentVolume = coin.volume24h;
                 
                 if (!state.volumeHistory[symbol]) {
-                    state.volumeHistory[symbol] = {
-                        volumes: [currentVolume],
-                        lastAlert: 0
-                    };
+                    state.volumeHistory[symbol] = { volumes: [currentVolume], lastAlert: 0 };
                     return;
                 }
                 
                 const history = state.volumeHistory[symbol];
-                const avgVolume = history.volumes.reduce((a, b) => a + b, 0) / history.volumes.length;
+                const avgVolume = history.volumes.reduce(function(a, b) { return a + b; }, 0) / history.volumes.length;
                 
                 if (avgVolume > 0) {
                     const spikeRatio = currentVolume / avgVolume;
                     
                     if (spikeRatio >= CONFIG.VOLUME_SPIKE_THRESHOLD) {
-                        // Check cooldown
                         if (now - history.lastAlert > CONFIG.ALERT_COOLDOWN) {
-                            alerts.push({
-                                symbol: symbol,
-                                ratio: spikeRatio,
-                                volume: currentVolume
-                            });
+                            alerts.push({ symbol: symbol, ratio: spikeRatio, volume: currentVolume });
                             history.lastAlert = now;
                         }
                     }
                 }
                 
-                // Update history (keep last 5)
                 history.volumes.push(currentVolume);
                 if (history.volumes.length > 5) history.volumes.shift();
             });
             
-            // Show alerts
-            alerts.forEach((alert, index) => {
-                setTimeout(() => {
-                    showVolumeAlert(alert);
-                }, index * 500);
+            alerts.forEach(function(alert, index) {
+                setTimeout(function() { showVolumeAlert(alert); }, index * 500);
             });
             
             return alerts.length > 0;
@@ -2406,50 +2248,53 @@
             const title = document.getElementById('alert-title');
             const text = document.getElementById('alert-text');
             
-            title.textContent = '🚨 VOLUME SPIKE DETECTED';
-            text.textContent = `${alert.symbol}: ${alert.ratio.toFixed(1)}x average volume ($${formatNumber(alert.volume)})`;
+            if (title) title.textContent = '🚨 VOLUME SPIKE DETECTED';
+            if (text) text.textContent = alert.symbol + ': ' + alert.ratio.toFixed(1) + 'x average volume ($' + formatNumber(alert.volume) + ')';
             
-            banner.classList.add('volume-spike', 'show');
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                banner.classList.remove('show');
-            }, 5000);
+            if (banner) {
+                banner.classList.add('volume-spike', 'show');
+                setTimeout(function() { banner.classList.remove('show'); }, 5000);
+            }
         }
 
-        function showAlert(message, type = 'info') {
+        function showAlert(message, type) {
             const banner = document.getElementById('alert-banner');
             const title = document.getElementById('alert-title');
             const text = document.getElementById('alert-text');
             
-            title.textContent = type === 'error' ? '⚠️ Error' : type === 'success' ? '🔥 Success' : 'ℹ️ Info';
-            text.textContent = message;
+            const safeType = type || 'info';
+            if (title) {
+                title.textContent = safeType === 'error' ? '⚠️ Error' : safeType === 'success' ? '🔥 Success' : 'ℹ️ Info';
+            }
+            if (text) text.textContent = message;
             
-            banner.classList.remove('volume-spike');
-            banner.classList.add('show');
-            
-            setTimeout(() => {
-                banner.classList.remove('show');
-            }, 4000);
+            if (banner) {
+                banner.classList.remove('volume-spike');
+                banner.classList.add('show');
+                setTimeout(function() { banner.classList.remove('show'); }, 4000);
+            }
         }
 
         function hideAlert() {
-            document.getElementById('alert-banner').classList.remove('show');
+            const banner = document.getElementById('alert-banner');
+            if (banner) banner.classList.remove('show');
         }
 
         // ============================================
-        // RALPH-3: PHYSICS & BUBBLE SYSTEM
+        // PHYSICS & BUBBLE SYSTEM
         // ============================================
         function initBubbleSimulation(data) {
             const container = document.getElementById('bubble-container');
-            const width = container.clientWidth;
-            const maxVolume = Math.max(...data.map(c => c.volume24h));
+            if (!container) return data;
             
-            const cols = Math.floor(width / 130);
+            const width = container.clientWidth || window.innerWidth;
+            const maxVolume = Math.max.apply(null, data.map(function(c) { return c.volume24h || 0; })) || 1;
+            
+            const cols = Math.floor(width / 130) || 4;
             const spacingX = width / cols;
             const spacingY = 140;
             
-            data.forEach((d, i) => {
+            data.forEach(function(d, i) {
                 const col = i % cols;
                 const row = Math.floor(i / cols);
                 
@@ -2476,13 +2321,15 @@
             const centerAttraction = 0.005;
             
             const container = document.getElementById('bubble-container');
-            const centerX = container.clientWidth / 2;
-            const centerY = container.clientHeight / 2;
+            if (!container) return;
             
-            data.forEach((bubble, i) => {
+            const centerX = (container.clientWidth || window.innerWidth) / 2;
+            const centerY = (container.clientHeight || window.innerHeight) / 2;
+            
+            data.forEach(function(bubble, i) {
                 let fx = 0, fy = 0;
                 
-                data.forEach((other, j) => {
+                data.forEach(function(other, j) {
                     if (i === j) return;
                     
                     const dx = bubble.x - other.x;
@@ -2509,14 +2356,19 @@
                 bubble.y += bubble.vy;
                 
                 const padding = bubble.size / 2 + 20;
-                bubble.x = Math.max(padding, Math.min(container.clientWidth - padding, bubble.x));
-                bubble.y = Math.max(padding, Math.min(container.clientHeight - padding, bubble.y));
+                const maxX = (container.clientWidth || window.innerWidth) - padding;
+                const maxY = (container.clientHeight || window.innerHeight) - padding;
+                
+                bubble.x = Math.max(padding, Math.min(maxX, bubble.x));
+                bubble.y = Math.max(padding, Math.min(maxY, bubble.y));
             });
         }
 
         function renderBubbles(coins) {
             const container = document.getElementById('bubble-container');
-            const width = container.clientWidth;
+            if (!container) return;
+            
+            const width = container.clientWidth || window.innerWidth;
             const height = Math.max(coins.length * 15 + 200, 800);
             
             container.innerHTML = '';
@@ -2544,20 +2396,21 @@
             feMerge.append('feMergeNode').attr('in', 'coloredBlur');
             feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
             
-            initBubbleSimulation(coins, svg);
+            initBubbleSimulation(coins);
             
             const groups = svg.selectAll('.bubble-group')
                 .data(coins)
                 .enter()
                 .append('g')
                 .attr('class', 'bubble-group')
-                .attr('data-symbol', d => d.symbol)
-                .attr('transform', d => `translate(${d.x},${d.y})`)
+                .attr('data-symbol', function(d) { return d.symbol; })
+                .attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; })
                 .style('opacity', 0);
             
             groups.each(function(d) {
                 const g = d3.select(this);
                 const colors = getBubbleColor(d.change24h, state.currentTheme);
+                const fillColor = state.currentTheme === 'dark' ? 'rgba(10,10,15,0.9)' : 'rgba(255,255,255,0.9)';
                 
                 g.append('circle')
                     .attr('r', d.size / 2 + 8)
@@ -2568,7 +2421,7 @@
                 g.append('circle')
                     .attr('class', 'bubble-spiral')
                     .attr('r', d.size / 2)
-                    .attr('fill', state.currentTheme === 'dark' ? 'rgba(10,10,15,0.9)' : 'rgba(255,255,255,0.9)')
+                    .attr('fill', fillColor)
                     .attr('stroke', colors.primary)
                     .attr('stroke-width', 2)
                     .style('color', colors.primary);
@@ -2589,19 +2442,19 @@
                     .attr('class', 'bubble-change')
                     .attr('dy', '1.2em')
                     .style('fill', colors.text)
-                    .text(`${d.change24h >= 0 ? '+' : ''}${d.change24h.toFixed(1)}%`);
+                    .text((d.change24h >= 0 ? '+' : '') + (d.change24h || 0).toFixed(1) + '%');
             });
             
             groups.transition()
                 .duration(600)
-                .delay((d, i) => i * 30)
+                .delay(function(d, i) { return i * 30; })
                 .ease(d3.easeBackOut)
                 .style('opacity', 1);
             
             groups.on('click', function(event, d) {
                 const el = d3.select(this);
                 el.classed('spinning', true);
-                setTimeout(() => el.classed('spinning', false), 1000);
+                setTimeout(function() { el.classed('spinning', false); }, 1000);
                 openModal(d);
             });
             
@@ -2610,7 +2463,7 @@
                 frameCount++;
                 if (frameCount % 2 === 0) {
                     runPhysicsStep(coins);
-                    groups.attr('transform', d => `translate(${d.x.toFixed(1)},${d.y.toFixed(1)})`);
+                    groups.attr('transform', function(d) { return 'translate(' + d.x.toFixed(1) + ',' + d.y.toFixed(1) + ')'; });
                 }
                 state.animationId = requestAnimationFrame(animate);
             }
@@ -2620,61 +2473,74 @@
         }
 
         // ============================================
-        // RALPH-4: MODAL SYSTEM
+        // MODAL SYSTEM
         // ============================================
         function openModal(coin) {
-            state.currentModalIndex = state.coins.findIndex(c => c.symbol === coin.symbol);
+            if (!coin) return;
+            
+            state.currentModalIndex = state.coins.findIndex(function(c) { return c.symbol === coin.symbol; });
             updateModalContent(coin);
             
             const modal = document.getElementById('enhanced-modal');
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
             
             generateSparkline(coin);
         }
 
         function closeModal() {
             const modal = document.getElementById('enhanced-modal');
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
         }
 
         function updateModalContent(coin) {
-            const isPositive = coin.change24h >= 0;
+            if (!coin) return;
             
-            document.getElementById('modal-symbol').textContent = coin.symbol;
-            document.getElementById('modal-name').textContent = coin.fullSymbol || coin.symbol;
-            document.getElementById('modal-price').textContent = '$' + formatPrice(coin.price);
+            const isPositive = (coin.change24h || 0) >= 0;
+            
+            safeSetText('modal-symbol', coin.symbol);
+            safeSetText('modal-name', coin.fullSymbol || coin.symbol);
+            safeSetText('modal-price', '$' + formatPrice(coin.price));
             
             const changeEl = document.getElementById('modal-change');
-            changeEl.textContent = `${isPositive ? '+' : ''}${coin.change24h.toFixed(2)}%`;
-            changeEl.className = 'price-change-pill ' + (isPositive ? 'positive' : 'negative');
+            if (changeEl) {
+                changeEl.textContent = (isPositive ? '+' : '') + (coin.change24h || 0).toFixed(2) + '%';
+                changeEl.className = 'price-change-pill ' + (isPositive ? 'positive' : 'negative');
+            }
             
-            document.getElementById('modal-volume').textContent = '$' + formatNumber(coin.volume24h);
-            document.getElementById('modal-turnover').textContent = '$' + formatNumber(coin.turnover24h);
-            document.getElementById('modal-high').textContent = '$' + formatPrice(coin.high24h);
-            document.getElementById('modal-low').textContent = '$' + formatPrice(coin.low24h);
+            safeSetText('modal-volume', '$' + formatNumber(coin.volume24h));
+            safeSetText('modal-turnover', '$' + formatNumber(coin.turnover24h));
+            safeSetText('modal-high', '$' + formatPrice(coin.high24h));
+            safeSetText('modal-low', '$' + formatPrice(coin.low24h));
             
             if (coin.high24h > coin.low24h) {
                 const range = coin.high24h - coin.low24h;
                 const position = ((coin.price - coin.low24h) / range) * 100;
-                document.getElementById('modal-hl-progress').style.width = Math.max(5, Math.min(95, position)) + '%';
-                document.getElementById('modal-hl-low').textContent = '$' + formatNumber(coin.low24h);
-                document.getElementById('modal-hl-high').textContent = '$' + formatNumber(coin.high24h);
-                document.getElementById('modal-hl-current').textContent = formatNumber(coin.price);
+                const progressEl = document.getElementById('modal-hl-progress');
+                if (progressEl) progressEl.style.width = Math.max(5, Math.min(95, position)) + '%';
+                safeSetText('modal-hl-low', '$' + formatNumber(coin.low24h));
+                safeSetText('modal-hl-high', '$' + formatNumber(coin.high24h));
+                safeSetText('modal-hl-current', formatNumber(coin.price));
             }
             
             generateVolumeBars();
             
-            document.getElementById('modal-prev').disabled = state.currentModalIndex <= 0;
-            document.getElementById('modal-next').disabled = state.currentModalIndex >= state.coins.length - 1;
+            const prevBtn = document.getElementById('modal-prev');
+            const nextBtn = document.getElementById('modal-next');
+            if (prevBtn) prevBtn.disabled = state.currentModalIndex <= 0;
+            if (nextBtn) nextBtn.disabled = state.currentModalIndex >= state.coins.length - 1;
         }
 
         function generateSparkline(data) {
             const points = 50;
             const prices = [];
-            const change = data ? data.change24h / 100 : 0;
-            let price = data ? data.price : 100;
+            const change = data && data.change24h ? data.change24h / 100 : 0;
+            let price = data && data.price ? data.price : 100;
             
             for (let i = 0; i < points; i++) {
                 prices.unshift(price);
@@ -2687,45 +2553,55 @@
             const height = 60;
             const padding = 5;
             
-            const minPrice = Math.min(...prices);
-            const maxPrice = Math.max(...prices);
+            const minPrice = Math.min.apply(null, prices);
+            const maxPrice = Math.max.apply(null, prices);
             const range = maxPrice - minPrice || 1;
             
-            const pathPoints = prices.map((p, i) => {
+            const pathPoints = prices.map(function(p, i) {
                 const x = (i / (prices.length - 1)) * width;
                 const y = height - padding - ((p - minPrice) / range) * (height - 2 * padding);
                 return [x, y];
             });
             
-            const pathD = pathPoints.map((p, i) => (i === 0 ? 'M' : 'L') + p[0] + ',' + p[1]).join(' ');
-            const areaD = pathD + ` L${width},${height} L0,${height} Z`;
+            let pathD = '';
+            pathPoints.forEach(function(p, i) {
+                pathD += (i === 0 ? 'M' : 'L') + p[0] + ',' + p[1];
+            });
+            const areaD = pathD + ' L' + width + ',' + height + ' L0,' + height + ' Z';
             
-            document.getElementById('sparkline-path').setAttribute('d', pathD);
-            document.getElementById('sparkline-area').setAttribute('d', areaD);
+            const pathEl = document.getElementById('sparkline-path');
+            const areaEl = document.getElementById('sparkline-area');
             
-            const isPositive = data ? data.change24h >= 0 : true;
+            if (pathEl) pathEl.setAttribute('d', pathD);
+            if (areaEl) areaEl.setAttribute('d', areaD);
+            
+            const isPositive = data && data.change24h >= 0;
             const color = isPositive ? '#00ff41' : '#ff0040';
-            document.getElementById('sparkline-path').setAttribute('stroke', color);
+            if (pathEl) pathEl.setAttribute('stroke', color);
             
             const lastPoint = pathPoints[pathPoints.length - 1];
             const dot = document.getElementById('sparkline-dot');
-            dot.setAttribute('cx', lastPoint[0]);
-            dot.setAttribute('cy', lastPoint[1]);
-            dot.setAttribute('r', 4);
-            dot.setAttribute('fill', color);
+            if (dot) {
+                dot.setAttribute('cx', lastPoint[0]);
+                dot.setAttribute('cy', lastPoint[1]);
+                dot.setAttribute('r', 4);
+                dot.setAttribute('fill', color);
+            }
             
-            const pathEl = document.getElementById('sparkline-path');
-            pathEl.style.strokeDasharray = 300;
-            pathEl.style.strokeDashoffset = 300;
-            pathEl.style.animation = 'none';
-            pathEl.offsetHeight;
-            pathEl.style.animation = 'drawLine 1s ease-out forwards';
+            if (pathEl) {
+                pathEl.style.strokeDasharray = 300;
+                pathEl.style.strokeDashoffset = 300;
+                pathEl.style.animation = 'none';
+                pathEl.offsetHeight;
+                pathEl.style.animation = 'drawLine 1s ease-out forwards';
+            }
         }
 
         function generateVolumeBars() {
             const container = document.getElementById('modal-volume-bars');
-            container.innerHTML = '';
+            if (!container) return;
             
+            container.innerHTML = '';
             const bars = 12;
             for (let i = 0; i < bars; i++) {
                 const bar = document.createElement('div');
@@ -2742,258 +2618,74 @@
             if (newIndex >= 0 && newIndex < state.coins.length) {
                 state.currentModalIndex = newIndex;
                 const coin = state.coins[newIndex];
-                updateModalContent(coin);
-                generateSparkline(coin);
+                if (coin) {
+                    updateModalContent(coin);
+                    generateSparkline(coin);
+                }
             }
         }
 
         function showToast(message) {
             const toast = document.getElementById('modal-toast');
-            document.getElementById('toast-message').textContent = message;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2500);
-        }
-
-        // ============================================
-        // ERROR HANDLING - API WRAPPER & FALLBACK
-        // ============================================
-        
-        /**
-         * Fetch with timeout support to prevent hanging requests
-         */
-        async function fetchWithTimeout(url, timeout = 10000) {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), timeout);
-            
-            try {
-                const response = await fetch(url, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                return response;
-            } catch (error) {
-                clearTimeout(timeoutId);
-                throw error;
-            }
-        }
-        
-        /**
-         * Load data with proper error handling and fallback
-         */
-        async function loadData() {
-            try {
-                const response = await fetchWithTimeout(`${CONFIG.API_URL}?category=spot`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.retCode !== 0) {
-                    throw new Error(data.retMsg || 'API returned error');
-                }
-                
-                const processed = processMarketData(data.result.list);
-                renderShapes(processed);
-                return processed;
-            } catch (error) {
-                console.error('API failed:', error);
-                renderDemoData(); // Fallback
-                return null;
-            } finally {
-                hideLoading(); // ALWAYS hide loading
-            }
-        }
-        
-        /**
-         * Hide loading overlay - ALWAYS called
-         */
-        function hideLoading() {
-            const loadingOverlay = document.getElementById('loading-overlay');
-            if (loadingOverlay) {
-                loadingOverlay.classList.add('hidden');
-            }
-            state.isLoading = false;
-        }
-        
-        /**
-         * Render shapes with live data
-         */
-        function renderShapes(data) {
-            if (!data || data.length === 0) return;
-            
-            state.coins = data;
-            state.filteredCoins = data;
-            
-            // Render bubbles
-            renderBubbles(data);
-            
-            // Update stats
-            updateStats(data);
-            
-            // Apply initial filters
-            applyFilters();
-            
-            // Check initial volume spikes
-            checkVolumeSpikes(data);
-            
-            console.log(`✅ Rendered ${data.length} coins from API`);
-        }
-        
-        /**
-         * Render demo data as fallback
-         */
-        function renderDemoData() {
-            console.warn('⚠️ Rendering DEMO DATA fallback');
-            
-            const demoData = generateDemoData();
-            state.coins = demoData;
-            state.filteredCoins = demoData;
-            
-            // Render bubbles
-            renderBubbles(demoData);
-            
-            // Update stats
-            updateStats(demoData);
-            
-            // Apply initial filters
-            applyFilters();
-            
-            // Show error UI with retry
-            showErrorUI('Could not connect to Bybit API. Check your internet connection or try again later.', () => {
-                // Retry - reload page or re-fetch
-                window.location.reload();
-            });
-            
-            console.log(`✅ Rendered ${demoData.length} demo coins`);
-        }
-        
-        /**
-         * Generate 20 demo coins with realistic data
-         */
-        function generateDemoData() {
-            const demoCoins = [
-                { symbol: 'BTC', fullSymbol: 'BTCUSDT', price: 67432.50, change24h: 2.35, volume24h: 28500000000, turnover24h: 1920000000000, high24h: 68200.00, low24h: 65800.00 },
-                { symbol: 'ETH', fullSymbol: 'ETHUSDT', price: 3456.78, change24h: 1.82, volume24h: 15200000000, turnover24h: 525000000000, high24h: 3520.00, low24h: 3380.00 },
-                { symbol: 'SOL', fullSymbol: 'SOLUSDT', price: 178.45, change24h: 5.67, volume24h: 3200000000, turnover24h: 57000000000, high24h: 185.20, low24h: 168.90 },
-                { symbol: 'BNB', fullSymbol: 'BNBUSDT', price: 598.30, change24h: -0.45, volume24h: 1800000000, turnover24h: 107600000000, high24h: 610.00, low24h: 590.00 },
-                { symbol: 'XRP', fullSymbol: 'XRPUSDT', price: 0.6234, change24h: -2.15, volume24h: 2100000000, turnover24h: 1309000000, high24h: 0.6450, low24h: 0.6100 },
-                { symbol: 'ADA', fullSymbol: 'ADAUSDT', price: 0.5890, change24h: 3.21, volume24h: 890000000, turnover24h: 524210000, high24h: 0.6020, low24h: 0.5680 },
-                { symbol: 'AVAX', fullSymbol: 'AVAXUSDT', price: 42.15, change24h: 7.45, volume24h: 650000000, turnover24h: 27397500000, high24h: 44.80, low24h: 39.20 },
-                { symbol: 'DOT', fullSymbol: 'DOTUSDT', price: 8.92, change24h: -1.30, volume24h: 420000000, turnover24h: 3746400000, high24h: 9.15, low24h: 8.75 },
-                { symbol: 'MATIC', fullSymbol: 'MATICUSDT', price: 0.7250, change24h: 4.50, volume24h: 380000000, turnover24h: 275500000, high24h: 0.7480, low24h: 0.6900 },
-                { symbol: 'LINK', fullSymbol: 'LINKUSDT', price: 18.45, change24h: 6.20, volume24h: 520000000, turnover24h: 9594000000, high24h: 19.20, low24h: 17.30 },
-                { symbol: 'UNI', fullSymbol: 'UNIUSDT', price: 12.30, change24h: -3.45, volume24h: 280000000, turnover24h: 3444000000, high24h: 12.85, low24h: 11.80 },
-                { symbol: 'AAVE', fullSymbol: 'AAVEUSDT', price: 145.60, change24h: 8.90, volume24h: 190000000, turnover24h: 27664000000, high24h: 152.00, low24h: 132.50 },
-                { symbol: 'ATOM', fullSymbol: 'ATOMUSDT', price: 9.85, change24h: 2.10, volume24h: 220000000, turnover24h: 2167000000, high24h: 10.20, low24h: 9.55 },
-                { symbol: 'NEAR', fullSymbol: 'NEARUSDT', price: 6.78, change24h: 12.50, volume24h: 450000000, turnover24h: 3051000000, high24h: 7.25, low24h: 5.95 },
-                { symbol: 'ALGO', fullSymbol: 'ALGOUSDT', price: 0.2340, change24h: -5.20, volume24h: 150000000, turnover24h: 35100000, high24h: 0.2510, low24h: 0.2280 },
-                { symbol: 'VET', fullSymbol: 'VETUSDT', price: 0.0398, change24h: 1.50, volume24h: 120000000, turnover24h: 4776000, high24h: 0.0412, low24h: 0.0385 },
-                { symbol: 'FIL', fullSymbol: 'FILUSDT', price: 8.45, change24h: -2.80, volume24h: 180000000, turnover24h: 1521000000, high24h: 8.90, low24h: 8.15 },
-                { symbol: 'THETA', fullSymbol: 'THETAUSDT', price: 2.85, change24h: 15.20, volume24h: 280000000, turnover24h: 798000000, high24h: 3.15, low24h: 2.42 },
-                { symbol: 'XTZ', fullSymbol: 'XTZUSDT', price: 1.25, change24h: -1.50, volume24h: 85000000, turnover24h: 106250000, high24h: 1.30, low24h: 1.18 },
-                { symbol: 'XLM', fullSymbol: 'XLMUSDT', price: 0.1250, change24h: 0.80, volume24h: 95000000, turnover24h: 11875000, high24h: 0.1290, low24h: 0.1220 }
-            ];
-            
-            // Sort by volume descending
-            return demoCoins.sort((a, b) => b.volume24h - a.volume24h);
-        }
-        
-        /**
-         * Show error UI with retry button
-         */
-        function showErrorUI(message, onRetry) {
-            const loadingOverlay = document.getElementById('loading-overlay');
-            if (!loadingOverlay) return;
-            
-            loadingOverlay.innerHTML = `
-                <div style="text-align: center; padding: 20px;">
-                    <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
-                    <p style="font-family: 'Orbitron', sans-serif; font-size: 16px; color: var(--accent-red); margin-bottom: 8px;">Connection Error</p>
-                    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; max-width: 300px; line-height: 1.5;">${message}</p>
-                    <button id="retry-btn" style="
-                        padding: 12px 32px;
-                        background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 212, 255, 0.1));
-                        border: 1px solid rgba(0, 255, 136, 0.4);
-                        border-radius: 12px;
-                        color: var(--accent-green);
-                        font-family: 'Orbitron', sans-serif;
-                        font-size: 14px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        transition: all 0.3s ease;
-                        margin-bottom: 12px;
-                    ">🔄 Retry Connection</button>
-                    <p style="font-size: 12px; color: var(--text-muted);">Showing demo data</p>
-                </div>
-            `;
-            
-            // Show the overlay (it was hidden by hideLoading, so we need to show it again for the error)
-            loadingOverlay.classList.remove('hidden');
-            
-            // Add retry handler
-            const retryBtn = document.getElementById('retry-btn');
-            if (retryBtn && onRetry) {
-                retryBtn.addEventListener('click', onRetry);
+            const msgEl = document.getElementById('toast-message');
+            if (msgEl) msgEl.textContent = message;
+            if (toast) {
+                toast.classList.add('show');
+                setTimeout(function() { toast.classList.remove('show'); }, 2500);
             }
         }
 
         // ============================================
-        // LEGACY DATA FETCHING (for auto-refresh)
+        // DATA FETCHING (RALPH-3: API Fixes)
         // ============================================
         async function fetchMarketData() {
-            console.log('🌊 Fetching market data from Bybit API...');
-            
             try {
-                const response = await fetchWithTimeout(`${CONFIG.API_URL}?category=linear`, 10000);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(function() { controller.abort(); }, 5000);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                const response = await fetch(CONFIG.API_URL + '?category=spot', {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
                 
                 const data = await response.json();
                 
                 if (data.retCode !== 0) throw new Error(data.retMsg);
                 
-                console.log('✅ Data fetched successfully:', data.result.list.length, 'tickers');
                 return processMarketData(data.result.list);
             } catch (error) {
-                console.error('❌ Error fetching data:', error);
-                
-                if (error.name === 'AbortError') {
-                    console.warn('⏱️ API call timed out after 10 seconds');
-                }
-                
                 return null;
             }
         }
 
         function processMarketData(list) {
+            if (!Array.isArray(list)) return [];
+            
             return list
-                .filter(item => item.symbol.endsWith('USDT'))
-                .map(item => ({
-                    symbol: item.symbol.replace('USDT', ''),
-                    fullSymbol: item.symbol,
-                    price: parseFloat(item.lastPrice) || 0,
-                    change24h: parseFloat(item.price24hPcnt) * 100 || 0,
-                    volume24h: parseFloat(item.volume24h) || 0,
-                    turnover24h: parseFloat(item.turnover24h) || 0,
-                    high24h: parseFloat(item.highPrice24h) || 0,
-                    low24h: parseFloat(item.lowPrice24h) || 0,
-                }))
-                .filter(item => item.price > 0)
-                .sort((a, b) => b.volume24h - a.volume24h)
+                .filter(function(item) { return item.symbol && item.symbol.endsWith('USDT'); })
+                .map(function(item) {
+                    return {
+                        symbol: item.symbol.replace('USDT', ''),
+                        fullSymbol: item.symbol,
+                        price: parseFloat(item.lastPrice) || 0,
+                        change24h: (parseFloat(item.price24hPcnt) || 0) * 100,
+                        volume24h: parseFloat(item.volume24h) || 0,
+                        turnover24h: parseFloat(item.turnover24h) || 0,
+                        high24h: parseFloat(item.highPrice24h) || 0,
+                        low24h: parseFloat(item.lowPrice24h) || 0
+                    };
+                })
+                .filter(function(item) { return item.price > 0; })
+                .sort(function(a, b) { return b.volume24h - a.volume24h; })
                 .slice(0, CONFIG.MAX_BUBBLES);
         }
 
         function updateStats(coins) {
-            const bullish = coins.filter(c => c.change24h > 0).length;
-            const bearish = coins.filter(c => c.change24h < 0).length;
-            
-            document.getElementById('stat-bullish').textContent = bullish;
-            document.getElementById('stat-bearish').textContent = bearish;
+            if (!Array.isArray(coins)) return;
+            const bullish = coins.filter(function(c) { return c.change24h > 0; }).length;
+            const bearish = coins.filter(function(c) { return c.change24h < 0; }).length;
+            safeSetText('stat-bullish', bullish);
+            safeSetText('stat-bearish', bearish);
         }
 
         // ============================================
@@ -3003,50 +2695,54 @@
             const newTheme = state.currentTheme === 'dark' ? 'light' : 'dark';
             state.currentTheme = newTheme;
             document.body.setAttribute('data-theme', newTheme);
-            document.getElementById('theme-icon').textContent = newTheme === 'dark' ? '🌙' : '☀️';
+            safeSetText('theme-icon', newTheme === 'dark' ? '🌙' : '☀️');
             
             if (state.coins.length > 0) {
                 if (state.animationId) cancelAnimationFrame(state.animationId);
                 renderBubbles(state.filteredCoins.length > 0 ? state.filteredCoins : state.coins);
             }
             
-            localStorage.setItem('bybit-heatmap-theme', newTheme);
+            try {
+                localStorage.setItem('bybit-heatmap-theme', newTheme);
+            } catch (e) {}
         }
 
         function loadTheme() {
-            const savedTheme = localStorage.getItem('bybit-heatmap-theme') || 'dark';
+            let savedTheme = 'dark';
+            try {
+                savedTheme = localStorage.getItem('bybit-heatmap-theme') || 'dark';
+            } catch (e) {}
             state.currentTheme = savedTheme;
             document.body.setAttribute('data-theme', savedTheme);
-            document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+            safeSetText('theme-icon', savedTheme === 'dark' ? '🌙' : '☀️');
         }
 
         // ============================================
-        // EVENT HANDLERS
+        // EVENT HANDLERS (RALPH-1: Safe Event Listeners)
         // ============================================
         function setupEventListeners() {
-            // Theme
-            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+            safeAddEventListener('theme-toggle', 'click', toggleTheme);
+            safeAddEventListener('modal-close', 'click', closeModal);
             
-            // Modal
-            document.getElementById('modal-close').addEventListener('click', closeModal);
-            document.getElementById('enhanced-modal').addEventListener('click', (e) => {
-                if (e.target.id === 'enhanced-modal') closeModal();
-            });
+            const modal = document.getElementById('enhanced-modal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target.id === 'enhanced-modal') closeModal();
+                });
+            }
             
-            // Modal navigation
-            document.getElementById('modal-prev').addEventListener('click', () => navigateModal(-1));
-            document.getElementById('modal-next').addEventListener('click', () => navigateModal(1));
+            safeAddEventListener('modal-prev', 'click', function() { navigateModal(-1); });
+            safeAddEventListener('modal-next', 'click', function() { navigateModal(1); });
             
-            // Action buttons
-            document.getElementById('btn-trade').addEventListener('click', () => {
+            safeAddEventListener('btn-trade', 'click', function() {
                 const coin = state.coins[state.currentModalIndex];
-                if (coin) window.open(`https://www.bybit.com/trade/usdt/${coin.symbol}USDT`, '_blank');
+                if (coin) window.open('https://www.bybit.com/trade/usdt/' + coin.symbol + 'USDT', '_blank');
             });
             
-            document.getElementById('btn-copy').addEventListener('click', async () => {
+            safeAddEventListener('btn-copy', 'click', async function() {
                 const coin = state.coins[state.currentModalIndex];
                 if (coin) {
-                    const text = `${coin.symbol}: $${formatPrice(coin.price)} (${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%)`;
+                    const text = coin.symbol + ': $' + formatPrice(coin.price) + ' (' + (coin.change24h >= 0 ? '+' : '') + (coin.change24h || 0).toFixed(2) + '%)';
                     try {
                         await navigator.clipboard.writeText(text);
                         showToast('Price copied!');
@@ -3056,19 +2752,19 @@
                 }
             });
             
-            document.getElementById('btn-share').addEventListener('click', async () => {
+            safeAddEventListener('btn-share', 'click', async function() {
                 const coin = state.coins[state.currentModalIndex];
                 if (coin) {
                     const shareData = {
-                        title: `${coin.symbol} on Bybit`,
-                        text: `${coin.symbol}: $${formatPrice(coin.price)} (${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%)`,
-                        url: `https://www.bybit.com/trade/usdt/${coin.symbol}USDT`
+                        title: coin.symbol + ' on Bybit',
+                        text: coin.symbol + ': $' + formatPrice(coin.price) + ' (' + (coin.change24h >= 0 ? '+' : '') + (coin.change24h || 0).toFixed(2) + '%)',
+                        url: 'https://www.bybit.com/trade/usdt/' + coin.symbol + 'USDT'
                     };
                     
                     try {
                         if (navigator.share) await navigator.share(shareData);
                         else {
-                            await navigator.clipboard.writeText(`${shareData.text} - ${shareData.url}`);
+                            await navigator.clipboard.writeText(shareData.text + ' - ' + shareData.url);
                             showToast('Link copied!');
                         }
                     } catch (err) {
@@ -3077,42 +2773,42 @@
                 }
             });
             
-            // Alert close
-            document.getElementById('alert-close').addEventListener('click', hideAlert);
+            safeAddEventListener('alert-close', 'click', hideAlert);
             
-            // Keyboard
-            document.addEventListener('keydown', (e) => {
+            document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') closeModal();
-                else if (e.key === 'ArrowLeft' && document.getElementById('enhanced-modal').classList.contains('active')) {
-                    navigateModal(-1);
-                } else if (e.key === 'ArrowRight' && document.getElementById('enhanced-modal').classList.contains('active')) {
-                    navigateModal(1);
+                else if (e.key === 'ArrowLeft') {
+                    const modalEl = document.getElementById('enhanced-modal');
+                    if (modalEl && modalEl.classList.contains('active')) navigateModal(-1);
+                } else if (e.key === 'ArrowRight') {
+                    const modalEl = document.getElementById('enhanced-modal');
+                    if (modalEl && modalEl.classList.contains('active')) navigateModal(1);
                 } else if ((e.key === 't' || e.key === 'T') && e.target.tagName !== 'INPUT') {
                     toggleTheme();
                 } else if ((e.key === '/' || e.key === 's' || e.key === 'S') && e.target.tagName !== 'INPUT') {
                     e.preventDefault();
-                    document.getElementById('filter-search').focus();
+                    const searchInput = document.getElementById('filter-search');
+                    if (searchInput) searchInput.focus();
                 }
             });
             
-            // Swipe to close modal
-            let touchStartY = 0;
             const modalContent = document.querySelector('.enhanced-modal-content');
+            if (modalContent) {
+                let touchStartY = 0;
+                modalContent.addEventListener('touchstart', function(e) {
+                    touchStartY = e.touches[0].clientY;
+                }, { passive: true });
+                
+                modalContent.addEventListener('touchend', function(e) {
+                    const touchEndY = e.changedTouches[0].clientY;
+                    if (touchEndY - touchStartY > 100) closeModal();
+                }, { passive: true });
+            }
             
-            modalContent.addEventListener('touchstart', (e) => {
-                touchStartY = e.touches[0].clientY;
-            }, { passive: true });
-            
-            modalContent.addEventListener('touchend', (e) => {
-                const touchEndY = e.changedTouches[0].clientY;
-                if (touchEndY - touchStartY > 100) closeModal();
-            }, { passive: true });
-            
-            // Window resize
             let resizeTimeout;
-            window.addEventListener('resize', () => {
+            window.addEventListener('resize', function() {
                 clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(() => {
+                resizeTimeout = setTimeout(function() {
                     if (state.coins.length > 0) {
                         if (state.animationId) cancelAnimationFrame(state.animationId);
                         renderBubbles(state.filteredCoins.length > 0 ? state.filteredCoins : state.coins);
@@ -3122,54 +2818,71 @@
         }
 
         // ============================================
-        // INITIALIZATION
+        // INITIALIZATION (RALPH-2: Guaranteed Loading Hide)
         // ============================================
         async function init() {
-            console.log('%c🤿 CRYPTO DIVER - RALPH-3 INTEGRATION', 'color: #00d4ff; font-size: 16px; font-weight: bold;');
-            console.log('%cFeatures:', 'color: #00ff88;');
-            console.log('  ✅ Filter System (Shapes)');
-            console.log('  ✅ Volume Spike Alerts');
-            console.log('  ✅ Integrated UI');
-            console.log('  ✅ Robust Error Handling');
+            state.loadingStartTime = Date.now();
+            state.isLoading = true;
             
-            // Load saved theme
-            loadTheme();
+            startLoadingTimeout();
             
-            // Initialize visual systems
-            initParticles();
-            initDottedPaths();
-            initGeometricShapes();
-            initFilterSystem();
+            try {
+                loadTheme();
+                initParticles();
+                initDottedPaths();
+                initGeometricShapes();
+                setupEventListeners();
+                setupFilterListeners();
+            } catch (e) {
+                // Continue even if visual init fails
+            }
             
-            // Setup event listeners
-            setupEventListeners();
-            setupFilterListeners();
+            let data = null;
+            let usedFallback = false;
             
-            // Load data with error handling and fallback
-            console.log('📡 Loading market data...');
-            await loadData();
+            try {
+                data = await fetchMarketData();
+                if (!data) {
+                    data = CONFIG.FALLBACK_DATA.slice();
+                    usedFallback = true;
+                }
+            } catch (error) {
+                data = CONFIG.FALLBACK_DATA.slice();
+                usedFallback = true;
+            }
             
-            // Setup auto-refresh (only if using live data)
-            if (state.coins.length > 0) {
-                setInterval(async () => {
-                    console.log('🔄 Auto-refreshing data...');
-                    try {
-                        const response = await fetchWithTimeout(`${CONFIG.API_URL}?category=linear`, 10000);
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.retCode === 0) {
-                                const newData = processMarketData(data.result.list);
-                                if (newData) {
-                                    state.coins = newData;
-                                    applyFilters();
-                                    checkVolumeSpikes(newData);
-                                }
-                            }
-                        }
-                    } catch (err) {
-                        console.warn('Auto-refresh failed:', err);
+            if (data && data.length > 0) {
+                state.coins = data;
+                state.filteredCoins = data;
+                state.isUsingFallback = usedFallback;
+                
+                hideLoading(usedFallback);
+                
+                try {
+                    renderBubbles(data);
+                    updateStats(data);
+                    applyFilters();
+                    
+                    if (!usedFallback) {
+                        checkVolumeSpikes(data);
                     }
-                }, CONFIG.UPDATE_INTERVAL);
+                } catch (e) {
+                    // Continue even if render fails
+                }
+                
+                if (!usedFallback) {
+                    setInterval(async function() {
+                        const newData = await fetchMarketData();
+                        if (newData) {
+                            state.coins = newData;
+                            applyFilters();
+                            checkVolumeSpikes(newData);
+                        }
+                    }, CONFIG.UPDATE_INTERVAL);
+                }
+            } else {
+                hideLoading(true);
+                showAlert('Failed to load data. Please refresh.', 'error');
             }
         }
 
