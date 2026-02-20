@@ -1,419 +1,372 @@
 <!DOCTYPE html>
-<html lang="ro">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BYBIT HEATMAP PRO | Unified 💰</title>
+    <title>Bybit Heatmap Pro | Crypto Bubble Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        /* ==========================================
-           CSS VARIABLES - THEME SYSTEM
-           ========================================== */
+        /* ═══════════════════════════════════════════════════════════════
+           CSS VARIABLES & THEME SYSTEM
+           ═══════════════════════════════════════════════════════════════ */
         :root {
+            /* ─── Core Background Colors ─── */
             --bg-primary: #050a08;
             --bg-secondary: #0a1a0f;
-            --bg-gradient-start: rgba(20, 60, 40, 0.4);
-            --bg-gradient-mid: rgba(10, 30, 20, 0.2);
-            --bg-gradient-end: #020504;
+            --bg-tertiary: #0d2418;
+            --bg-card: rgba(10, 26, 15, 0.85);
+            --bg-overlay: rgba(0, 0, 0, 0.8);
             
+            /* ─── Text Colors ─── */
             --text-primary: #ffffff;
             --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
             
+            /* ─── Accent Colors ─── */
             --accent-green: #00ff88;
+            --accent-green-light: #4dffb3;
             --accent-red: #ff3366;
-            --accent-green-dark: #004422;
-            --accent-red-dark: #661122;
-            --accent-green-secondary: #00aa55;
-            --accent-red-secondary: #cc2255;
+            --accent-red-light: #ff6688;
+            --accent-blue: #33ccff;
+            --accent-gold: #ffcc00;
+            --accent-purple: #b829dd;
+            --neon-cyan: #00d4ff;
+            --neon-pink: #ff00ff;
             
-            --glow-green: rgba(0, 255, 100, 0.5);
-            --glow-red: rgba(255, 50, 100, 0.5);
+            /* ─── Glow Effects ─── */
+            --glow-green: rgba(0, 255, 136, 0.5);
+            --glow-red: rgba(255, 51, 102, 0.5);
+            --glow-purple: rgba(184, 41, 221, 0.6);
+            --glow-pink: rgba(255, 0, 255, 0.8);
             
-            --grid-color: rgba(0, 255, 100, 0.03);
-            --circle-color: rgba(0, 255, 100, 0.1);
-            --particle-color: rgba(0, 255, 100, 0.3);
+            /* ─── Border Colors ─── */
+            --border-primary: rgba(0, 255, 136, 0.3);
+            --border-secondary: rgba(255, 255, 255, 0.1);
             
-            --header-bg: rgba(5, 10, 8, 0.95);
-            --modal-bg: rgba(10, 20, 15, 0.98);
-            --modal-border: rgba(0, 255, 100, 0.3);
+            /* ─── Transitions ─── */
+            --transition-fast: 0.15s ease;
+            --transition-base: 0.3s ease;
+            --transition-slow: 0.5s ease;
             
-            --logo-gradient-start: #00ff88;
-            --logo-gradient-end: #00aa55;
+            /* ─── Layout ─── */
+            --header-height: 70px;
+            --bottom-nav-height: 64px;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
         }
 
+        /* Light Theme Overrides */
         [data-theme="light"] {
             --bg-primary: #f0f5f0;
             --bg-secondary: #e8f0e8;
-            --bg-gradient-start: rgba(200, 240, 210, 0.8);
-            --bg-gradient-mid: rgba(220, 245, 225, 0.5);
-            --bg-gradient-end: #f0f5f0;
+            --bg-tertiary: #d8e8d8;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-overlay: rgba(240, 245, 240, 0.95);
             
             --text-primary: #1a3a2a;
             --text-secondary: rgba(26, 58, 42, 0.7);
+            --text-muted: rgba(26, 58, 42, 0.4);
             
             --accent-green: #2a8a4a;
             --accent-red: #c54a4a;
-            --accent-green-dark: #1a5a3a;
-            --accent-red-dark: #8a2a2a;
-            --accent-green-secondary: #4ab86a;
-            --accent-red-secondary: #e57a7a;
             
             --glow-green: rgba(42, 138, 74, 0.3);
             --glow-red: rgba(197, 74, 74, 0.3);
             
-            --grid-color: rgba(100, 200, 130, 0.08);
-            --circle-color: rgba(100, 200, 130, 0.15);
-            --particle-color: rgba(100, 200, 130, 0.4);
-            
-            --header-bg: rgba(240, 245, 240, 0.95);
-            --modal-bg: rgba(240, 245, 240, 0.98);
-            --modal-border: rgba(42, 138, 74, 0.3);
-            
-            --logo-gradient-start: #2a8a4a;
-            --logo-gradient-end: #1a5a3a;
+            --border-primary: rgba(42, 138, 74, 0.3);
+            --border-secondary: rgba(26, 58, 42, 0.1);
         }
 
-        /* ==========================================
-           REDUCED MOTION PREFERENCES
-           ========================================== */
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-                scroll-behavior: auto !important;
-            }
-            .bg-gradient { animation: none !important; }
-            .bg-grid { animation: none !important; }
-            .circle-ring { animation: none !important; }
-            .d-line { animation: none !important; }
-            .particle { animation: none !important; }
-            .loading-spinner { animation: none !important; }
+        /* ═══════════════════════════════════════════════════════════════
+           BASE STYLES & RESET
+           ═══════════════════════════════════════════════════════════════ */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            transition: background-color var(--transition-base),
+                        border-color var(--transition-base),
+                        box-shadow var(--transition-base),
+                        color var(--transition-base);
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+        }
 
         body {
             font-family: 'Rajdhani', sans-serif;
             background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
-            color: var(--text-primary);
-            contain: layout style paint;
+            font-size: 16px;
+            line-height: 1.5;
         }
 
-        /* ==========================================
-           BACKGROUND LAYERS - CSS CONTAINMENT
-           ========================================== */
-        .bg-container {
+        /* ═══════════════════════════════════════════════════════════════
+           BACKGROUND SYSTEM
+           ═══════════════════════════════════════════════════════════════ */
+        .bg-system-wrapper {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 0;
-            overflow: hidden;
+            z-index: 1;
             pointer-events: none;
-            contain: strict;
-            will-change: transform;
-        }
-
-        .bg-gradient {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(ellipse at 50% 50%, 
-                var(--bg-gradient-start) 0%, 
-                var(--bg-gradient-mid) 30%,
-                var(--bg-gradient-end) 70%,
-                var(--bg-primary) 100%);
-            animation: bgPulse 12s ease-in-out infinite;
-            will-change: opacity, transform;
-            contain: strict;
-        }
-
-        @keyframes bgPulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.9; transform: scale(1.05); }
-        }
-
-        .bg-grid {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 60px 60px;
-            animation: gridMove 20s linear infinite;
-            opacity: 1;
-            will-change: transform;
-            contain: strict;
-        }
-
-        [data-theme="light"] .bg-grid {
-            opacity: 0;
-        }
-
-        @keyframes gridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(60px, 60px); }
-        }
-
-        .bg-circles {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            contain: layout style;
-        }
-
-        .circle-ring {
-            position: absolute;
-            border-radius: 50%;
-            border: 1px solid var(--circle-color);
-            animation: circlePulse 6s ease-in-out infinite;
-            will-change: box-shadow, border-color;
-            contain: layout style;
-        }
-
-        [data-theme="dark"] .circle-ring:nth-child(1) { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20%; height: 20%; animation-delay: 0s; }
-        [data-theme="dark"] .circle-ring:nth-child(2) { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40%; height: 40%; animation-delay: 1s; }
-        [data-theme="dark"] .circle-ring:nth-child(3) { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 60%; animation-delay: 2s; }
-        [data-theme="dark"] .circle-ring:nth-child(4) { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; height: 80%; animation-delay: 3s; }
-        [data-theme="dark"] .circle-ring:nth-child(5) { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; animation-delay: 4s; }
-        [data-theme="dark"] .circle-ring:nth-child(6) { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 120%; height: 120%; animation-delay: 5s; }
-
-        [data-theme="light"] .circle-ring:nth-child(1) { top: 10%; left: 10%; width: 200px; height: 200px; animation-delay: 0s; }
-        [data-theme="light"] .circle-ring:nth-child(2) { top: 5%; left: 5%; width: 300px; height: 300px; animation-delay: 1s; }
-        [data-theme="light"] .circle-ring:nth-child(3) { top: 0%; left: 0%; width: 400px; height: 400px; animation-delay: 2s; }
-        [data-theme="light"] .circle-ring:nth-child(4) { bottom: 10%; right: 10%; top: auto; left: auto; width: 250px; height: 250px; animation-delay: 1.5s; }
-        [data-theme="light"] .circle-ring:nth-child(5) { bottom: 5%; right: 5%; top: auto; left: auto; width: 350px; height: 350px; animation-delay: 2.5s; }
-        [data-theme="light"] .circle-ring:nth-child(6) { bottom: 0%; right: 0%; top: auto; left: auto; width: 450px; height: 450px; animation-delay: 3.5s; }
-
-        @keyframes circlePulse {
-            0%, 100% { border-color: var(--circle-color); box-shadow: 0 0 20px var(--glow-green); }
-            50% { border-color: rgba(100, 200, 130, 0.25); box-shadow: 0 0 40px var(--glow-green); }
-        }
-
-        .diagonal-lines {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
             overflow: hidden;
-            opacity: 0;
-            contain: strict;
         }
 
-        [data-theme="light"] .diagonal-lines {
+        .bg-layer {
+            position: absolute;
+            inset: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .bg-layer-dark {
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(79, 70, 229, 0.05) 0%, transparent 70%),
+                linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
             opacity: 1;
         }
 
-        .d-line {
-            position: absolute;
-            width: 150%;
-            height: 1px;
-            background: linear-gradient(90deg, 
-                transparent 0%, 
-                var(--grid-color) 50%, 
-                transparent 100%);
-            transform-origin: left center;
-            animation: lineSlide 20s linear infinite;
-            will-change: transform, opacity;
-            contain: strict;
+        .bg-layer-light {
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(79, 70, 229, 0.03) 0%, transparent 70%),
+                linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+            opacity: 0;
         }
 
-        .d-line:nth-child(1) { top: 20%; transform: rotate(25deg); animation-delay: 0s; }
-        .d-line:nth-child(2) { top: 40%; transform: rotate(25deg); animation-delay: 5s; }
-        .d-line:nth-child(3) { top: 60%; transform: rotate(25deg); animation-delay: 10s; }
-        .d-line:nth-child(4) { top: 80%; transform: rotate(25deg); animation-delay: 15s; }
+        [data-theme="light"] .bg-layer-dark { opacity: 0; }
+        [data-theme="light"] .bg-layer-light { opacity: 1; }
 
-        @keyframes lineSlide {
-            0% { transform: rotate(25deg) translateX(-100%); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: rotate(25deg) translateX(100%); opacity: 0; }
+        /* Animated Particles */
+        .bg-particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
         }
 
-        .particles {
+        .bg-particle {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            contain: strict;
-        }
-
-        .particle {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: var(--particle-color);
+            width: 4px;
+            height: 4px;
             border-radius: 50%;
-            animation: float 15s infinite ease-in-out;
-            will-change: transform, opacity;
-            contain: strict;
-        }
-
-        [data-theme="light"] .particles {
-            display: none;
+            background: rgba(99, 102, 241, 0.6);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+            animation: float 20s ease-in-out infinite;
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
-            25% { transform: translateY(-50px) translateX(30px); opacity: 0.6; }
-            50% { transform: translateY(-30px) translateX(-20px); opacity: 0.4; }
-            75% { transform: translateY(-70px) translateX(10px); opacity: 0.5; }
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+            25% { transform: translate(10px, -15px) scale(1.05); opacity: 0.6; }
+            50% { transform: translate(-5px, -25px) scale(0.95); opacity: 0.4; }
+            75% { transform: translate(-15px, -10px) scale(1.02); opacity: 0.5; }
         }
 
-        /* ==========================================
+        /* ═══════════════════════════════════════════════════════════════
            HEADER
-           ========================================== */
+           ═══════════════════════════════════════════════════════════════ */
         .header {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            padding: 15px 25px;
-            background: var(--header-bg);
+            height: var(--header-height);
+            padding: 12px 20px;
+            padding-top: calc(12px + var(--safe-top));
+            background: linear-gradient(180deg, rgba(10,10,15,0.98) 0%, rgba(10,10,15,0.85) 60%, transparent 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             z-index: 100;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--grid-color);
-            contain: layout style;
-            will-change: transform;
+        }
+
+        [data-theme="light"] .header {
+            background: linear-gradient(180deg, rgba(240,245,240,0.98) 0%, rgba(240,245,240,0.85) 60%, transparent 100%);
         }
 
         .logo {
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.4rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--logo-gradient-start), var(--logo-gradient-end));
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--neon-pink));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px var(--glow-green);
-            contain: layout style;
-        }
-
-        .header-controls {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 10px;
         }
 
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            justify-content: center;
+            max-width: 500px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Search Box */
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 250px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-secondary);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition-base);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 3px rgba(184, 41, 221, 0.2);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Stats Display */
         .stats {
             display: flex;
-            gap: 15px;
+            gap: 12px;
         }
 
         .stat {
-            padding: 8px 15px;
-            background: var(--grid-color);
-            border: 1px solid var(--circle-color);
-            border-radius: 20px;
-            contain: layout;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-secondary);
+            border-radius: 10px;
+            text-align: center;
         }
 
         .stat-value {
             font-family: 'Orbitron', sans-serif;
-            font-size: 1rem;
+            font-size: 18px;
             font-weight: 700;
         }
 
-        .stat-value.positive { color: var(--accent-green); text-shadow: 0 0 15px var(--glow-green); }
-        .stat-value.negative { color: var(--accent-red); text-shadow: 0 0 15px var(--glow-red); }
+        .stat-value.bullish { color: var(--accent-green); }
+        .stat-value.bearish { color: var(--accent-red); }
 
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Theme Toggle */
         .theme-toggle {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: 2px solid var(--circle-color);
-            background: var(--bg-secondary);
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border-secondary);
+            border-radius: 12px;
+            background: var(--bg-card);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            will-change: transform;
-            transform: translateZ(0);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            contain: layout;
+            font-size: 20px;
+            transition: var(--transition-base);
         }
 
         .theme-toggle:hover {
-            transform: scale(1.1) translateZ(0);
-            box-shadow: 0 0 20px var(--glow-green);
+            border-color: var(--accent-purple);
+            transform: scale(1.05);
         }
 
-        /* ==========================================
-           VIRTUAL SCROLLING CONTAINER
-           ========================================== */
-        #bubble-viewport {
-            width: 100%;
-            height: calc(100vh - 80px);
-            margin-top: 80px;
-            overflow-y: auto;
-            overflow-x: hidden;
-            scroll-behavior: smooth;
-            scroll-snap-type: y proximity;
+        /* ═══════════════════════════════════════════════════════════════
+           MAIN CONTENT & BUBBLE CONTAINER
+           ═══════════════════════════════════════════════════════════════ */
+        .main-content {
             position: relative;
             z-index: 10;
-            contain: layout style paint;
-        }
-
-        #bubble-spacer {
-            position: relative;
-            width: 100%;
-            will-change: height;
-            contain: size;
+            padding-top: calc(var(--header-height) + 20px);
+            padding-bottom: calc(var(--bottom-nav-height) + 20px);
+            min-height: 100vh;
         }
 
         #bubble-container {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
-            contain: layout style paint;
-        }
-
-        .bubble-row {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            padding: 10px 0;
-            scroll-snap-align: start;
-            contain: layout style paint;
-            will-change: transform;
-        }
-
-        .bubble-item {
+            min-height: calc(100vh - var(--header-height) - var(--bottom-nav-height) - 40px);
             position: relative;
-            width: 140px;
-            height: 140px;
-            cursor: pointer;
-            contain: layout style paint;
-            will-change: transform;
-            transform: translateZ(0);
         }
 
-        .bubble-item:hover {
-            filter: brightness(1.2);
-        }
-
-        .bubble-svg {
+        #bubble-container svg {
             width: 100%;
             height: 100%;
-            overflow: visible;
-            contain: strict;
+            display: block;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           BUBBLE STYLES
+           ═══════════════════════════════════════════════════════════════ */
+        .bubble-group {
+            cursor: pointer;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .bubble-spiral {
+            filter: drop-shadow(0 0 10px currentColor);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .bubble-group:hover .bubble-spiral {
+            filter: drop-shadow(0 0 25px currentColor) brightness(1.3);
+            transform: scale(1.15);
+        }
+
+        .bubble-group.spinning .bubble-spiral {
+            animation: bubbleSpin 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes bubbleSpin {
+            0% { transform: scale(1) rotateZ(0deg); }
+            50% { transform: scale(1.3) rotateZ(180deg); }
+            100% { transform: scale(1) rotateZ(360deg); }
         }
 
         .bubble-label {
@@ -422,8 +375,8 @@
             font-weight: 700;
             text-anchor: middle;
             pointer-events: none;
-            fill: var(--text-primary);
-            text-shadow: 0 0 15px var(--glow-green);
+            fill: #ffffff;
+            text-shadow: 0 0 10px rgba(0,0,0,0.9), 0 0 20px currentColor;
             letter-spacing: 1px;
         }
 
@@ -433,38 +386,23 @@
             font-weight: 600;
             text-anchor: middle;
             pointer-events: none;
+            fill: #ffffff;
+            text-shadow: 0 0 10px rgba(0,0,0,0.9);
         }
 
-        /* ==========================================
-           LOADING
-           ========================================== */
-        .loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 50;
-            text-align: center;
-            contain: layout style;
+        .bubble-pulse {
+            animation: volumePulse 1.5s ease-in-out infinite;
         }
 
-        .loading-spinner {
-            width: 80px;
-            height: 80px;
-            border: 4px solid var(--grid-color);
-            border-top-color: var(--accent-green);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-            will-change: transform;
+        @keyframes volumePulse {
+            0%, 100% { filter: drop-shadow(0 0 10px currentColor); }
+            50% { filter: drop-shadow(0 0 30px currentColor) brightness(1.3); }
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ==========================================
-           MODAL
-           ========================================== */
-        .modal {
+        /* ═══════════════════════════════════════════════════════════════
+           ENHANCED MODAL
+           ═══════════════════════════════════════════════════════════════ */
+        .enhanced-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -472,952 +410,1335 @@
             bottom: 0;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             z-index: 1000;
-            display: none;
+            display: flex;
             justify-content: center;
-            align-items: center;
-            contain: layout style;
+            align-items: flex-end;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
         }
 
-        .modal.active { display: flex; }
-
-        .modal-content {
-            background: var(--modal-bg);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 400px;
-            width: 90%;
-            border: 2px solid var(--modal-border);
-            box-shadow: 0 0 60px var(--glow-green);
-            animation: modalIn 0.3s ease;
-            contain: layout style;
+        .enhanced-modal.active {
+            opacity: 1;
+            visibility: visible;
         }
 
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
+        .enhanced-modal-content {
+            background: linear-gradient(165deg, rgba(26, 10, 15, 0.98) 0%, rgba(10, 10, 15, 0.99) 100%);
+            border-radius: 24px 24px 0 0;
+            width: 100%;
+            max-width: 480px;
+            max-height: 85vh;
+            position: relative;
+            transform: translateY(100%) scale(0.95);
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+            box-shadow: 0 -20px 80px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
-        .modal-close {
+        [data-theme="light"] .enhanced-modal-content {
+            background: linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 245, 240, 0.99) 100%);
+        }
+
+        .enhanced-modal.active .enhanced-modal-content {
+            transform: translateY(0) scale(1);
+        }
+
+        /* Modal gradient border */
+        .enhanced-modal-content::before {
+            content: '';
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-green) 0%, var(--accent-red) 100%);
+        }
+
+        /* Swipe Handle */
+        .modal-swipe-handle {
+            width: 100%;
+            padding: 12px 0;
+            display: flex;
+            justify-content: center;
+            cursor: grab;
+        }
+
+        .modal-swipe-handle::before {
+            content: '';
             width: 40px;
-            height: 40px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        /* Modal Header */
+        .modal-header {
+            padding: 0 24px 16px;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 0;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 50%;
-            border: 1px solid var(--circle-color);
-            background: var(--bg-secondary);
-            color: var(--text-primary);
             cursor: pointer;
-            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 20px;
+            transition: all 0.3s ease;
         }
 
-        /* ==========================================
-           PERFORMANCE MONITOR OVERLAY
-           ========================================== */
-        #perf-monitor {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            color: #00ff88;
-            font-family: monospace;
-            font-size: 11px;
-            padding: 8px 12px;
-            border-radius: 4px;
-            z-index: 1001;
-            display: none;
-            contain: layout style;
+        .modal-close-btn:hover {
+            background: rgba(255, 0, 64, 0.2);
+            color: var(--accent-red);
+            transform: rotate(90deg);
         }
 
-        #perf-monitor.visible {
-            display: block;
+        .modal-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border-secondary);
+            background: var(--bg-card);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 18px;
+            transition: all 0.3s ease;
+            opacity: 0;
         }
 
-        .perf-stat {
+        .enhanced-modal-content:hover .modal-nav {
+            opacity: 1;
+        }
+
+        .modal-nav:hover {
+            background: var(--bg-secondary);
+            border-color: var(--border-primary);
+            color: var(--text-primary);
+        }
+
+        .modal-nav.prev { left: 12px; }
+        .modal-nav.next { right: 12px; }
+        .modal-nav:disabled { opacity: 0.3 !important; cursor: not-allowed; }
+
+        .coin-symbol-large {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        [data-theme="light"] .coin-symbol-large {
+            background: linear-gradient(180deg, var(--text-primary) 0%, rgba(26, 58, 42, 0.7) 100%);
+            -webkit-background-clip: text;
+        }
+
+        .coin-full-name {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Price Section */
+        .price-section {
+            padding: 0 24px 20px;
+            text-align: center;
+        }
+
+        .price-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+        }
+
+        .price-change-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .price-change-pill.positive {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--accent-green);
+            box-shadow: 0 0 20px var(--glow-green);
+        }
+
+        .price-change-pill.negative {
+            background: rgba(255, 51, 102, 0.15);
+            color: var(--accent-red);
+            box-shadow: 0 0 20px var(--glow-red);
+        }
+
+        /* Stats Grid */
+        .modal-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding: 0 24px 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-secondary);
+            border-radius: 12px;
+            padding: 14px 12px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-primary);
+            transform: translateY(-2px);
+        }
+
+        .stat-card-label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .stat-card-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .stat-card-value.highlight {
+            font-size: 1.1rem;
+        }
+
+        /* HL Progress Bar */
+        .hl-progress {
+            margin-top: 8px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hl-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-red), var(--accent-green));
+            border-radius: 2px;
+            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .hl-labels {
             display: flex;
             justify-content: space-between;
-            gap: 15px;
+            margin-top: 4px;
+            font-size: 0.6rem;
+            color: var(--text-muted);
         }
 
-        .perf-value {
-            color: #fff;
+        /* Volume Bars */
+        .volume-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 20px;
+            margin-top: 6px;
         }
 
-        /* ==========================================
-           BUBBLE PERFECTION ENHANCEMENTS
-           ========================================== */
-        .bubble-item {
+        .volume-bar-mini {
+            flex: 1;
+            background: linear-gradient(to top, var(--accent-blue), rgba(51, 204, 255, 0.3));
+            border-radius: 1px;
+            min-height: 2px;
+        }
+
+        /* Action Buttons */
+        .modal-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 0 24px 24px;
+        }
+
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 14px 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-secondary);
+            border-radius: 12px;
             cursor: pointer;
-            transition: filter 0.25s ease;
-            will-change: transform, filter;
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
         }
 
-        .bubble-item:hover {
-            z-index: 10;
+        .action-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--border-primary);
+            transform: translateY(-2px);
+            color: var(--text-primary);
         }
 
-        .bubble-ripple {
-            pointer-events: none;
-            z-index: 1000;
+        .action-btn.primary {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 212, 255, 0.1));
+            border-color: rgba(0, 255, 136, 0.3);
+            color: var(--accent-green);
         }
 
-        /* Ribbon layers for animation */
-        .ribbon-0, .ribbon-1, .ribbon-2 {
-            transform-origin: center;
-            will-change: transform;
+        .action-btn.primary:hover {
+            box-shadow: 0 0 20px var(--glow-green);
         }
 
-        /* Pause animation on hover */
-        .bubble-item:hover ~ .bubble-ribbons [class^="ribbon-"],
-        .bubble-item:hover .bubble-ribbons [class^="ribbon-"] {
-            animation-play-state: paused !important;
+        .action-icon { font-size: 1.3rem; }
+        .action-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Toast Notification */
+        .modal-toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 24px;
+            border: 1px solid var(--border-secondary);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .modal-toast.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           BOTTOM NAVIGATION
+           ═══════════════════════════════════════════════════════════════ */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            padding-bottom: var(--safe-bottom);
+            background: linear-gradient(0deg, rgba(10,10,15,0.98) 0%, rgba(10,10,15,0.9) 70%, transparent 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 100;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid var(--border-secondary);
+        }
+
+        [data-theme="light"] .bottom-nav {
+            background: linear-gradient(0deg, rgba(240,245,240,0.98) 0%, rgba(240,245,240,0.9) 70%, transparent 100%);
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-width: 48px;
+            min-height: 48px;
+            padding: 4px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--accent-green);
+        }
+
+        .bottom-nav-icon {
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           LOADING STATE
+           ═══════════════════════════════════════════════════════════════ */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid var(--border-secondary);
+            border-top-color: var(--accent-purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           ALERT BANNER
+           ═══════════════════════════════════════════════════════════════ */
+        .alert-banner {
+            position: fixed;
+            top: calc(var(--header-height) + 10px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-150%);
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 99;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .alert-banner.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .alert-icon { font-size: 20px; }
+        .alert-text { font-size: 14px; color: var(--text-secondary); }
+        .alert-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           RESPONSIVE DESIGN
+           ═══════════════════════════════════════════════════════════════ */
+        @media (max-width: 768px) {
+            :root {
+                --header-height: 60px;
+            }
+
+            .logo { font-size: 1rem; }
+            .header-center { display: none; }
+            .stats { display: none; }
+            
+            .search-box {
+                position: fixed;
+                top: calc(var(--header-height) + 10px);
+                left: 16px;
+                right: 16px;
+                max-width: none;
+                z-index: 99;
+            }
+
+            .coin-symbol-large { font-size: 2rem; }
+            .price-display { font-size: 2.2rem; }
+            .modal-stats-grid { grid-template-columns: 1fr; }
+            .modal-actions { grid-template-columns: 1fr; }
+        }
+
+        @media (min-width: 769px) {
+            .bottom-nav { display: none; }
+            .main-content { padding-bottom: 20px; }
+            
+            .enhanced-modal {
+                align-items: center;
+                padding: 20px;
+            }
+            
+            .enhanced-modal-content {
+                border-radius: 24px;
+                max-height: 85vh;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            :root { --header-height: 70px; }
+            .logo { font-size: 1.2rem; }
+        }
+
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .header, .bottom-nav, .enhanced-modal, .loading-overlay {
+                display: none !important;
+            }
         }
     </style>
 </head>
 <body data-theme="dark">
-    <!-- Background -->
-    <div class="bg-container">
-        <div class="bg-gradient"></div>
-        <div class="bg-grid"></div>
-        
-        <div class="bg-circles">
-            <div class="circle-ring"></div>
-            <div class="circle-ring"></div>
-            <div class="circle-ring"></div>
-            <div class="circle-ring"></div>
-            <div class="circle-ring"></div>
-            <div class="circle-ring"></div>
-        </div>
-        
-        <div class="diagonal-lines">
-            <div class="d-line"></div>
-            <div class="d-line"></div>
-            <div class="d-line"></div>
-            <div class="d-line"></div>
-        </div>
-        
-        <div class="particles">
-            <div class="particle" style="top: 20%; left: 10%; animation-delay: 0s;"></div>
-            <div class="particle" style="top: 60%; left: 80%; animation-delay: 3s;"></div>
-            <div class="particle" style="top: 40%; left: 50%; animation-delay: 6s;"></div>
-            <div class="particle" style="top: 80%; left: 30%; animation-delay: 9s;"></div>
-            <div class="particle" style="top: 10%; left: 70%; animation-delay: 12s;"></div>
-            <div class="particle" style="top: 70%; left: 60%; animation-delay: 15s;"></div>
-        </div>
+    <!-- Background System -->
+    <div class="bg-system-wrapper">
+        <div class="bg-layer bg-layer-dark"></div>
+        <div class="bg-layer bg-layer-light"></div>
+        <div class="bg-particles" id="bg-particles"></div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">LOADING MARKET DATA...</p>
     </div>
 
     <!-- Header -->
-    <div class="header">
-        <div class="logo">💰 BYBIT HEATMAP PRO</div>
+    <header class="header">
+        <div class="logo">
+            <span>💰</span>
+            <span>BYBIT HEATMAP</span>
+        </div>
         
-        <div class="header-controls">
+        <div class="header-center">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="search-input" placeholder="Search coin...">
+            </div>
+        </div>
+        
+        <div class="header-right">
             <div class="stats">
                 <div class="stat">
-                    <div style="font-size:0.7rem;opacity:0.6;">BULLISH</div>
-                    <div class="stat-value positive" id="bullish-count">-</div>
+                    <div class="stat-value bullish" id="stat-bullish">0</div>
+                    <div class="stat-label">Bullish</div>
                 </div>
                 <div class="stat">
-                    <div style="font-size:0.7rem;opacity:0.6;">BEARISH</div>
-                    <div class="stat-value negative" id="bearish-count">-</div>
+                    <div class="stat-value bearish" id="stat-bearish">0</div>
+                    <div class="stat-label">Bearish</div>
                 </div>
             </div>
-            
-            <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+            <button class="theme-toggle" id="theme-toggle" title="Toggle theme (T)">
                 <span id="theme-icon">🌙</span>
             </button>
         </div>
+    </header>
+
+    <!-- Mobile Search -->
+    <div class="search-box" style="display: none;" id="mobile-search">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" placeholder="Search coin...">
     </div>
 
-    <!-- Loading -->
-    <div class="loading" id="loading">
-        <div class="loading-spinner"></div>
-        <p style="color: var(--accent-green); font-family: Orbitron;">Încărcare...</p>
-    </div>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div id="bubble-container"></div>
+    </main>
 
-    <!-- Virtual Scrolling Viewport -->
-    <div id="bubble-viewport">
-        <div id="bubble-spacer">
-            <div id="bubble-container"></div>
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="bottom-nav-item active" data-tab="heatmap">
+            <span class="bottom-nav-icon">📊</span>
+            <span>Heatmap</span>
+        </button>
+        <button class="bottom-nav-item" data-tab="search" id="mobile-search-btn">
+            <span class="bottom-nav-icon">🔍</span>
+            <span>Search</span>
+        </button>
+        <button class="bottom-nav-item" data-tab="stats">
+            <span class="bottom-nav-icon">📈</span>
+            <span>Stats</span>
+        </button>
+        <button class="bottom-nav-item" data-tab="settings">
+            <span class="bottom-nav-icon">⚙️</span>
+            <span>Settings</span>
+        </button>
+    </nav>
+
+    <!-- Enhanced Modal -->
+    <div class="enhanced-modal" id="enhanced-modal">
+        <div class="enhanced-modal-content">
+            <div class="modal-swipe-handle"></div>
+            <div class="modal-header">
+                <button class="modal-nav prev" id="modal-prev" title="Previous (←)">‹</button>
+                <button class="modal-nav next" id="modal-next" title="Next (→)">›</button>
+                <button class="modal-close-btn" id="modal-close" title="Close (Esc)">×</button>
+                <div class="coin-symbol-large" id="modal-symbol">BTC</div>
+                <div class="coin-full-name" id="modal-name">Bitcoin</div>
+            </div>
+            
+            <div class="price-section">
+                <div class="price-display" id="modal-price">$0.00</div>
+                <div class="price-change-pill" id="modal-change">+0.00%</div>
+            </div>
+            
+            <div class="modal-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-label">📊 Volume 24h</div>
+                    <div class="stat-card-value highlight" id="modal-volume">-</div>
+                    <div class="volume-bars" id="modal-volume-bars"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">📈 Turnover 24h</div>
+                    <div class="stat-card-value highlight" id="modal-turnover">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">⬆️ High 24h</div>
+                    <div class="stat-card-value" id="modal-high">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">⬇️ Low 24h</div>
+                    <div class="stat-card-value" id="modal-low">-</div>
+                </div>
+                <div class="stat-card" style="grid-column: span 2;">
+                    <div class="stat-card-label">📍 Price Range</div>
+                    <div class="hl-progress">
+                        <div class="hl-progress-bar" id="modal-hl-progress" style="width: 50%"></div>
+                    </div>
+                    <div class="hl-labels">
+                        <span id="modal-hl-low">Low</span>
+                        <span id="modal-hl-current">Current</span>
+                        <span id="modal-hl-high">High</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="action-btn primary" id="btn-trade">
+                    <span class="action-icon">🚀</span>
+                    <span class="action-label">Trade</span>
+                </button>
+                <button class="action-btn" id="btn-copy">
+                    <span class="action-icon">📋</span>
+                    <span class="action-label">Copy</span>
+                </button>
+                <button class="action-btn" id="btn-share">
+                    <span class="action-icon">🔗</span>
+                    <span class="action-label">Share</span>
+                </button>
+            </div>
+        </div>
+        <div class="modal-toast" id="modal-toast">
+            <span>✓</span>
+            <span id="toast-message">Copied!</span>
         </div>
     </div>
 
-    <!-- Modal -->
-    <div class="modal" id="modal">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeModal()">×</button>
-            <h2 id="modal-symbol" style="font-family: Orbitron; text-align: center; margin-bottom: 20px; color: var(--accent-green);">BTC</h2>
-            <div id="modal-price" style="font-size: 1.5rem; text-align: center; margin-bottom: 10px;">$0.00</div>
-            <div id="modal-change" style="font-size: 1.2rem; text-align: center; color: var(--accent-green);">+0.00%</div>
-        </div>
-    </div>
-
-    <!-- Performance Monitor -->
-    <div id="perf-monitor">
-        <div class="perf-stat"><span>FPS:</span><span class="perf-value" id="perf-fps">-</span></div>
-        <div class="perf-stat"><span>Memory:</span><span class="perf-value" id="perf-mem">-</span></div>
-        <div class="perf-stat"><span>Nodes:</span><span class="perf-value" id="perf-nodes">-</span></div>
-        <div class="perf-stat"><span>Render:</span><span class="perf-value" id="perf-render">-</span></div>
+    <!-- Alert Banner -->
+    <div class="alert-banner" id="alert-banner">
+        <span class="alert-icon">⚡</span>
+        <span class="alert-text" id="alert-text">Volume spike detected!</span>
+        <button class="alert-close" onclick="this.parentElement.classList.remove('show')">×</button>
     </div>
 
     <script>
-    // ==========================================
-    // PERFORMANCE MONITOR
-    // ==========================================
-    class PerformanceMonitor {
-        constructor() {
-            this.fps = 0;
-            this.frameCount = 0;
-            this.lastTime = performance.now();
-            this.renderTime = 0;
-            this.isVisible = false;
-            this.monitorEl = document.getElementById('perf-monitor');
+        // ═══════════════════════════════════════════════════════════════
+        // BYBIT HEATMAP PRO - INTEGRATED APPLICATION
+        // ═══════════════════════════════════════════════════════════════
+
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const CONFIG = {
+            API_URL: 'https://api.bybit.com/v5/market/tickers',
+            UPDATE_INTERVAL: 30000, // 30 seconds
+            MAX_BUBBLES: 60,
+            VOLUME_SPIKE_THRESHOLD: 2.5, // 250% of average
+            ANIMATION_DURATION: 1000,
+        };
+
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+        const state = {
+            coins: [],
+            filteredCoins: [],
+            currentTheme: 'dark',
+            currentModalIndex: -1,
+            volumeHistory: {},
+            isLoading: true,
+            searchQuery: '',
+        };
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        
+        /**
+         * Format price with appropriate decimals
+         */
+        function formatPrice(price) {
+            if (price >= 1000) {
+                return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } else if (price >= 1) {
+                return price.toFixed(4);
+            } else if (price >= 0.01) {
+                return price.toFixed(6);
+            } else {
+                return price.toFixed(8);
+            }
+        }
+
+        /**
+         * Format number to K/M/B
+         */
+        function formatNumber(num) {
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+            if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+            return num.toFixed(2);
+        }
+
+        /**
+         * Get bubble color based on price change
+         */
+        function getBubbleColor(change24h, theme = 'dark') {
+            const isPositive = change24h >= 0;
             
-            // Show monitor with Ctrl+Shift+P
-            document.addEventListener('keydown', (e) => {
-                if (e.ctrlKey && e.shiftKey && e.key === 'P') {
-                    this.isVisible = !this.isVisible;
-                    this.monitorEl.classList.toggle('visible', this.isVisible);
+            if (theme === 'dark') {
+                return isPositive ? {
+                    primary: '#00ff41',
+                    glow: 'rgba(0, 255, 65, 0.6)',
+                    text: '#00ff41'
+                } : {
+                    primary: '#ff0040',
+                    glow: 'rgba(255, 0, 64, 0.6)',
+                    text: '#ff0040'
+                };
+            } else {
+                return isPositive ? {
+                    primary: '#2a8a4a',
+                    glow: 'rgba(42, 138, 74, 0.3)',
+                    text: '#2a8a4a'
+                } : {
+                    primary: '#c54a4a',
+                    glow: 'rgba(197, 74, 74, 0.3)',
+                    text: '#c54a4a'
+                };
+            }
+        }
+
+        /**
+         * Calculate bubble size based on volume
+         */
+        function calculateBubbleSize(volume, maxVolume) {
+            const minSize = 45;
+            const maxSize = 110;
+            const normalized = Math.log10(volume + 1) / Math.log10(maxVolume + 1);
+            return minSize + normalized * (maxSize - minSize);
+        }
+
+        // ============================================
+        // BACKGROUND PARTICLES
+        // ============================================
+        function initParticles() {
+            const container = document.getElementById('bg-particles');
+            const particleCount = window.matchMedia('(pointer: coarse)').matches ? 5 : 15;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'bg-particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * -20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 15) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // ============================================
+        // DATA FETCHING
+        // ============================================
+        async function fetchMarketData() {
+            try {
+                const response = await fetch(`${CONFIG.API_URL}?category=spot`);
+                const data = await response.json();
+                
+                if (data.retCode !== 0) {
+                    throw new Error(data.retMsg);
                 }
-            });
-        }
-
-        startMeasure(label) {
-            if (!this.isVisible) return;
-            console.time(label);
-            return performance.now();
-        }
-
-        endMeasure(label, startTime) {
-            if (!this.isVisible) return;
-            console.timeEnd(label);
-            if (startTime) {
-                this.renderTime = performance.now() - startTime;
-            }
-        }
-
-        tick() {
-            this.frameCount++;
-            const now = performance.now();
-            if (now - this.lastTime >= 1000) {
-                this.fps = this.frameCount;
-                this.frameCount = 0;
-                this.lastTime = now;
-                this.updateDisplay();
-            }
-        }
-
-        updateDisplay() {
-            if (!this.isVisible) return;
-            document.getElementById('perf-fps').textContent = this.fps;
-            document.getElementById('perf-render').textContent = this.renderTime.toFixed(1) + 'ms';
-            
-            if (performance.memory) {
-                const memMB = Math.round(performance.memory.usedJSHeapSize / 1048576);
-                document.getElementById('perf-mem').textContent = memMB + 'MB';
-            }
-            
-            const container = document.getElementById('bubble-container');
-            if (container) {
-                const nodes = container.querySelectorAll('.bubble-item').length;
-                document.getElementById('perf-nodes').textContent = nodes;
-            }
-        }
-    }
-
-    const perfMonitor = new PerformanceMonitor();
-
-    // ==========================================
-    // CACHE MANAGER
-    // ==========================================
-    class CacheManager {
-        constructor() {
-            this.cache = new Map();
-            this.timestamps = new Map();
-            this.maxAge = 5 * 60 * 1000; // 5 minutes
-            this.cleanupInterval = setInterval(() => this.cleanup(), 60000); // Cleanup every minute
-        }
-
-        get(key) {
-            const timestamp = this.timestamps.get(key);
-            if (!timestamp) return null;
-            
-            if (Date.now() - timestamp > this.maxAge) {
-                this.delete(key);
+                
+                return processMarketData(data.result.list);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showAlert('Failed to load market data. Retrying...', 'error');
                 return null;
             }
-            return this.cache.get(key);
         }
 
-        set(key, value) {
-            this.cache.set(key, value);
-            this.timestamps.set(key, Date.now());
-        }
-
-        delete(key) {
-            this.cache.delete(key);
-            this.timestamps.delete(key);
-        }
-
-        cleanup() {
-            const now = Date.now();
-            for (const [key, timestamp] of this.timestamps) {
-                if (now - timestamp > this.maxAge) {
-                    this.delete(key);
-                }
-            }
-        }
-
-        destroy() {
-            clearInterval(this.cleanupInterval);
-            this.cache.clear();
-            this.timestamps.clear();
-        }
-    }
-
-    const cacheManager = new CacheManager();
-
-    // ==========================================
-    // API CLIENT WITH RETRY
-    // ==========================================
-    class ApiClient {
-        constructor() {
-            this.baseUrl = 'https://api.bybit.com/v5';
-            this.retryAttempts = 3;
-            this.retryDelay = 1000;
-        }
-
-        async fetchWithRetry(url, options = {}) {
-            let lastError;
-            let delay = this.retryDelay;
-
-            for (let attempt = 0; attempt < this.retryAttempts; attempt++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    return await response.json();
-                } catch (error) {
-                    lastError = error;
-                    console.warn(`API attempt ${attempt + 1} failed:`, error.message);
-                    
-                    if (attempt < this.retryAttempts - 1) {
-                        await this.sleep(delay);
-                        delay *= 2; // Exponential backoff
-                    }
-                }
-            }
-
-            throw lastError;
-        }
-
-        async getTickers() {
-            const cacheKey = 'tickers';
-            const cached = cacheManager.get(cacheKey);
-            
-            if (cached) {
-                console.log('[Cache] Using cached tickers');
-                return cached;
-            }
-
-            const data = await this.fetchWithRetry(`${this.baseUrl}/market/tickers?category=linear`);
-            cacheManager.set(cacheKey, data);
-            return data;
-        }
-
-        sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-    }
-
-    const apiClient = new ApiClient();
-
-    // ==========================================
-    // VIRTUAL SCROLLER
-    // ==========================================
-    class VirtualScroller {
-        constructor(container, options = {}) {
-            this.container = container;
-            this.spacer = container.querySelector('#bubble-spacer');
-            this.content = container.querySelector('#bubble-container');
-            this.viewport = document.getElementById('bubble-viewport');
-            
-            this.itemHeight = options.itemHeight || 160;
-            this.itemsPerRow = options.itemsPerRow || 6;
-            this.bufferRows = options.bufferRows || 2;
-            this.totalItems = 0;
-            
-            this.visibleStart = 0;
-            this.visibleEnd = 0;
-            this.renderedItems = new Map(); // item index -> DOM element
-            this.data = [];
-            this.pool = []; // Recycled DOM elements
-            
-            this.resizeObserver = null;
-            this.scrollListener = null;
-            this.isDestroyed = false;
-            
-            this.throttledUpdate = this.throttle(() => this.updateVisibleItems(), 16);
-        }
-
-        init(data) {
-            this.data = data;
-            this.totalItems = data.length;
-            this.calculateItemsPerRow();
-            this.calculateTotalHeight();
-            
-            // Setup observers and listeners
-            this.resizeObserver = new ResizeObserver(() => {
-                this.calculateItemsPerRow();
-                this.calculateTotalHeight();
-                this.updateVisibleItems();
-            });
-            this.resizeObserver.observe(this.container);
-            
-            this.scrollListener = () => this.throttledUpdate();
-            this.viewport.addEventListener('scroll', this.scrollListener, { passive: true });
-            
-            // Intersection Observer for visibility tracking
-            this.intersectionObserver = new IntersectionObserver(
-                (entries) => this.handleIntersection(entries),
-                { root: this.viewport, rootMargin: `${this.bufferRows * this.itemHeight}px` }
-            );
-            
-            this.updateVisibleItems();
-        }
-
-        calculateItemsPerRow() {
-            const width = this.container.clientWidth;
-            if (width >= 1200) this.itemsPerRow = 6;
-            else if (width >= 1000) this.itemsPerRow = 5;
-            else if (width >= 800) this.itemsPerRow = 4;
-            else if (width >= 600) this.itemsPerRow = 3;
-            else if (width >= 400) this.itemsPerRow = 2;
-            else this.itemsPerRow = 1;
-        }
-
-        calculateTotalHeight() {
-            const totalRows = Math.ceil(this.totalItems / this.itemsPerRow);
-            const totalHeight = totalRows * this.itemHeight;
-            this.spacer.style.height = `${totalHeight}px`;
-        }
-
-        getVisibleRange() {
-            const scrollTop = this.viewport.scrollTop;
-            const viewportHeight = this.viewport.clientHeight;
-            
-            const startRow = Math.max(0, Math.floor(scrollTop / this.itemHeight) - this.bufferRows);
-            const endRow = Math.min(
-                Math.ceil(this.totalItems / this.itemsPerRow),
-                Math.ceil((scrollTop + viewportHeight) / this.itemHeight) + this.bufferRows
-            );
-            
-            const startIndex = startRow * this.itemsPerRow;
-            const endIndex = Math.min(this.totalItems, endRow * this.itemsPerRow);
-            
-            return { startIndex, endIndex, startRow };
-        }
-
-        updateVisibleItems() {
-            if (this.isDestroyed) return;
-            
-            const measureStart = perfMonitor.startMeasure('updateVisibleItems');
-            const { startIndex, endIndex, startRow } = this.getVisibleRange();
-            
-            // Remove items that are no longer visible
-            for (const [index, element] of this.renderedItems) {
-                if (index < startIndex || index >= endIndex) {
-                    this.recycleElement(element);
-                    this.renderedItems.delete(index);
-                }
-            }
-            
-            // Add new visible items
-            for (let i = startIndex; i < endIndex; i++) {
-                if (!this.renderedItems.has(i)) {
-                    const element = this.getOrCreateElement(i);
-                    this.positionElement(element, i, startRow);
-                    this.content.appendChild(element);
-                    this.renderedItems.set(i, element);
-                }
-            }
-            
-            perfMonitor.endMeasure('updateVisibleItems', measureStart);
-        }
-
-        positionElement(element, index, startRow) {
-            const row = Math.floor(index / this.itemsPerRow);
-            const col = index % this.itemsPerRow;
-            
-            const offsetX = (row % 2) * (140 / 2); // Stagger every other row
-            const x = col * 160 + 80 + offsetX;
-            const y = (row - startRow) * this.itemHeight + 80;
-            
-            element.style.position = 'absolute';
-            element.style.left = `${x}px`;
-            element.style.top = `${row * this.itemHeight}px`;
-            element.style.transform = `translateX(-50%)`;
-        }
-
-        getOrCreateElement(index) {
-            if (this.pool.length > 0) {
-                const element = this.pool.pop();
-                this.updateElementContent(element, index);
-                return element;
-            }
-            return this.createElement(index);
-        }
-
-        createElement(index) {
-            const item = this.data[index];
-            const element = document.createElement('div');
-            element.className = 'bubble-item';
-            element.innerHTML = this.getBubbleHTML(item, index);
-            
-            // Add click handler
-            element.addEventListener('click', () => showModal(item));
-            
-            return element;
-        }
-
-        updateElementContent(element, index) {
-            const item = this.data[index];
-            const svg = element.querySelector('.bubble-svg');
-            if (svg) {
-                // Update the ribbon colors and paths
-                this.updateBubbleSVG(svg, item, index);
-            }
-            
-            // Update click handler
-            element.onclick = () => showModal(item);
-        }
-
-        getBubbleHTML(item, index) {
-            const colors = getBubbleColor(item.change24h, currentTheme);
-            const paths = this.generateRibbonPaths(item.baseRadius, index);
-            
-            return `
-                <svg class="bubble-svg" viewBox="-80 -80 160 160">
-                    <defs>
-                        <linearGradient id="grad-${index}-0" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="${colors.dark}"/>
-                            <stop offset="30%" stop-color="${colors.secondary}"/>
-                            <stop offset="50%" stop-color="#ffffff"/>
-                            <stop offset="70%" stop-color="${colors.secondary}"/>
-                            <stop offset="100%" stop-color="${colors.dark}"/>
-                        </linearGradient>
-                        <linearGradient id="grad-${index}-1" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="${colors.dark}"/>
-                            <stop offset="50%" stop-color="${colors.secondary}"/>
-                            <stop offset="100%" stop-color="${colors.dark}"/>
-                        </linearGradient>
-                        <linearGradient id="grad-${index}-2" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="${colors.dark}"/>
-                            <stop offset="50%" stop-color="${colors.secondary}"/>
-                            <stop offset="100%" stop-color="${colors.dark}"/>
-                        </linearGradient>
-                        <filter id="glow-${index}">
-                            <feGaussianBlur stdDeviation="3" result="blur"/>
-                            <feFlood flood-color="${colors.primary}" result="color"/>
-                            <feComposite in="color" in2="blur" operator="in" result="glow"/>
-                            <feMerge>
-                                <feMergeNode in="glow"/>
-                                <feMergeNode in="SourceGraphic"/>
-                            </feMerge>
-                        </filter>
-                    </defs>
-                    <g class="bubble-ribbons" data-index="${index}">
-                        <path class="ribbon-0" d="${paths[0]}" fill="url(#grad-${index}-0)" 
-                              stroke="${colors.primary}" stroke-width="2" opacity="0.7"
-                              filter="url(#glow-${index})" transform="rotate(${index * 15})"/>
-                        <path class="ribbon-1" d="${paths[1]}" fill="url(#grad-${index}-1)" 
-                              stroke="${colors.primary}" stroke-width="1" opacity="0.85"
-                              transform="rotate(${45 + index * 15})"/>
-                        <path class="ribbon-2" d="${paths[2]}" fill="url(#grad-${index}-2)" 
-                              stroke="${colors.primary}" stroke-width="1" opacity="1"
-                              transform="rotate(${90 + index * 15})"/>
-                    </g>
-                    <circle r="6" fill="${colors.primary}" 
-                            filter="${currentTheme === 'dark' ? `drop-shadow(0 0 8px ${colors.primary})` : 'none'}"/>
-                    <circle r="3" cx="-2" cy="-2" fill="rgba(255,255,255,0.8)"/>
-                    <text class="bubble-label" dy="-0.5em">${item.symbol}</text>
-                    <text class="bubble-change" dy="1.1em" fill="${colors.primary}">
-                        ${(item.change24h >= 0 ? '+' : '') + item.change24h.toFixed(1)}%
-                    </text>
-                </svg>
-            `;
-        }
-
-        updateBubbleSVG(svg, item, index) {
-            // Update colors
-            const colors = getBubbleColor(item.change24h, currentTheme);
-            const paths = svg.querySelectorAll('path');
-            const circles = svg.querySelectorAll('circle');
-            const texts = svg.querySelectorAll('text');
-            const gradients = svg.querySelectorAll('linearGradient stop');
-            const filter = svg.querySelector('filter feFlood');
-            
-            // Update gradient colors efficiently
-            if (gradients.length >= 5) {
-                gradients[0].setAttribute('stop-color', colors.dark);
-                gradients[1].setAttribute('stop-color', colors.secondary);
-                gradients[3].setAttribute('stop-color', colors.secondary);
-                gradients[4].setAttribute('stop-color', colors.dark);
-            }
-            
-            // Update stroke colors
-            paths.forEach(p => p.setAttribute('stroke', colors.primary));
-            if (filter) filter.setAttribute('flood-color', colors.primary);
-            
-            // Update center circle
-            if (circles[0]) circles[0].setAttribute('fill', colors.primary);
-            
-            // Update text colors
-            const changeText = texts[1];
-            if (changeText) {
-                changeText.setAttribute('fill', colors.primary);
-                changeText.textContent = (item.change24h >= 0 ? '+' : '') + item.change24h.toFixed(1) + '%';
-            }
-        }
-
-        generateRibbonPaths(radius, index) {
-            const ribbons = [
-                { r: radius, w: 12, twist: 2.5 },
-                { r: radius * 0.75, w: 9, twist: 3 },
-                { r: radius * 0.5, w: 6, twist: 3.5 }
-            ];
-            
-            return ribbons.map(r => createTwistedRibbon(r.r, r.twist, r.w, 40, { zSpread: 60, focalLength: 400 }));
-        }
-
-        recycleElement(element) {
-            // Remove event listeners by cloning
-            const cloned = element.cloneNode(false);
-            element.remove();
-            this.pool.push(cloned);
-        }
-
-        handleIntersection(entries) {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                } else {
-                    entry.target.classList.remove('visible');
-                }
-            });
-        }
-
-        throttle(fn, wait) {
-            let lastTime = 0;
-            return (...args) => {
-                const now = performance.now();
-                if (now - lastTime >= wait) {
-                    lastTime = now;
-                    fn.apply(this, args);
-                }
-            };
-        }
-
-        destroy() {
-            this.isDestroyed = true;
-            
-            if (this.resizeObserver) {
-                this.resizeObserver.disconnect();
-                this.resizeObserver = null;
-            }
-            
-            if (this.scrollListener) {
-                this.viewport.removeEventListener('scroll', this.scrollListener);
-                this.scrollListener = null;
-            }
-            
-            if (this.intersectionObserver) {
-                this.intersectionObserver.disconnect();
-                this.intersectionObserver = null;
-            }
-            
-            // Clear all elements
-            this.renderedItems.forEach(el => el.remove());
-            this.renderedItems.clear();
-            this.pool = [];
-            this.data = [];
-        }
-
-        refresh(data) {
-            this.data = data;
-            this.totalItems = data.length;
-            this.calculateTotalHeight();
-            
-            // Clear and re-render
-            this.renderedItems.forEach(el => el.remove());
-            this.renderedItems.clear();
-            this.pool = [];
-            
-            this.updateVisibleItems();
-        }
-    }
-
-    // ==========================================
-    // RIBBON GEOMETRY (Optimized)
-    // ==========================================
-    function rotateZ(point, angle) {
-        const cos = Math.cos(angle), sin = Math.sin(angle);
-        return { x: point.x * cos - point.y * sin, y: point.x * sin + point.y * cos, z: point.z || 0 };
-    }
-
-    function project3D(p, focalLength, center) {
-        const scale = focalLength / (focalLength + p.z);
-        return { x: center.x + p.x * scale, y: center.y + p.y * scale, scale };
-    }
-
-    function createTwistedRibbon(radius, twists, width, segments, options = {}) {
-        const { zSpread = 80, focalLength = 500, innerRadius = 5 } = options;
-        const frontEdge = [], backEdge = [];
-        
-        for (let i = 0; i <= segments; i++) {
-            const t = i / segments;
-            const r = innerRadius + t * (radius - innerRadius);
-            const angle = t * twists * Math.PI * 2;
-            const z = -zSpread * Math.sin(t * twists * Math.PI);
-            
-            const cx = Math.cos(angle) * r;
-            const cy = Math.sin(angle) * r;
-            const tangentAngle = angle + Math.PI / 2;
-            
-            const twistAngle = t * 3 * Math.PI;
-            const halfWidth = (width * (0.5 + 0.5 * t)) / 2;
-            
-            const wx = Math.cos(tangentAngle) * halfWidth;
-            const wy = Math.sin(tangentAngle) * halfWidth;
-            
-            const front = rotateZ({x: wx, y: wy, z: 0}, twistAngle);
-            const back = rotateZ({x: -wx, y: -wy, z: 0}, twistAngle);
-            
-            frontEdge.push(project3D({x: cx + front.x, y: cy + front.y, z: z + front.z * 0.2}, focalLength, {x: 0, y: 0}));
-            backEdge.push(project3D({x: cx + back.x, y: cy + back.y, z: z + back.z * 0.2}, focalLength, {x: 0, y: 0}));
-        }
-        
-        let path = `M ${frontEdge[0].x.toFixed(1)} ${frontEdge[0].y.toFixed(1)}`;
-        for (let i = 1; i < frontEdge.length; i++) {
-            path += ` L ${frontEdge[i].x.toFixed(1)} ${frontEdge[i].y.toFixed(1)}`;
-        }
-        path += ` L ${backEdge[backEdge.length-1].x.toFixed(1)} ${backEdge[backEdge.length-1].y.toFixed(1)}`;
-        for (let i = backEdge.length - 2; i >= 0; i--) {
-            path += ` L ${backEdge[i].x.toFixed(1)} ${backEdge[i].y.toFixed(1)}`;
-        }
-        path += ' Z';
-        return path;
-    }
-
-    function getBubbleColor(change24h, theme) {
-        if (change24h >= 0) {
-            if (theme === 'dark') {
-                return { primary: '#00ff88', secondary: '#00aa55', dark: '#004422' };
-            } else {
-                return { primary: '#2a8a4a', secondary: '#4ab86a', dark: '#1a5a3a' };
-            }
-        } else {
-            if (theme === 'dark') {
-                return { primary: '#ff3366', secondary: '#cc2255', dark: '#661122' };
-            } else {
-                return { primary: '#c54a4a', secondary: '#e57a7a', dark: '#8a2a2a' };
-            }
-        }
-    }
-
-    // ==========================================
-    // MAIN APPLICATION
-    // ==========================================
-    let bubbleData = [];
-    let currentTheme = 'dark';
-    let virtualScroller = null;
-    let animationFrame = null;
-    let themeObserver = null;
-    let resizeThrottle = null;
-
-    // Theme toggle
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-    const body = document.body;
-
-    themeToggle.addEventListener('click', () => {
-        const current = body.getAttribute('data-theme');
-        const newTheme = current === 'dark' ? 'light' : 'dark';
-        body.setAttribute('data-theme', newTheme);
-        themeIcon.textContent = newTheme === 'dark' ? '🌙' : '☀️';
-        currentTheme = newTheme;
-        if (virtualScroller) {
-            virtualScroller.refresh(bubbleData);
-        }
-    });
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 't' || e.key === 'T') {
-            themeToggle.click();
-        }
-        if (e.key === 'Escape') {
-            closeModal();
-        }
-    });
-
-    async function loadData() {
-        const measureStart = perfMonitor.startMeasure('loadData');
-        
-        try {
-            const data = await apiClient.getTickers();
-            
-            bubbleData = data.result.list
+        function processMarketData(list) {
+            const processed = list
                 .filter(item => item.symbol.endsWith('USDT'))
                 .map(item => ({
                     symbol: item.symbol.replace('USDT', ''),
-                    change24h: parseFloat(item.price24hPcnt) * 100,
-                    price: parseFloat(item.lastPrice),
-                    volume24h: parseFloat(item.volume24h) * parseFloat(item.lastPrice)
+                    fullSymbol: item.symbol,
+                    price: parseFloat(item.lastPrice) || 0,
+                    change24h: parseFloat(item.price24hPcnt) * 100 || 0,
+                    volume24h: parseFloat(item.volume24h) || 0,
+                    turnover24h: parseFloat(item.turnover24h) || 0,
+                    high24h: parseFloat(item.highPrice24h) || 0,
+                    low24h: parseFloat(item.lowPrice24h) || 0,
                 }))
-                .filter(item => !isNaN(item.change24h))
+                .filter(item => item.price > 0)
                 .sort((a, b) => b.volume24h - a.volume24h)
-                .slice(0, 48);
-
-            // Calculate base radius for each bubble
-            bubbleData.forEach(d => {
-                d.baseRadius = 45 + Math.sqrt(d.volume24h) / 80000;
-            });
-
-            updateStats();
+                .slice(0, CONFIG.MAX_BUBBLES);
             
-            if (!virtualScroller) {
-                virtualScroller = new VirtualScroller(document.getElementById('bubble-spacer'), {
-                    itemHeight: 160,
-                    bufferRows: 2
-                });
-                virtualScroller.init(bubbleData);
+            // Update volume history for spike detection
+            processed.forEach(coin => {
+                if (!state.volumeHistory[coin.symbol]) {
+                    state.volumeHistory[coin.symbol] = [];
+                }
+                state.volumeHistory[coin.symbol].push(coin.volume24h);
+                if (state.volumeHistory[coin.symbol].length > 10) {
+                    state.volumeHistory[coin.symbol].shift();
+                }
+            });
+            
+            return processed;
+        }
+
+        function detectVolumeSpikes(coins) {
+            coins.forEach(coin => {
+                const history = state.volumeHistory[coin.symbol];
+                if (history && history.length >= 3) {
+                    const avg = history.slice(0, -1).reduce((a, b) => a + b, 0) / (history.length - 1);
+                    if (avg > 0 && coin.volume24h / avg > CONFIG.VOLUME_SPIKE_THRESHOLD) {
+                        showAlert(`🔥 Volume spike detected for ${coin.symbol}!`, 'success');
+                        const bubble = document.querySelector(`[data-symbol="${coin.symbol}"]`);
+                        if (bubble) {
+                            bubble.classList.add('bubble-pulse');
+                            setTimeout(() => bubble.classList.remove('bubble-pulse'), 5000);
+                        }
+                    }
+                }
+            });
+        }
+
+        // ============================================
+        // BUBBLE RENDERING
+        // ============================================
+        function renderBubbles(coins) {
+            const container = document.getElementById('bubble-container');
+            const width = container.clientWidth;
+            const height = Math.max(window.innerHeight - 200, 600);
+            
+            // Clear existing
+            container.innerHTML = '';
+            
+            // Create SVG
+            const svg = d3.select('#bubble-container')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+            
+            // Add defs for filters
+            const defs = svg.append('defs');
+            
+            // Glow filter
+            const filter = defs.append('filter')
+                .attr('id', 'glow')
+                .attr('x', '-50%')
+                .attr('y', '-50%')
+                .attr('width', '200%')
+                .attr('height', '200%');
+            
+            filter.append('feGaussianBlur')
+                .attr('stdDeviation', '4')
+                .attr('result', 'coloredBlur');
+            
+            const feMerge = filter.append('feMerge');
+            feMerge.append('feMergeNode').attr('in', 'coloredBlur');
+            feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+            
+            const maxVolume = Math.max(...coins.map(c => c.volume24h));
+            
+            // Create grid layout
+            const cols = Math.floor(width / 130);
+            const spacingX = width / cols;
+            const spacingY = 130;
+            
+            coins.forEach((coin, i) => {
+                const col = i % cols;
+                const row = Math.floor(i / cols);
+                coin.x = col * spacingX + spacingX / 2;
+                coin.y = row * spacingY + spacingY / 2 + 40;
+                coin.size = calculateBubbleSize(coin.volume24h, maxVolume);
+            });
+            
+            // Render bubble groups
+            const groups = svg.selectAll('.bubble-group')
+                .data(coins)
+                .enter()
+                .append('g')
+                .attr('class', 'bubble-group')
+                .attr('data-symbol', d => d.symbol)
+                .attr('transform', d => `translate(${d.x},${d.y})`);
+            
+            groups.each(function(d) {
+                const g = d3.select(this);
+                const colors = getBubbleColor(d.change24h, state.currentTheme);
+                const isPositive = d.change24h >= 0;
+                
+                // Create spiral ribbon path
+                const ribbonPath = createSpiralPath(d.size / 2);
+                
+                // Outer glow
+                g.append('circle')
+                    .attr('r', d.size / 2 + 5)
+                    .attr('fill', colors.glow)
+                    .attr('opacity', 0.3)
+                    .attr('filter', 'url(#glow)');
+                
+                // Spiral ribbon
+                g.append('path')
+                    .attr('class', 'bubble-spiral')
+                    .attr('d', ribbonPath)
+                    .attr('fill', 'none')
+                    .attr('stroke', colors.primary)
+                    .attr('stroke-width', 3)
+                    .attr('stroke-linecap', 'round')
+                    .style('color', colors.primary);
+                
+                // Inner circle
+                g.append('circle')
+                    .attr('r', d.size / 3)
+                    .attr('fill', state.currentTheme === 'dark' ? '#0a0a0f' : '#f0f5f0')
+                    .attr('stroke', colors.primary)
+                    .attr('stroke-width', 2);
+                
+                // Symbol text
+                g.append('text')
+                    .attr('class', 'bubble-label')
+                    .attr('dy', '-0.2em')
+                    .text(d.symbol);
+                
+                // Change text
+                g.append('text')
+                    .attr('class', 'bubble-change')
+                    .attr('dy', '1.2em')
+                    .style('fill', colors.text)
+                    .text(`${d.change24h >= 0 ? '+' : ''}${d.change24h.toFixed(1)}%`);
+            });
+            
+            // Click handlers
+            groups.on('click', function(event, d) {
+                const el = d3.select(this);
+                el.classed('spinning', true);
+                setTimeout(() => el.classed('spinning', false), 1000);
+                openModal(d);
+            });
+        }
+
+        /**
+         * Create spiral path for bubble
+         */
+        function createSpiralPath(radius) {
+            let path = '';
+            const turns = 2.5;
+            const segments = 60;
+            
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const angle = t * turns * Math.PI * 2;
+                const r = radius * (0.2 + 0.8 * t);
+                const x = r * Math.cos(angle);
+                const y = r * Math.sin(angle);
+                path += (i === 0 ? 'M' : 'L') + ` ${x.toFixed(2)},${y.toFixed(2)}`;
+            }
+            
+            return path;
+        }
+
+        // ============================================
+        // MODAL FUNCTIONS
+        // ============================================
+        function openModal(coin) {
+            state.currentModalIndex = state.coins.findIndex(c => c.symbol === coin.symbol);
+            updateModalContent(coin);
+            
+            const modal = document.getElementById('enhanced-modal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('enhanced-modal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function updateModalContent(coin) {
+            const isPositive = coin.change24h >= 0;
+            const colors = getBubbleColor(coin.change24h, state.currentTheme);
+            
+            document.getElementById('modal-symbol').textContent = coin.symbol;
+            document.getElementById('modal-name').textContent = coin.fullSymbol;
+            document.getElementById('modal-price').textContent = '$' + formatPrice(coin.price);
+            
+            const changeEl = document.getElementById('modal-change');
+            changeEl.textContent = `${isPositive ? '+' : ''}${coin.change24h.toFixed(2)}%`;
+            changeEl.className = 'price-change-pill ' + (isPositive ? 'positive' : 'negative');
+            
+            document.getElementById('modal-volume').textContent = '$' + formatNumber(coin.volume24h);
+            document.getElementById('modal-turnover').textContent = '$' + formatNumber(coin.turnover24h);
+            document.getElementById('modal-high').textContent = '$' + formatPrice(coin.high24h);
+            document.getElementById('modal-low').textContent = '$' + formatPrice(coin.low24h);
+            
+            // Update HL progress
+            if (coin.high24h > coin.low24h) {
+                const range = coin.high24h - coin.low24h;
+                const position = ((coin.price - coin.low24h) / range) * 100;
+                document.getElementById('modal-hl-progress').style.width = Math.max(5, Math.min(95, position)) + '%';
+                document.getElementById('modal-hl-low').textContent = '$' + formatNumber(coin.low24h);
+                document.getElementById('modal-hl-high').textContent = '$' + formatNumber(coin.high24h);
+                document.getElementById('modal-hl-current').textContent = formatNumber(coin.price);
+            }
+            
+            // Generate volume bars
+            const barsContainer = document.getElementById('modal-volume-bars');
+            barsContainer.innerHTML = '';
+            for (let i = 0; i < 12; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'volume-bar-mini';
+                bar.style.height = (20 + Math.random() * 80) + '%';
+                barsContainer.appendChild(bar);
+            }
+            
+            // Update nav buttons
+            document.getElementById('modal-prev').disabled = state.currentModalIndex <= 0;
+            document.getElementById('modal-next').disabled = state.currentModalIndex >= state.coins.length - 1;
+        }
+
+        function navigateModal(direction) {
+            const newIndex = state.currentModalIndex + direction;
+            if (newIndex >= 0 && newIndex < state.coins.length) {
+                state.currentModalIndex = newIndex;
+                updateModalContent(state.coins[newIndex]);
+            }
+        }
+
+        // ============================================
+        // THEME MANAGEMENT
+        // ============================================
+        function toggleTheme() {
+            const newTheme = state.currentTheme === 'dark' ? 'light' : 'dark';
+            state.currentTheme = newTheme;
+            document.body.setAttribute('data-theme', newTheme);
+            document.getElementById('theme-icon').textContent = newTheme === 'dark' ? '🌙' : '☀️';
+            
+            // Re-render bubbles with new theme colors
+            if (state.coins.length > 0) {
+                renderBubbles(state.coins);
+            }
+            
+            // Save preference
+            localStorage.setItem('bybit-heatmap-theme', newTheme);
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('bybit-heatmap-theme') || 'dark';
+            state.currentTheme = savedTheme;
+            document.body.setAttribute('data-theme', savedTheme);
+            document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+        }
+
+        // ============================================
+        // SEARCH FUNCTIONALITY
+        // ============================================
+        function filterCoins(query) {
+            state.searchQuery = query.toLowerCase();
+            if (!state.searchQuery) {
+                state.filteredCoins = state.coins;
             } else {
-                virtualScroller.refresh(bubbleData);
+                state.filteredCoins = state.coins.filter(c => 
+                    c.symbol.toLowerCase().includes(state.searchQuery)
+                );
             }
-            
-            document.getElementById('loading').style.display = 'none';
-            startAnimation();
-            
-        } catch (error) {
-            console.error('Error loading data:', error);
-            // Try to use cached data as fallback
-            const cached = cacheManager.get('tickers');
-            if (cached) {
-                console.log('[Fallback] Using cached data');
-                bubbleData = cached.result.list
-                    .filter(item => item.symbol.endsWith('USDT'))
-                    .map(item => ({
-                        symbol: item.symbol.replace('USDT', ''),
-                        change24h: parseFloat(item.price24hPcnt) * 100,
-                        price: parseFloat(item.lastPrice),
-                        volume24h: parseFloat(item.volume24h) * parseFloat(item.lastPrice)
-                    }))
-                    .filter(item => !isNaN(item.change24h))
-                    .sort((a, b) => b.volume24h - a.volume24h)
-                    .slice(0, 48);
-                
-                if (!virtualScroller) {
-                    virtualScroller = new VirtualScroller(document.getElementById('bubble-spacer'));
-                    virtualScroller.init(bubbleData);
-                } else {
-                    virtualScroller.refresh(bubbleData);
-                }
-            }
+            renderBubbles(state.filteredCoins);
         }
-        
-        perfMonitor.endMeasure('loadData', measureStart);
-    }
 
-    function updateStats() {
-        const bullish = bubbleData.filter(d => d.change24h >= 0).length;
-        const bearish = bubbleData.filter(d => d.change24h < 0).length;
-        document.getElementById('bullish-count').textContent = bullish;
-        document.getElementById('bearish-count').textContent = bearish;
-    }
+        // ============================================
+        // STATS UPDATE
+        // ============================================
+        function updateStats(coins) {
+            const bullish = coins.filter(c => c.change24h > 0).length;
+            const bearish = coins.filter(c => c.change24h < 0).length;
+            
+            document.getElementById('stat-bullish').textContent = bullish;
+            document.getElementById('stat-bearish').textContent = bearish;
+        }
 
-    function startAnimation() {
-        if (animationFrame) cancelAnimationFrame(animationFrame);
-        
-        let time = 0;
-        function animate() {
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                return;
-            }
+        // ============================================
+        // ALERT SYSTEM
+        // ============================================
+        function showAlert(message, type = 'info') {
+            const banner = document.getElementById('alert-banner');
+            const text = document.getElementById('alert-text');
+            const icon = banner.querySelector('.alert-icon');
             
-            time += 0.025;
-            perfMonitor.tick();
+            text.textContent = message;
+            icon.textContent = type === 'error' ? '⚠️' : type === 'success' ? '🔥' : '⚡';
             
-            // Animate only visible ribbons
-            const ribbons = document.querySelectorAll('.bubble-ribbons');
-            ribbons.forEach(g => {
-                const idx = parseInt(g.dataset.index);
-                const float = Math.sin(time + idx * 0.5) * 8;
-                
-                const r0 = g.querySelector('.ribbon-0');
-                const r1 = g.querySelector('.ribbon-1');
-                const r2 = g.querySelector('.ribbon-2');
-                
-                if (r0) r0.style.transform = `rotate(${idx * 15 + float}deg)`;
-                if (r1) r1.style.transform = `rotate(${45 + idx * 15 + float}deg)`;
-                if (r2) r2.style.transform = `rotate(${90 + idx * 15 + float}deg)`;
+            banner.classList.add('show');
+            
+            setTimeout(() => {
+                banner.classList.remove('show');
+            }, 4000);
+        }
+
+        // ============================================
+        // TOAST NOTIFICATION
+        // ============================================
+        function showToast(message) {
+            const toast = document.getElementById('modal-toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // ============================================
+        // EVENT HANDLERS
+        // ============================================
+        function setupEventListeners() {
+            // Theme toggle
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+            
+            // Search
+            const searchInput = document.getElementById('search-input');
+            searchInput.addEventListener('input', (e) => filterCoins(e.target.value));
+            
+            // Modal close
+            document.getElementById('modal-close').addEventListener('click', closeModal);
+            document.getElementById('enhanced-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'enhanced-modal') closeModal();
             });
             
-            animationFrame = requestAnimationFrame(animate);
-        }
-        animate();
-    }
-
-    function showModal(coin) {
-        document.getElementById('modal-symbol').textContent = coin.symbol;
-        document.getElementById('modal-price').textContent = '$' + coin.price.toFixed(2);
-        const changeEl = document.getElementById('modal-change');
-        changeEl.textContent = (coin.change24h >= 0 ? '+' : '') + coin.change24h.toFixed(2) + '%';
-        changeEl.style.color = coin.change24h >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-        document.getElementById('modal').classList.add('active');
-    }
-
-    function closeModal() {
-        document.getElementById('modal').classList.remove('active');
-    }
-
-    // Theme observer for auto-refresh
-    themeObserver = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.attributeName === 'data-theme') {
-                currentTheme = body.getAttribute('data-theme');
-                if (virtualScroller) {
-                    virtualScroller.refresh(bubbleData);
+            // Modal navigation
+            document.getElementById('modal-prev').addEventListener('click', () => navigateModal(-1));
+            document.getElementById('modal-next').addEventListener('click', () => navigateModal(1));
+            
+            // Action buttons
+            document.getElementById('btn-trade').addEventListener('click', () => {
+                const coin = state.coins[state.currentModalIndex];
+                if (coin) {
+                    window.open(`https://www.bybit.com/trade/usdt/${coin.symbol}USDT`, '_blank');
                 }
-            }
-        });
-    });
-    themeObserver.observe(body, { attributes: true });
-
-    // Handle visibility change to pause/resume animation
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            if (animationFrame) {
-                cancelAnimationFrame(animationFrame);
-                animationFrame = null;
-            }
-        } else {
-            startAnimation();
+            });
+            
+            document.getElementById('btn-copy').addEventListener('click', async () => {
+                const coin = state.coins[state.currentModalIndex];
+                if (coin) {
+                    const text = `${coin.symbol}: $${formatPrice(coin.price)} (${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%)`;
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        showToast('Price copied!');
+                    } catch (err) {
+                        showToast('Copy failed');
+                    }
+                }
+            });
+            
+            document.getElementById('btn-share').addEventListener('click', async () => {
+                const coin = state.coins[state.currentModalIndex];
+                if (coin) {
+                    const shareData = {
+                        title: `${coin.symbol} on Bybit`,
+                        text: `${coin.symbol}: $${formatPrice(coin.price)} (${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%)`,
+                        url: `https://www.bybit.com/trade/usdt/${coin.symbol}USDT`
+                    };
+                    
+                    try {
+                        if (navigator.share) {
+                            await navigator.share(shareData);
+                        } else {
+                            await navigator.clipboard.writeText(`${shareData.text} - ${shareData.url}`);
+                            showToast('Link copied!');
+                        }
+                    } catch (err) {
+                        if (err.name !== 'AbortError') {
+                            showToast('Share failed');
+                        }
+                    }
+                }
+            });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeModal();
+                } else if (e.key === 'ArrowLeft' && document.getElementById('enhanced-modal').classList.contains('active')) {
+                    navigateModal(-1);
+                } else if (e.key === 'ArrowRight' && document.getElementById('enhanced-modal').classList.contains('active')) {
+                    navigateModal(1);
+                } else if ((e.key === 't' || e.key === 'T') && e.target.tagName !== 'INPUT') {
+                    toggleTheme();
+                } else if ((e.key === '/' || e.key === 's' || e.key === 'S') && e.target.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    searchInput.focus();
+                }
+            });
+            
+            // Swipe to close modal (mobile)
+            let touchStartY = 0;
+            const modalContent = document.querySelector('.enhanced-modal-content');
+            
+            modalContent.addEventListener('touchstart', (e) => {
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+            
+            modalContent.addEventListener('touchend', (e) => {
+                const touchEndY = e.changedTouches[0].clientY;
+                if (touchEndY - touchStartY > 100) {
+                    closeModal();
+                }
+            }, { passive: true });
+            
+            // Window resize
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    if (state.coins.length > 0) {
+                        renderBubbles(state.filteredCoins.length > 0 ? state.filteredCoins : state.coins);
+                    }
+                }, 250);
+            });
+            
+            // Mobile search toggle
+            document.getElementById('mobile-search-btn')?.addEventListener('click', () => {
+                const mobileSearch = document.getElementById('mobile-search');
+                mobileSearch.style.display = mobileSearch.style.display === 'none' ? 'block' : 'none';
+                if (mobileSearch.style.display === 'block') {
+                    mobileSearch.querySelector('input').focus();
+                }
+            });
         }
-    });
 
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', () => {
-        if (virtualScroller) virtualScroller.destroy();
-        if (animationFrame) cancelAnimationFrame(animationFrame);
-        if (themeObserver) themeObserver.disconnect();
-        cacheManager.destroy();
-    });
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        async function init() {
+            // Load saved theme
+            loadTheme();
+            
+            // Initialize particles
+            initParticles();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Fetch initial data
+            const data = await fetchMarketData();
+            
+            if (data) {
+                state.coins = data;
+                state.filteredCoins = data;
+                
+                // Hide loading
+                document.getElementById('loading-overlay').classList.add('hidden');
+                state.isLoading = false;
+                
+                // Render bubbles
+                renderBubbles(data);
+                
+                // Update stats
+                updateStats(data);
+                
+                // Check for volume spikes
+                detectVolumeSpikes(data);
+                
+                // Setup auto-refresh
+                setInterval(async () => {
+                    const newData = await fetchMarketData();
+                    if (newData) {
+                        state.coins = newData;
+                        if (!state.searchQuery) {
+                            state.filteredCoins = newData;
+                            renderBubbles(newData);
+                        }
+                        updateStats(newData);
+                        detectVolumeSpikes(newData);
+                    }
+                }, CONFIG.UPDATE_INTERVAL);
+            }
+        }
 
-    // Initialize
-    loadData();
-    setInterval(loadData, 30000);
+        // Start application when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     </script>
 </body>
 </html>
