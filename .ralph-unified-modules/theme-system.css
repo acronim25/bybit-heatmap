@@ -1,0 +1,503 @@
+/**
+ * ═══════════════════════════════════════════════════════════════
+ * RALPH-1 THEME SYSTEM - Unified Dark/Light Theme
+ * ═══════════════════════════════════════════════════════════════
+ * 
+ * Usage:
+ *   <body data-theme="dark"> or <body data-theme="light">
+ *   Toggle via: document.body.setAttribute('data-theme', 'light')
+ * 
+ * Generated: 2026-02-20
+ * Author: Ralph-1 (CSS Theme System)
+ * ═══════════════════════════════════════════════════════════════
+ */
+
+/* ═══════════════════════════════════════════════════════════════
+   ROOT VARIABLES - Default (Dark Theme)
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  /* ─── Core Background Colors ─── */
+  --bg-primary: #050a08;
+  --bg-secondary: #0a1a0f;
+  --bg-tertiary: #0d2418;
+  --bg-gradient-start: #050a08;
+  --bg-gradient-end: #0a1a0f;
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  --bg-card: rgba(10, 26, 15, 0.8);
+  --bg-input: rgba(5, 10, 8, 0.9);
+  
+  /* ─── Text Colors ─── */
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-tertiary: rgba(255, 255, 255, 0.5);
+  --text-muted: rgba(255, 255, 255, 0.4);
+  --text-inverse: #050a08;
+  
+  /* ─── Accent Colors (Trading/Bullish-Bearish) ─── */
+  --accent-green: #00ff88;
+  --accent-green-light: #4dffb3;
+  --accent-green-dark: #00cc6a;
+  --accent-red: #ff3366;
+  --accent-red-light: #ff6688;
+  --accent-red-dark: #cc2952;
+  --accent-blue: #33ccff;
+  --accent-yellow: #ffcc00;
+  --accent-purple: #cc66ff;
+  
+  /* ─── Glow Effects (Neon) ─── */
+  --glow-green: rgba(0, 255, 136, 0.5);
+  --glow-green-soft: rgba(0, 255, 136, 0.3);
+  --glow-green-intense: rgba(0, 255, 136, 0.8);
+  --glow-red: rgba(255, 51, 102, 0.5);
+  --glow-red-soft: rgba(255, 51, 102, 0.3);
+  --glow-red-intense: rgba(255, 51, 102, 0.8);
+  --glow-blue: rgba(51, 204, 255, 0.5);
+  --glow-white: rgba(255, 255, 255, 0.3);
+  
+  /* ─── Border Colors ─── */
+  --border-primary: rgba(0, 255, 136, 0.3);
+  --border-secondary: rgba(255, 255, 255, 0.1);
+  --border-tertiary: rgba(255, 255, 255, 0.05);
+  --border-accent: rgba(0, 255, 136, 0.5);
+  --border-error: rgba(255, 51, 102, 0.5);
+  
+  /* ─── Background Effect Colors ─── */
+  --bg-grid-color: rgba(0, 255, 136, 0.03);
+  --bg-grid-line: rgba(0, 255, 136, 0.08);
+  --bg-circle-color: rgba(0, 255, 136, 0.05);
+  --bg-circle-glow: rgba(0, 255, 136, 0.15);
+  --bg-ripple-color: rgba(0, 255, 136, 0.1);
+  --bg-particle-color: rgba(0, 255, 136, 0.6);
+  --bg-scanline: rgba(0, 0, 0, 0.1);
+  --bg-vignette: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+  
+  /* ─── Shadow Colors ─── */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow-green: 0 0 20px var(--glow-green);
+  --shadow-glow-red: 0 0 20px var(--glow-red);
+  
+  /* ─── Transition Settings ─── */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  --transition-all: all 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="light"] {
+  /* ─── Core Background Colors ─── */
+  --bg-primary: #f0f5f0;
+  --bg-secondary: #e8f0e8;
+  --bg-tertiary: #d8e8d8;
+  --bg-gradient-start: #f0f5f0;
+  --bg-gradient-end: #e8f0e8;
+  --bg-overlay: rgba(240, 245, 240, 0.9);
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-input: rgba(240, 245, 240, 0.95);
+  
+  /* ─── Text Colors ─── */
+  --text-primary: #1a3a2a;
+  --text-secondary: rgba(26, 58, 42, 0.7);
+  --text-tertiary: rgba(26, 58, 42, 0.5);
+  --text-muted: rgba(26, 58, 42, 0.4);
+  --text-inverse: #f0f5f0;
+  
+  /* ─── Accent Colors (Trading/Bullish-Bearish) ─── */
+  --accent-green: #2a8a4a;
+  --accent-green-light: #3db560;
+  --accent-green-dark: #1f6b38;
+  --accent-red: #c54a4a;
+  --accent-red-light: #d66868;
+  --accent-red-dark: #a33a3a;
+  --accent-blue: #2a7a9a;
+  --accent-yellow: #b88a2a;
+  --accent-purple: #8a4a9a;
+  
+  /* ─── Glow Effects (Neon - muted for light) ─── */
+  --glow-green: rgba(42, 138, 74, 0.3);
+  --glow-green-soft: rgba(42, 138, 74, 0.15);
+  --glow-green-intense: rgba(42, 138, 74, 0.5);
+  --glow-red: rgba(197, 74, 74, 0.3);
+  --glow-red-soft: rgba(197, 74, 74, 0.15);
+  --glow-red-intense: rgba(197, 74, 74, 0.5);
+  --glow-blue: rgba(42, 122, 154, 0.3);
+  --glow-white: rgba(0, 0, 0, 0.1);
+  
+  /* ─── Border Colors ─── */
+  --border-primary: rgba(42, 138, 74, 0.3);
+  --border-secondary: rgba(26, 58, 42, 0.1);
+  --border-tertiary: rgba(26, 58, 42, 0.05);
+  --border-accent: rgba(42, 138, 74, 0.5);
+  --border-error: rgba(197, 74, 74, 0.5);
+  
+  /* ─── Background Effect Colors ─── */
+  --bg-grid-color: rgba(42, 138, 74, 0.06);
+  --bg-grid-line: rgba(42, 138, 74, 0.12);
+  --bg-circle-color: rgba(42, 138, 74, 0.08);
+  --bg-circle-glow: rgba(42, 138, 74, 0.2);
+  --bg-ripple-color: rgba(42, 138, 74, 0.15);
+  --bg-particle-color: rgba(42, 138, 74, 0.5);
+  --bg-scanline: rgba(0, 0, 0, 0.03);
+  --bg-vignette: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.1) 100%);
+  
+  /* ─── Shadow Colors (softer for light) ─── */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-glow-green: 0 0 15px var(--glow-green);
+  --shadow-glow-red: 0 0 15px var(--glow-red);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SMOOTH THEME TRANSITIONS
+   ═══════════════════════════════════════════════════════════════ */
+*,
+*::before,
+*::after {
+  transition: background-color var(--transition-base),
+              border-color var(--transition-base),
+              box-shadow var(--transition-base),
+              color var(--transition-base),
+              fill var(--transition-base),
+              stroke var(--transition-base);
+}
+
+/* Disable transitions on page load */
+.no-transitions *,
+.no-transitions *::before,
+.no-transitions *::after {
+  transition: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THEME TOGGLE BUTTON STYLING
+   ═══════════════════════════════════════════════════════════════ */
+.theme-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  background: var(--bg-card);
+  cursor: pointer;
+  overflow: hidden;
+  transition: var(--transition-all);
+}
+
+.theme-toggle:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-glow-green);
+  transform: scale(1.05);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle__icon {
+  width: 24px;
+  height: 24px;
+  color: var(--text-primary);
+  transition: var(--transition-all);
+}
+
+/* Sun icon (shown in dark mode, switch to light) */
+[data-theme="dark"] .theme-toggle__icon--sun,
+.theme-toggle[aria-label="Switch to light mode"] .theme-toggle__icon--sun {
+  display: block;
+}
+
+[data-theme="dark"] .theme-toggle__icon--moon,
+.theme-toggle[aria-label="Switch to light mode"] .theme-toggle__icon--moon {
+  display: none;
+}
+
+/* Moon icon (shown in light mode, switch to dark) */
+[data-theme="light"] .theme-toggle__icon--sun,
+.theme-toggle[aria-label="Switch to dark mode"] .theme-toggle__icon--sun {
+  display: none;
+}
+
+[data-theme="light"] .theme-toggle__icon--moon,
+.theme-toggle[aria-label="Switch to dark mode"] .theme-toggle__icon--moon {
+  display: block;
+}
+
+/* Alternative: Toggle Switch Style */
+.theme-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.theme-switch__track {
+  position: relative;
+  width: 56px;
+  height: 28px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 14px;
+  transition: var(--transition-all);
+}
+
+.theme-switch:hover .theme-switch__track {
+  border-color: var(--border-primary);
+}
+
+.theme-switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="light"] .theme-switch__thumb {
+  transform: translateX(28px);
+  background: var(--accent-blue);
+}
+
+.theme-switch__icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-secondary);
+  transition: color var(--transition-base);
+}
+
+.theme-switch:hover .theme-switch__icon {
+  color: var(--text-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BACKGROUND EFFECTS UTILITIES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Grid Background */
+.bg-grid {
+  background-image: 
+    linear-gradient(var(--bg-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid-line) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-color: var(--bg-primary);
+}
+
+.bg-grid-dots {
+  background-image: 
+    radial-gradient(circle, var(--bg-grid-color) 1px, transparent 1px);
+  background-size: 30px 30px;
+  background-color: var(--bg-primary);
+}
+
+/* Animated Circles Background */
+.bg-circles::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: 
+    radial-gradient(circle at 20% 30%, var(--bg-circle-color) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, var(--bg-circle-glow) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, var(--bg-circle-color) 0%, transparent 60%);
+  z-index: -1;
+}
+
+/* Scanline Effect */
+.bg-scanlines::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    var(--bg-scanline),
+    var(--bg-scanline) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  z-index: 1000;
+  opacity: 0.5;
+}
+
+/* Vignette Overlay */
+.bg-vignette::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: var(--bg-vignette);
+  z-index: 999;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Text Utilities */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-muted { color: var(--text-muted); }
+.text-green { color: var(--accent-green); }
+.text-red { color: var(--accent-red); }
+
+/* Background Utilities */
+.bg-primary { background-color: var(--bg-primary); }
+.bg-secondary { background-color: var(--bg-secondary); }
+.bg-tertiary { background-color: var(--bg-tertiary); }
+.bg-card { background-color: var(--bg-card); }
+
+/* Border Utilities */
+.border-primary { border-color: var(--border-primary); }
+.border-secondary { border-color: var(--border-secondary); }
+.border-accent { border-color: var(--border-accent); }
+
+/* Glow Utilities */
+.glow-green { box-shadow: var(--shadow-glow-green); }
+.glow-red { box-shadow: var(--shadow-glow-red); }
+.text-glow-green { text-shadow: 0 0 10px var(--glow-green); }
+.text-glow-red { text-shadow: 0 0 10px var(--glow-red); }
+
+/* Gradient Backgrounds */
+.bg-gradient {
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+}
+
+.bg-gradient-radial {
+  background: radial-gradient(ellipse at center, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPONENT PATTERNS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Card Component */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-secondary);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-all);
+}
+
+.card:hover {
+  border-color: var(--border-primary);
+  box-shadow: var(--shadow-md);
+}
+
+/* Button Components */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.btn-primary {
+  background: var(--accent-green);
+  color: var(--text-inverse);
+  border-color: var(--accent-green);
+}
+
+.btn-primary:hover {
+  background: var(--accent-green-light);
+  box-shadow: var(--shadow-glow-green);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-accent);
+}
+
+/* Input Component */
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-secondary);
+  border-radius: 8px;
+  outline: none;
+  transition: var(--transition-all);
+}
+
+.input:focus {
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px var(--glow-green-soft);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Badge Component */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-green {
+  background: rgba(0, 255, 136, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.badge-red {
+  background: rgba(255, 51, 102, 0.15);
+  color: var(--accent-red);
+  border: 1px solid rgba(255, 51, 102, 0.3);
+}
+
+[data-theme="light"] .badge-green {
+  background: rgba(42, 138, 74, 0.15);
+  border-color: rgba(42, 138, 74, 0.3);
+}
+
+[data-theme="light"] .badge-red {
+  background: rgba(197, 74, 74, 0.15);
+  border-color: rgba(197, 74, 74, 0.3);
+}
