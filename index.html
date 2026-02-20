@@ -1,372 +1,139 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bybit Heatmap Pro | Crypto Bubble Visualization</title>
+    <title>CRYPTO DIVER | Bybit Heatmap 💰</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
-        /* ═══════════════════════════════════════════════════════════════
-           CSS VARIABLES & THEME SYSTEM
-           ═══════════════════════════════════════════════════════════════ */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         :root {
-            /* ─── Core Background Colors ─── */
-            --bg-primary: #050a08;
-            --bg-secondary: #0a1a0f;
-            --bg-tertiary: #0d2418;
-            --bg-card: rgba(10, 26, 15, 0.85);
-            --bg-overlay: rgba(0, 0, 0, 0.8);
-            
-            /* ─── Text Colors ─── */
+            --bg-dark: #0a0a0f;
+            --bg-mid: #151520;
+            --neon-cyan: #00ffff;
+            --neon-green: #00ff88;
+            --neon-pink: #ff0080;
+            --neon-red: #ff3366;
+            --gold: #ffd700;
             --text-primary: #ffffff;
-            --text-secondary: rgba(255, 255, 255, 0.7);
-            --text-muted: rgba(255, 255, 255, 0.5);
-            
-            /* ─── Accent Colors ─── */
-            --accent-green: #00ff88;
-            --accent-green-light: #4dffb3;
-            --accent-red: #ff3366;
-            --accent-red-light: #ff6688;
-            --accent-blue: #33ccff;
-            --accent-gold: #ffcc00;
-            --accent-purple: #b829dd;
-            --neon-cyan: #00d4ff;
-            --neon-pink: #ff00ff;
-            
-            /* ─── Glow Effects ─── */
-            --glow-green: rgba(0, 255, 136, 0.5);
-            --glow-red: rgba(255, 51, 102, 0.5);
-            --glow-purple: rgba(184, 41, 221, 0.6);
-            --glow-pink: rgba(255, 0, 255, 0.8);
-            
-            /* ─── Border Colors ─── */
-            --border-primary: rgba(0, 255, 136, 0.3);
-            --border-secondary: rgba(255, 255, 255, 0.1);
-            
-            /* ─── Transitions ─── */
-            --transition-fast: 0.15s ease;
-            --transition-base: 0.3s ease;
-            --transition-slow: 0.5s ease;
-            
-            /* ─── Layout ─── */
-            --header-height: 70px;
-            --bottom-nav-height: 64px;
-            --safe-top: env(safe-area-inset-top, 0px);
-            --safe-bottom: env(safe-area-inset-bottom, 0px);
-        }
-
-        /* Light Theme Overrides */
-        [data-theme="light"] {
-            --bg-primary: #f0f5f0;
-            --bg-secondary: #e8f0e8;
-            --bg-tertiary: #d8e8d8;
-            --bg-card: rgba(255, 255, 255, 0.9);
-            --bg-overlay: rgba(240, 245, 240, 0.95);
-            
-            --text-primary: #1a3a2a;
-            --text-secondary: rgba(26, 58, 42, 0.7);
-            --text-muted: rgba(26, 58, 42, 0.4);
-            
-            --accent-green: #2a8a4a;
-            --accent-red: #c54a4a;
-            
-            --glow-green: rgba(42, 138, 74, 0.3);
-            --glow-red: rgba(197, 74, 74, 0.3);
-            
-            --border-primary: rgba(42, 138, 74, 0.3);
-            --border-secondary: rgba(26, 58, 42, 0.1);
-        }
-
-        /* ═══════════════════════════════════════════════════════════════
-           BASE STYLES & RESET
-           ═══════════════════════════════════════════════════════════════ */
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-        }
-
-        * {
-            transition: background-color var(--transition-base),
-                        border-color var(--transition-base),
-                        box-shadow var(--transition-base),
-                        color var(--transition-base);
-        }
-
-        html {
-            scroll-behavior: smooth;
-            -webkit-text-size-adjust: 100%;
+            --text-secondary: #888888;
         }
 
         body {
             font-family: 'Rajdhani', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-mid) 50%, var(--bg-dark) 100%);
             min-height: 100vh;
             overflow-x: hidden;
-            font-size: 16px;
-            line-height: 1.5;
+            color: var(--text-primary);
         }
 
-        /* ═══════════════════════════════════════════════════════════════
-           BACKGROUND SYSTEM
-           ═══════════════════════════════════════════════════════════════ */
-        .bg-system-wrapper {
+        /* ==========================================
+           CRYPTO DIVER BACKGROUND
+           ========================================== */
+        .crypto-diver-bg {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        .bg-layer {
-            position: absolute;
-            inset: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        .bg-layer-dark {
-            background: 
-                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(79, 70, 229, 0.05) 0%, transparent 70%),
-                linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
-            opacity: 1;
-        }
-
-        .bg-layer-light {
-            background: 
-                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(79, 70, 229, 0.03) 0%, transparent 70%),
-                linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
-            opacity: 0;
-        }
-
-        [data-theme="light"] .bg-layer-dark { opacity: 0; }
-        [data-theme="light"] .bg-layer-light { opacity: 1; }
-
-        /* Animated Particles */
-        .bg-particles {
-            position: absolute;
-            inset: 0;
+            z-index: 0;
             pointer-events: none;
         }
 
-        .bg-particle {
+        /* Title */
+        .diver-title {
             position: absolute;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background: rgba(99, 102, 241, 0.6);
-            box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
-            animation: float 20s ease-in-out infinite;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: 8px;
+            color: #ffffff;
+            text-shadow: 
+                0 0 10px var(--neon-cyan),
+                0 0 20px var(--neon-cyan),
+                0 0 40px var(--neon-cyan);
+            animation: titlePulse 3s ease-in-out infinite;
+            z-index: 10;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
-            25% { transform: translate(10px, -15px) scale(1.05); opacity: 0.6; }
-            50% { transform: translate(-5px, -25px) scale(0.95); opacity: 0.4; }
-            75% { transform: translate(-15px, -10px) scale(1.02); opacity: 0.5; }
+        .diver-subtitle {
+            position: absolute;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            z-index: 10;
         }
 
-        /* ═══════════════════════════════════════════════════════════════
+        @keyframes titlePulse {
+            0%, 100% { text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-cyan); }
+            50% { text-shadow: 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-cyan), 0 0 60px var(--neon-cyan); }
+        }
+
+        /* SVG Container */
+        .diver-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ==========================================
            HEADER
-           ═══════════════════════════════════════════════════════════════ */
+           ========================================== */
         .header {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: var(--header-height);
-            padding: 12px 20px;
-            padding-top: calc(12px + var(--safe-top));
-            background: linear-gradient(180deg, rgba(10,10,15,0.98) 0%, rgba(10,10,15,0.85) 60%, transparent 100%);
+            padding: 15px 25px;
+            background: rgba(10, 10, 15, 0.8);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             z-index: 100;
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-
-        [data-theme="light"] .header {
-            background: linear-gradient(180deg, rgba(240,245,240,0.98) 0%, rgba(240,245,240,0.85) 60%, transparent 100%);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
         }
 
         .logo {
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: 700;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, var(--accent-purple), var(--neon-pink));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 20px var(--neon-cyan);
         }
 
-        .header-center {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex: 1;
-            justify-content: center;
-            max-width: 500px;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        /* Search Box */
-        .search-box {
-            position: relative;
-            flex: 1;
-            max-width: 250px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 10px 16px 10px 40px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-secondary);
-            border-radius: 12px;
-            color: var(--text-primary);
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 14px;
-            outline: none;
-            transition: var(--transition-base);
-        }
-
-        .search-input:focus {
-            border-color: var(--accent-purple);
-            box-shadow: 0 0 0 3px rgba(184, 41, 221, 0.2);
-        }
-
-        .search-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-
-        /* Stats Display */
-        .stats {
-            display: flex;
-            gap: 12px;
-        }
-
-        .stat {
-            padding: 8px 16px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-secondary);
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .stat-value.bullish { color: var(--accent-green); }
-        .stat-value.bearish { color: var(--accent-red); }
-
-        .stat-label {
-            font-size: 10px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Theme Toggle */
-        .theme-toggle {
-            width: 44px;
-            height: 44px;
-            border: 1px solid var(--border-secondary);
-            border-radius: 12px;
-            background: var(--bg-card);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: var(--transition-base);
-        }
-
-        .theme-toggle:hover {
-            border-color: var(--accent-purple);
-            transform: scale(1.05);
-        }
-
-        /* ═══════════════════════════════════════════════════════════════
-           MAIN CONTENT & BUBBLE CONTAINER
-           ═══════════════════════════════════════════════════════════════ */
-        .main-content {
-            position: relative;
-            z-index: 10;
-            padding-top: calc(var(--header-height) + 20px);
-            padding-bottom: calc(var(--bottom-nav-height) + 20px);
-            min-height: 100vh;
-        }
-
+        /* ==========================================
+           BUBBLE CONTAINER
+           ========================================== */
         #bubble-container {
-            width: 100%;
-            min-height: calc(100vh - var(--header-height) - var(--bottom-nav-height) - 40px);
             position: relative;
-        }
-
-        #bubble-container svg {
+            z-index: 50;
             width: 100%;
-            height: 100%;
-            display: block;
+            min-height: 100vh;
+            padding-top: 200px;
+            padding-bottom: 50px;
         }
 
-        /* ═══════════════════════════════════════════════════════════════
-           BUBBLE STYLES
-           ═══════════════════════════════════════════════════════════════ */
         .bubble-group {
             cursor: pointer;
-            transform-style: preserve-3d;
-            perspective: 1000px;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 136, 0.4));
+            transition: filter 0.3s ease;
         }
 
-        .bubble-spiral {
-            filter: drop-shadow(0 0 10px currentColor);
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .bubble-group:hover .bubble-spiral {
-            filter: drop-shadow(0 0 25px currentColor) brightness(1.3);
-            transform: scale(1.15);
-        }
-
-        .bubble-group.spinning .bubble-spiral {
-            animation: bubbleSpin 1s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        @keyframes bubbleSpin {
-            0% { transform: scale(1) rotateZ(0deg); }
-            50% { transform: scale(1.3) rotateZ(180deg); }
-            100% { transform: scale(1) rotateZ(360deg); }
+        .bubble-group:hover {
+            filter: drop-shadow(0 0 30px rgba(0, 255, 136, 0.7)) brightness(1.2);
         }
 
         .bubble-label {
@@ -376,8 +143,7 @@
             text-anchor: middle;
             pointer-events: none;
             fill: #ffffff;
-            text-shadow: 0 0 10px rgba(0,0,0,0.9), 0 0 20px currentColor;
-            letter-spacing: 1px;
+            text-shadow: 0 0 15px rgba(0, 255, 136, 0.9);
         }
 
         .bubble-change {
@@ -386,1359 +152,285 @@
             font-weight: 600;
             text-anchor: middle;
             pointer-events: none;
-            fill: #ffffff;
-            text-shadow: 0 0 10px rgba(0,0,0,0.9);
-        }
-
-        .bubble-pulse {
-            animation: volumePulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes volumePulse {
-            0%, 100% { filter: drop-shadow(0 0 10px currentColor); }
-            50% { filter: drop-shadow(0 0 30px currentColor) brightness(1.3); }
-        }
-
-        /* ═══════════════════════════════════════════════════════════════
-           ENHANCED MODAL
-           ═══════════════════════════════════════════════════════════════ */
-        .enhanced-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.4s ease, visibility 0.4s ease;
-        }
-
-        .enhanced-modal.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .enhanced-modal-content {
-            background: linear-gradient(165deg, rgba(26, 10, 15, 0.98) 0%, rgba(10, 10, 15, 0.99) 100%);
-            border-radius: 24px 24px 0 0;
-            width: 100%;
-            max-width: 480px;
-            max-height: 85vh;
-            position: relative;
-            transform: translateY(100%) scale(0.95);
-            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            overflow: hidden;
-            box-shadow: 0 -20px 80px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-
-        [data-theme="light"] .enhanced-modal-content {
-            background: linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 245, 240, 0.99) 100%);
-        }
-
-        .enhanced-modal.active .enhanced-modal-content {
-            transform: translateY(0) scale(1);
-        }
-
-        /* Modal gradient border */
-        .enhanced-modal-content::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--accent-green) 0%, var(--accent-red) 100%);
-        }
-
-        /* Swipe Handle */
-        .modal-swipe-handle {
-            width: 100%;
-            padding: 12px 0;
-            display: flex;
-            justify-content: center;
-            cursor: grab;
-        }
-
-        .modal-swipe-handle::before {
-            content: '';
-            width: 40px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-        }
-
-        /* Modal Header */
-        .modal-header {
-            padding: 0 24px 16px;
-            text-align: center;
-            position: relative;
-        }
-
-        .modal-close-btn {
-            position: absolute;
-            top: 0;
-            right: 16px;
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
-            font-size: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .modal-close-btn:hover {
-            background: rgba(255, 0, 64, 0.2);
-            color: var(--accent-red);
-            transform: rotate(90deg);
-        }
-
-        .modal-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 36px;
-            height: 36px;
-            border: 1px solid var(--border-secondary);
-            background: var(--bg-card);
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
-            font-size: 18px;
-            transition: all 0.3s ease;
-            opacity: 0;
-        }
-
-        .enhanced-modal-content:hover .modal-nav {
-            opacity: 1;
-        }
-
-        .modal-nav:hover {
-            background: var(--bg-secondary);
-            border-color: var(--border-primary);
-            color: var(--text-primary);
-        }
-
-        .modal-nav.prev { left: 12px; }
-        .modal-nav.next { right: 12px; }
-        .modal-nav:disabled { opacity: 0.3 !important; cursor: not-allowed; }
-
-        .coin-symbol-large {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
-            font-weight: 900;
-            letter-spacing: 3px;
-            background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.7) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        [data-theme="light"] .coin-symbol-large {
-            background: linear-gradient(180deg, var(--text-primary) 0%, rgba(26, 58, 42, 0.7) 100%);
-            -webkit-background-clip: text;
-        }
-
-        .coin-full-name {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        /* Price Section */
-        .price-section {
-            padding: 0 24px 20px;
-            text-align: center;
-        }
-
-        .price-display {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2.8rem;
-            font-weight: 700;
-            letter-spacing: -1px;
-            margin-bottom: 8px;
-        }
-
-        .price-change-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        .price-change-pill.positive {
-            background: rgba(0, 255, 136, 0.15);
-            color: var(--accent-green);
-            box-shadow: 0 0 20px var(--glow-green);
-        }
-
-        .price-change-pill.negative {
-            background: rgba(255, 51, 102, 0.15);
-            color: var(--accent-red);
-            box-shadow: 0 0 20px var(--glow-red);
-        }
-
-        /* Stats Grid */
-        .modal-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            padding: 0 24px 20px;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-secondary);
-            border-radius: 12px;
-            padding: 14px 12px;
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            border-color: var(--border-primary);
-            transform: translateY(-2px);
-        }
-
-        .stat-card-label {
-            font-size: 0.65rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 6px;
-        }
-
-        .stat-card-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-
-        .stat-card-value.highlight {
-            font-size: 1.1rem;
-        }
-
-        /* HL Progress Bar */
-        .hl-progress {
-            margin-top: 8px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .hl-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-red), var(--accent-green));
-            border-radius: 2px;
-            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .hl-labels {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 4px;
-            font-size: 0.6rem;
-            color: var(--text-muted);
-        }
-
-        /* Volume Bars */
-        .volume-bars {
-            display: flex;
-            align-items: flex-end;
-            gap: 2px;
-            height: 20px;
-            margin-top: 6px;
-        }
-
-        .volume-bar-mini {
-            flex: 1;
-            background: linear-gradient(to top, var(--accent-blue), rgba(51, 204, 255, 0.3));
-            border-radius: 1px;
-            min-height: 2px;
-        }
-
-        /* Action Buttons */
-        .modal-actions {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            padding: 0 24px 24px;
-        }
-
-        .action-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            padding: 14px 8px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-secondary);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: var(--text-secondary);
-        }
-
-        .action-btn:hover {
-            background: var(--bg-secondary);
-            border-color: var(--border-primary);
-            transform: translateY(-2px);
-            color: var(--text-primary);
-        }
-
-        .action-btn.primary {
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 212, 255, 0.1));
-            border-color: rgba(0, 255, 136, 0.3);
-            color: var(--accent-green);
-        }
-
-        .action-btn.primary:hover {
-            box-shadow: 0 0 20px var(--glow-green);
-        }
-
-        .action-icon { font-size: 1.3rem; }
-        .action-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; }
-
-        /* Toast Notification */
-        .modal-toast {
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(10px);
-            padding: 12px 24px;
-            border-radius: 24px;
-            border: 1px solid var(--border-secondary);
-            color: var(--text-primary);
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            z-index: 1001;
-        }
-
-        .modal-toast.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        /* ═══════════════════════════════════════════════════════════════
-           BOTTOM NAVIGATION
-           ═══════════════════════════════════════════════════════════════ */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: var(--bottom-nav-height);
-            padding-bottom: var(--safe-bottom);
-            background: linear-gradient(0deg, rgba(10,10,15,0.98) 0%, rgba(10,10,15,0.9) 70%, transparent 100%);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 100;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid var(--border-secondary);
-        }
-
-        [data-theme="light"] .bottom-nav {
-            background: linear-gradient(0deg, rgba(240,245,240,0.98) 0%, rgba(240,245,240,0.9) 70%, transparent 100%);
-        }
-
-        .bottom-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            min-width: 48px;
-            min-height: 48px;
-            padding: 4px;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .bottom-nav-item.active {
-            color: var(--accent-green);
-        }
-
-        .bottom-nav-icon {
-            font-size: 20px;
-            line-height: 1;
-        }
-
-        /* ═══════════════════════════════════════════════════════════════
-           LOADING STATE
-           ═══════════════════════════════════════════════════════════════ */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--bg-primary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            z-index: 9999;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-
-        .loading-overlay.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 3px solid var(--border-secondary);
-            border-top-color: var(--accent-purple);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
-            color: var(--text-secondary);
-            letter-spacing: 2px;
-        }
-
-        /* ═══════════════════════════════════════════════════════════════
-           ALERT BANNER
-           ═══════════════════════════════════════════════════════════════ */
-        .alert-banner {
-            position: fixed;
-            top: calc(var(--header-height) + 10px);
-            left: 50%;
-            transform: translateX(-50%) translateY(-150%);
-            background: var(--bg-card);
-            border: 1px solid var(--border-primary);
-            border-radius: 12px;
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 99;
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .alert-banner.show {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .alert-icon { font-size: 20px; }
-        .alert-text { font-size: 14px; color: var(--text-secondary); }
-        .alert-close {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 18px;
-            padding: 0;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* ═══════════════════════════════════════════════════════════════
-           RESPONSIVE DESIGN
-           ═══════════════════════════════════════════════════════════════ */
-        @media (max-width: 768px) {
-            :root {
-                --header-height: 60px;
-            }
-
-            .logo { font-size: 1rem; }
-            .header-center { display: none; }
-            .stats { display: none; }
-            
-            .search-box {
-                position: fixed;
-                top: calc(var(--header-height) + 10px);
-                left: 16px;
-                right: 16px;
-                max-width: none;
-                z-index: 99;
-            }
-
-            .coin-symbol-large { font-size: 2rem; }
-            .price-display { font-size: 2.2rem; }
-            .modal-stats-grid { grid-template-columns: 1fr; }
-            .modal-actions { grid-template-columns: 1fr; }
-        }
-
-        @media (min-width: 769px) {
-            .bottom-nav { display: none; }
-            .main-content { padding-bottom: 20px; }
-            
-            .enhanced-modal {
-                align-items: center;
-                padding: 20px;
-            }
-            
-            .enhanced-modal-content {
-                border-radius: 24px;
-                max-height: 85vh;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            :root { --header-height: 70px; }
-            .logo { font-size: 1.2rem; }
-        }
-
-        /* Reduced Motion */
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-
-        /* Print Styles */
-        @media print {
-            .header, .bottom-nav, .enhanced-modal, .loading-overlay {
-                display: none !important;
-            }
         }
     </style>
 </head>
-<body data-theme="dark">
-    <!-- Background System -->
-    <div class="bg-system-wrapper">
-        <div class="bg-layer bg-layer-dark"></div>
-        <div class="bg-layer bg-layer-light"></div>
-        <div class="bg-particles" id="bg-particles"></div>
-    </div>
+<body>
+    <!-- CRYPTO DIVER BACKGROUND -->
+    <div class="crypto-diver-bg">
+        <div class="diver-title">CRYPTO DIVER</div>
+        <div class="diver-subtitle">Deep dive into the volatility abyss</div>
+        
+        <svg class="diver-svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+            <defs>
+                <!-- Glow Filters -->
+                <filter id="glow-cyan" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+                    <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+                
+                <filter id="glow-green" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="12" result="coloredBlur"/>
+                    <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+                
+                <filter id="glow-pink" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="12" result="coloredBlur"/>
+                    <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+                
+                <filter id="glow-white" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
 
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loading-overlay">
-        <div class="loading-spinner"></div>
-        <p class="loading-text">LOADING MARKET DATA...</p>
+                <!-- Gradients -->
+                <linearGradient id="grad-green" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#00ff88;stop-opacity:0.3" />
+                    <stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.1" />
+                    <stop offset="100%" style="stop-color:#00ff88;stop-opacity:0" />
+                </linearGradient>
+                
+                <linearGradient id="grad-pink" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#ff0080;stop-opacity:0.3" />
+                    <stop offset="50%" style="stop-color:#ff0080;stop-opacity:0.1" />
+                    <stop offset="100%" style="stop-color:#ff0080;stop-opacity:0" />
+                </linearGradient>
+            </defs>
+
+            <!-- BULL DIVER CIRCLES (Left) -->
+            <g transform="translate(250, 400)" filter="url(#glow-green)">
+                <circle cx="0" cy="0" r="180" fill="none" stroke="url(#grad-green)" stroke-width="2" opacity="0.8">
+                    <animate attributeName="r" values="180;200;180" dur="4s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0.8;0.4;0.8" dur="4s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="0" cy="0" r="140" fill="none" stroke="url(#grad-green)" stroke-width="2" opacity="0.6">
+                    <animate attributeName="r" values="140;160;140" dur="4s" repeatCount="indefinite" begin="0.5s"/>
+                    <animate attributeName="opacity" values="0.6;0.3;0.6" dur="4s" repeatCount="indefinite" begin="0.5s"/>
+                </circle>
+                <circle cx="0" cy="0" r="100" fill="none" stroke="url(#grad-green)" stroke-width="2" opacity="0.4">
+                    <animate attributeName="r" values="100;120;100" dur="4s" repeatCount="indefinite" begin="1s"/>
+                    <animate attributeName="opacity" values="0.4;0.2;0.4" dur="4s" repeatCount="indefinite" begin="1s"/>
+                </circle>
+                <circle cx="0" cy="0" r="60" fill="none" stroke="url(#grad-green)" stroke-width="2" opacity="0.3">
+                    <animate attributeName="r" values="60;80;60" dur="4s" repeatCount="indefinite" begin="1.5s"/>
+                    <animate attributeName="opacity" values="0.3;0.15;0.3" dur="4s" repeatCount="indefinite" begin="1.5s"/>
+                </circle>
+            </g>
+
+            <!-- BEAR DIVER CIRCLES (Right) -->
+            <g transform="translate(950, 400)" filter="url(#glow-pink)">
+                <circle cx="0" cy="0" r="180" fill="none" stroke="url(#grad-pink)" stroke-width="2" opacity="0.8">
+                    <animate attributeName="r" values="180;200;180" dur="4s" repeatCount="indefinite" begin="2s"/>
+                    <animate attributeName="opacity" values="0.8;0.4;0.8" dur="4s" repeatCount="indefinite" begin="2s"/>
+                </circle>
+                <circle cx="0" cy="0" r="140" fill="none" stroke="url(#grad-pink)" stroke-width="2" opacity="0.6">
+                    <animate attributeName="r" values="140;160;140" dur="4s" repeatCount="indefinite" begin="2.5s"/>
+                    <animate attributeName="opacity" values="0.6;0.3;0.6" dur="4s" repeatCount="indefinite" begin="2.5s"/>
+                </circle>
+                <circle cx="0" cy="0" r="100" fill="none" stroke="url(#grad-pink)" stroke-width="2" opacity="0.4">
+                    <animate attributeName="r" values="100;120;100" dur="4s" repeatCount="indefinite" begin="3s"/>
+                    <animate attributeName="opacity" values="0.4;0.2;0.4" dur="4s" repeatCount="indefinite" begin="3s"/>
+                </circle>
+                <circle cx="0" cy="0" r="60" fill="none" stroke="url(#grad-pink)" stroke-width="2" opacity="0.3">
+                    <animate attributeName="r" values="60;80;60" dur="4s" repeatCount="indefinite" begin="3.5s"/>
+                    <animate attributeName="opacity" values="0.3;0.15;0.3" dur="4s" repeatCount="indefinite" begin="3.5s"/>
+                </circle>
+            </g>
+
+            <!-- BULL DIVER (Left) -->
+            <g transform="translate(250, 400)" filter="url(#glow-cyan)">
+                <!-- Head -->
+                <circle cx="0" cy="-80" r="35" fill="#000" stroke="#00ffff" stroke-width="3"/>
+                
+                <!-- Body -->
+                <rect x="-25" y="-40" width="50" height="100" fill="#000" stroke="#00ffff" stroke-width="3" rx="5"/>
+                
+                <!-- Arms -->
+                <line x1="-25" y1="-20" x2="-70" y2="10" stroke="#00ffff" stroke-width="3" stroke-linecap="round"/>
+                <line x1="25" y1="-20" x2="70" y2="10" stroke="#00ffff" stroke-width="3" stroke-linecap="round"/>
+                
+                <!-- Hands -->
+                <circle cx="-70" cy="10" r="12" fill="#00ffff"/>
+                <circle cx="70" cy="10" r="12" fill="#00ffff"/>
+                
+                <!-- Legs -->
+                <line x1="-15" y1="60" x2="-30" y2="130" stroke="#00ffff" stroke-width="3" stroke-linecap="round"/>
+                <line x1="15" y1="60" x2="30" y2="130" stroke="#00ffff" stroke-width="3" stroke-linecap="round"/>
+                
+                <!-- Feet -->
+                <ellipse cx="-30" cy="135" rx="18" ry="10" fill="#ff0080" stroke="#00ffff" stroke-width="2"/>
+                <ellipse cx="30" cy="135" rx="18" ry="10" fill="#ff0080" stroke="#00ffff" stroke-width="2"/>
+                
+                <!-- Text -->
+                <text x="0" y="-10" text-anchor="middle" fill="#00ff88" font-family="Orbitron" font-size="12" font-weight="bold" filter="url(#glow-green)">ENTRY</text>
+                <text x="0" y="5" text-anchor="middle" fill="#00ff88" font-family="Orbitron" font-size="12" font-weight="bold" filter="url(#glow-green)">BULL RUN</text>
+                
+                <!-- Floating animation -->
+                <animateTransform attributeName="transform" type="translate" values="250,400; 250,380; 250,400" dur="6s" repeatCount="indefinite" additive="sum"/>
+            </g>
+
+            <!-- BEAR DIVER (Right) -->
+            <g transform="translate(950, 400)" filter="url(#glow-pink)">
+                <!-- Head -->
+                <circle cx="0" cy="-80" r="35" fill="#000" stroke="#ff0080" stroke-width="3"/>
+                
+                <!-- Body -->
+                <rect x="-25" y="-40" width="50" height="100" fill="#000" stroke="#ff0080" stroke-width="3" rx="5"/>
+                
+                <!-- Arms (raised) -->
+                <line x1="-25" y1="-30" x2="-60" y2="-70" stroke="#ffd700" stroke-width="3" stroke-linecap="round"/>
+                <line x1="25" y1="-30" x2="60" y2="-70" stroke="#ffd700" stroke-width="3" stroke-linecap="round"/>
+                
+                <!-- Hands (glow) -->
+                <circle cx="-60" cy="-70" r="12" fill="#ffd700" filter="url(#glow-white)"/>
+                <circle cx="60" cy="-70" r="12" fill="#ffd700" filter="url(#glow-white)"/>
+                
+                <!-- Legs -->
+                <line x1="-15" y1="60" x2="-20" y2="130" stroke="#ff0080" stroke-width="3" stroke-linecap="round"/>
+                <line x1="15" y1="60" x2="20" y2="130" stroke="#ff0080" stroke-width="3" stroke-linecap="round"/>
+                
+                <!-- Feet -->
+                <ellipse cx="-20" cy="135" rx="18" ry="10" fill="#00ff88" stroke="#ff0080" stroke-width="2"/>
+                <ellipse cx="20" cy="135" rx="18" ry="10" fill="#00ff88" stroke="#ff0080" stroke-width="2"/>
+                
+                <!-- Text -->
+                <text x="0" y="-10" text-anchor="middle" fill="#ff0080" font-family="Orbitron" font-size="12" font-weight="bold" filter="url(#glow-pink)">EXIT</text>
+                <text x="0" y="5" text-anchor="middle" fill="#ff0080" font-family="Orbitron" font-size="12" font-weight="bold" filter="url(#glow-pink)">BEAR DIP</text>
+                
+                <!-- Floating animation -->
+                <animateTransform attributeName="transform" type="translate" values="950,400; 950,380; 950,400" dur="6s" repeatCount="indefinite" begin="3s" additive="sum"/>
+            </g>
+
+            <!-- DOTTED PATH -->
+            <path d="M 320,400 Q 500,350 600,420 T 880,400" 
+                  fill="none" 
+                  stroke="#ffffff" 
+                  stroke-width="2"
+                  stroke-dasharray="8,8"
+                  filter="url(#glow-white)"
+                  opacity="0.6">
+                <animate attributeName="stroke-dashoffset" values="0;-16" dur="1s" repeatCount="indefinite"/>
+            </path>
+
+            <!-- CRYPTO ICONS Floating -->
+            <g opacity="0.3" fill="#ffd700" font-family="monospace" font-size="20">
+                <text x="100" y="200">₿</text>
+                <text x="500" y="150">Ξ</text>
+                <text x="800" y="250">◎</text>
+                <text x="200" y="600">₿</text>
+                <text x="700" y="550">Ξ</text>
+                <text x="1100" y="300">₿</text>
+                <text x="50" y="400">◎</text>
+                <text x="600" y="650">₿</text>
+                <text x="1000" y="500">Ξ</text>
+                <text x="400" y="300">◎</text>
+            </g>
+        </svg>
     </div>
 
     <!-- Header -->
-    <header class="header">
-        <div class="logo">
-            <span>💰</span>
-            <span>BYBIT HEATMAP</span>
-        </div>
-        
-        <div class="header-center">
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" id="search-input" placeholder="Search coin...">
-            </div>
-        </div>
-        
-        <div class="header-right">
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-value bullish" id="stat-bullish">0</div>
-                    <div class="stat-label">Bullish</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value bearish" id="stat-bearish">0</div>
-                    <div class="stat-label">Bearish</div>
-                </div>
-            </div>
-            <button class="theme-toggle" id="theme-toggle" title="Toggle theme (T)">
-                <span id="theme-icon">🌙</span>
-            </button>
-        </div>
-    </header>
-
-    <!-- Mobile Search -->
-    <div class="search-box" style="display: none;" id="mobile-search">
-        <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" placeholder="Search coin...">
+    <div class="header">
+        <div class="logo">💰 CRYPTO DIVER HEATMAP</div>
     </div>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div id="bubble-container"></div>
-    </main>
-
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <button class="bottom-nav-item active" data-tab="heatmap">
-            <span class="bottom-nav-icon">📊</span>
-            <span>Heatmap</span>
-        </button>
-        <button class="bottom-nav-item" data-tab="search" id="mobile-search-btn">
-            <span class="bottom-nav-icon">🔍</span>
-            <span>Search</span>
-        </button>
-        <button class="bottom-nav-item" data-tab="stats">
-            <span class="bottom-nav-icon">📈</span>
-            <span>Stats</span>
-        </button>
-        <button class="bottom-nav-item" data-tab="settings">
-            <span class="bottom-nav-icon">⚙️</span>
-            <span>Settings</span>
-        </button>
-    </nav>
-
-    <!-- Enhanced Modal -->
-    <div class="enhanced-modal" id="enhanced-modal">
-        <div class="enhanced-modal-content">
-            <div class="modal-swipe-handle"></div>
-            <div class="modal-header">
-                <button class="modal-nav prev" id="modal-prev" title="Previous (←)">‹</button>
-                <button class="modal-nav next" id="modal-next" title="Next (→)">›</button>
-                <button class="modal-close-btn" id="modal-close" title="Close (Esc)">×</button>
-                <div class="coin-symbol-large" id="modal-symbol">BTC</div>
-                <div class="coin-full-name" id="modal-name">Bitcoin</div>
-            </div>
-            
-            <div class="price-section">
-                <div class="price-display" id="modal-price">$0.00</div>
-                <div class="price-change-pill" id="modal-change">+0.00%</div>
-            </div>
-            
-            <div class="modal-stats-grid">
-                <div class="stat-card">
-                    <div class="stat-card-label">📊 Volume 24h</div>
-                    <div class="stat-card-value highlight" id="modal-volume">-</div>
-                    <div class="volume-bars" id="modal-volume-bars"></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-label">📈 Turnover 24h</div>
-                    <div class="stat-card-value highlight" id="modal-turnover">-</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-label">⬆️ High 24h</div>
-                    <div class="stat-card-value" id="modal-high">-</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-card-label">⬇️ Low 24h</div>
-                    <div class="stat-card-value" id="modal-low">-</div>
-                </div>
-                <div class="stat-card" style="grid-column: span 2;">
-                    <div class="stat-card-label">📍 Price Range</div>
-                    <div class="hl-progress">
-                        <div class="hl-progress-bar" id="modal-hl-progress" style="width: 50%"></div>
-                    </div>
-                    <div class="hl-labels">
-                        <span id="modal-hl-low">Low</span>
-                        <span id="modal-hl-current">Current</span>
-                        <span id="modal-hl-high">High</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="modal-actions">
-                <button class="action-btn primary" id="btn-trade">
-                    <span class="action-icon">🚀</span>
-                    <span class="action-label">Trade</span>
-                </button>
-                <button class="action-btn" id="btn-copy">
-                    <span class="action-icon">📋</span>
-                    <span class="action-label">Copy</span>
-                </button>
-                <button class="action-btn" id="btn-share">
-                    <span class="action-icon">🔗</span>
-                    <span class="action-label">Share</span>
-                </button>
-            </div>
-        </div>
-        <div class="modal-toast" id="modal-toast">
-            <span>✓</span>
-            <span id="toast-message">Copied!</span>
-        </div>
-    </div>
-
-    <!-- Alert Banner -->
-    <div class="alert-banner" id="alert-banner">
-        <span class="alert-icon">⚡</span>
-        <span class="alert-text" id="alert-text">Volume spike detected!</span>
-        <button class="alert-close" onclick="this.parentElement.classList.remove('show')">×</button>
-    </div>
+    <!-- Bubble Container -->
+    <div id="bubble-container"></div>
 
     <script>
-        // ═══════════════════════════════════════════════════════════════
-        // BYBIT HEATMAP PRO - INTEGRATED APPLICATION
-        // ═══════════════════════════════════════════════════════════════
-
-        // ============================================
-        // CONFIGURATION
-        // ============================================
-        const CONFIG = {
-            API_URL: 'https://api.bybit.com/v5/market/tickers',
-            UPDATE_INTERVAL: 30000, // 30 seconds
-            MAX_BUBBLES: 60,
-            VOLUME_SPIKE_THRESHOLD: 2.5, // 250% of average
-            ANIMATION_DURATION: 1000,
-        };
-
-        // ============================================
-        // STATE MANAGEMENT
-        // ============================================
-        const state = {
-            coins: [],
-            filteredCoins: [],
-            currentTheme: 'dark',
-            currentModalIndex: -1,
-            volumeHistory: {},
-            isLoading: true,
-            searchQuery: '',
-        };
-
-        // ============================================
-        // UTILITY FUNCTIONS
-        // ============================================
+        // BUBBLE DATA AND RENDERING (same as before)
+        let bubbleData = [];
         
-        /**
-         * Format price with appropriate decimals
-         */
-        function formatPrice(price) {
-            if (price >= 1000) {
-                return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            } else if (price >= 1) {
-                return price.toFixed(4);
-            } else if (price >= 0.01) {
-                return price.toFixed(6);
-            } else {
-                return price.toFixed(8);
-            }
-        }
-
-        /**
-         * Format number to K/M/B
-         */
-        function formatNumber(num) {
-            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-            if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-            return num.toFixed(2);
-        }
-
-        /**
-         * Get bubble color based on price change
-         */
-        function getBubbleColor(change24h, theme = 'dark') {
-            const isPositive = change24h >= 0;
-            
-            if (theme === 'dark') {
-                return isPositive ? {
-                    primary: '#00ff41',
-                    glow: 'rgba(0, 255, 65, 0.6)',
-                    text: '#00ff41'
-                } : {
-                    primary: '#ff0040',
-                    glow: 'rgba(255, 0, 64, 0.6)',
-                    text: '#ff0040'
-                };
-            } else {
-                return isPositive ? {
-                    primary: '#2a8a4a',
-                    glow: 'rgba(42, 138, 74, 0.3)',
-                    text: '#2a8a4a'
-                } : {
-                    primary: '#c54a4a',
-                    glow: 'rgba(197, 74, 74, 0.3)',
-                    text: '#c54a4a'
-                };
-            }
-        }
-
-        /**
-         * Calculate bubble size based on volume
-         */
-        function calculateBubbleSize(volume, maxVolume) {
-            const minSize = 45;
-            const maxSize = 110;
-            const normalized = Math.log10(volume + 1) / Math.log10(maxVolume + 1);
-            return minSize + normalized * (maxSize - minSize);
-        }
-
-        // ============================================
-        // BACKGROUND PARTICLES
-        // ============================================
-        function initParticles() {
-            const container = document.getElementById('bg-particles');
-            const particleCount = window.matchMedia('(pointer: coarse)').matches ? 5 : 15;
-            
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'bg-particle';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * -20 + 's';
-                particle.style.animationDuration = (15 + Math.random() * 15) + 's';
-                container.appendChild(particle);
-            }
-        }
-
-        // ============================================
-        // DATA FETCHING
-        // ============================================
-        async function fetchMarketData() {
+        async function loadData() {
             try {
-                const response = await fetch(`${CONFIG.API_URL}?category=spot`);
+                const response = await fetch('https://api.bybit.com/v5/market/tickers?category=linear');
                 const data = await response.json();
-                
-                if (data.retCode !== 0) {
-                    throw new Error(data.retMsg);
-                }
-                
-                return processMarketData(data.result.list);
+
+                bubbleData = data.result.list
+                    .filter(item => item.symbol.endsWith('USDT'))
+                    .map(item => ({
+                        symbol: item.symbol.replace('USDT', ''),
+                        change24h: parseFloat(item.price24hPcnt) * 100,
+                        price: parseFloat(item.lastPrice),
+                        volume24h: parseFloat(item.volume24h) * parseFloat(item.lastPrice)
+                    }))
+                    .filter(item => !isNaN(item.change24h))
+                    .sort((a, b) => b.volume24h - a.volume24h)
+                    .slice(0, 36);
+
+                renderBubbles();
             } catch (error) {
-                console.error('Error fetching data:', error);
-                showAlert('Failed to load market data. Retrying...', 'error');
-                return null;
+                console.error('Error:', error);
             }
         }
 
-        function processMarketData(list) {
-            const processed = list
-                .filter(item => item.symbol.endsWith('USDT'))
-                .map(item => ({
-                    symbol: item.symbol.replace('USDT', ''),
-                    fullSymbol: item.symbol,
-                    price: parseFloat(item.lastPrice) || 0,
-                    change24h: parseFloat(item.price24hPcnt) * 100 || 0,
-                    volume24h: parseFloat(item.volume24h) || 0,
-                    turnover24h: parseFloat(item.turnover24h) || 0,
-                    high24h: parseFloat(item.highPrice24h) || 0,
-                    low24h: parseFloat(item.lowPrice24h) || 0,
-                }))
-                .filter(item => item.price > 0)
-                .sort((a, b) => b.volume24h - a.volume24h)
-                .slice(0, CONFIG.MAX_BUBBLES);
-            
-            // Update volume history for spike detection
-            processed.forEach(coin => {
-                if (!state.volumeHistory[coin.symbol]) {
-                    state.volumeHistory[coin.symbol] = [];
-                }
-                state.volumeHistory[coin.symbol].push(coin.volume24h);
-                if (state.volumeHistory[coin.symbol].length > 10) {
-                    state.volumeHistory[coin.symbol].shift();
-                }
-            });
-            
-            return processed;
-        }
-
-        function detectVolumeSpikes(coins) {
-            coins.forEach(coin => {
-                const history = state.volumeHistory[coin.symbol];
-                if (history && history.length >= 3) {
-                    const avg = history.slice(0, -1).reduce((a, b) => a + b, 0) / (history.length - 1);
-                    if (avg > 0 && coin.volume24h / avg > CONFIG.VOLUME_SPIKE_THRESHOLD) {
-                        showAlert(`🔥 Volume spike detected for ${coin.symbol}!`, 'success');
-                        const bubble = document.querySelector(`[data-symbol="${coin.symbol}"]`);
-                        if (bubble) {
-                            bubble.classList.add('bubble-pulse');
-                            setTimeout(() => bubble.classList.remove('bubble-pulse'), 5000);
-                        }
-                    }
-                }
-            });
-        }
-
-        // ============================================
-        // BUBBLE RENDERING
-        // ============================================
-        function renderBubbles(coins) {
+        function renderBubbles() {
             const container = document.getElementById('bubble-container');
-            const width = container.clientWidth;
-            const height = Math.max(window.innerHeight - 200, 600);
-            
-            // Clear existing
             container.innerHTML = '';
             
-            // Create SVG
-            const svg = d3.select('#bubble-container')
-                .append('svg')
-                .attr('width', width)
-                .attr('height', height);
-            
-            // Add defs for filters
-            const defs = svg.append('defs');
-            
-            // Glow filter
-            const filter = defs.append('filter')
-                .attr('id', 'glow')
-                .attr('x', '-50%')
-                .attr('y', '-50%')
-                .attr('width', '200%')
-                .attr('height', '200%');
-            
-            filter.append('feGaussianBlur')
-                .attr('stdDeviation', '4')
-                .attr('result', 'coloredBlur');
-            
-            const feMerge = filter.append('feMerge');
-            feMerge.append('feMergeNode').attr('in', 'coloredBlur');
-            feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
-            
-            const maxVolume = Math.max(...coins.map(c => c.volume24h));
-            
-            // Create grid layout
-            const cols = Math.floor(width / 130);
-            const spacingX = width / cols;
-            const spacingY = 130;
-            
-            coins.forEach((coin, i) => {
+            const width = Math.min(container.clientWidth - 20, 1400);
+            const cols = Math.floor(width / 180);
+            const spacing = width / cols;
+
+            bubbleData.forEach((d, i) => {
                 const col = i % cols;
                 const row = Math.floor(i / cols);
-                coin.x = col * spacingX + spacingX / 2;
-                coin.y = row * spacingY + spacingY / 2 + 40;
-                coin.size = calculateBubbleSize(coin.volume24h, maxVolume);
+                const offsetX = (row % 2) * (spacing / 2);
+                d.x = col * spacing + spacing / 2 + offsetX;
+                d.y = row * spacing + spacing / 2 + 50;
             });
-            
-            // Render bubble groups
+
+            const svg = d3.select('#bubble-container').append('svg')
+                .attr('width', width)
+                .attr('height', Math.ceil(bubbleData.length / cols) * spacing + 100);
+
             const groups = svg.selectAll('.bubble-group')
-                .data(coins)
-                .enter()
-                .append('g')
+                .data(bubbleData)
+                .enter().append('g')
                 .attr('class', 'bubble-group')
-                .attr('data-symbol', d => d.symbol)
                 .attr('transform', d => `translate(${d.x},${d.y})`);
-            
+
             groups.each(function(d) {
                 const g = d3.select(this);
-                const colors = getBubbleColor(d.change24h, state.currentTheme);
-                const isPositive = d.change24h >= 0;
+                const isPos = d.change24h >= 0;
+                const color = isPos ? '#00ff88' : '#ff3366';
                 
-                // Create spiral ribbon path
-                const ribbonPath = createSpiralPath(d.size / 2);
-                
-                // Outer glow
+                // Simple circle bubble for now
                 g.append('circle')
-                    .attr('r', d.size / 2 + 5)
-                    .attr('fill', colors.glow)
-                    .attr('opacity', 0.3)
-                    .attr('filter', 'url(#glow)');
+                    .attr('r', 40)
+                    .attr('fill', 'rgba(0,0,0,0.8)')
+                    .attr('stroke', color)
+                    .attr('stroke-width', 2)
+                    .style('filter', `drop-shadow(0 0 15px ${color})`);
                 
-                // Spiral ribbon
-                g.append('path')
-                    .attr('class', 'bubble-spiral')
-                    .attr('d', ribbonPath)
-                    .attr('fill', 'none')
-                    .attr('stroke', colors.primary)
-                    .attr('stroke-width', 3)
-                    .attr('stroke-linecap', 'round')
-                    .style('color', colors.primary);
-                
-                // Inner circle
-                g.append('circle')
-                    .attr('r', d.size / 3)
-                    .attr('fill', state.currentTheme === 'dark' ? '#0a0a0f' : '#f0f5f0')
-                    .attr('stroke', colors.primary)
-                    .attr('stroke-width', 2);
-                
-                // Symbol text
                 g.append('text')
                     .attr('class', 'bubble-label')
-                    .attr('dy', '-0.2em')
+                    .attr('dy', '-0.3em')
                     .text(d.symbol);
                 
-                // Change text
                 g.append('text')
                     .attr('class', 'bubble-change')
-                    .attr('dy', '1.2em')
-                    .style('fill', colors.text)
-                    .text(`${d.change24h >= 0 ? '+' : ''}${d.change24h.toFixed(1)}%`);
-            });
-            
-            // Click handlers
-            groups.on('click', function(event, d) {
-                const el = d3.select(this);
-                el.classed('spinning', true);
-                setTimeout(() => el.classed('spinning', false), 1000);
-                openModal(d);
+                    .attr('dy', '1em')
+                    .style('fill', color)
+                    .text((d.change24h >= 0 ? '+' : '') + d.change24h.toFixed(1) + '%');
             });
         }
 
-        /**
-         * Create spiral path for bubble
-         */
-        function createSpiralPath(radius) {
-            let path = '';
-            const turns = 2.5;
-            const segments = 60;
-            
-            for (let i = 0; i <= segments; i++) {
-                const t = i / segments;
-                const angle = t * turns * Math.PI * 2;
-                const r = radius * (0.2 + 0.8 * t);
-                const x = r * Math.cos(angle);
-                const y = r * Math.sin(angle);
-                path += (i === 0 ? 'M' : 'L') + ` ${x.toFixed(2)},${y.toFixed(2)}`;
-            }
-            
-            return path;
-        }
-
-        // ============================================
-        // MODAL FUNCTIONS
-        // ============================================
-        function openModal(coin) {
-            state.currentModalIndex = state.coins.findIndex(c => c.symbol === coin.symbol);
-            updateModalContent(coin);
-            
-            const modal = document.getElementById('enhanced-modal');
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('enhanced-modal');
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        function updateModalContent(coin) {
-            const isPositive = coin.change24h >= 0;
-            const colors = getBubbleColor(coin.change24h, state.currentTheme);
-            
-            document.getElementById('modal-symbol').textContent = coin.symbol;
-            document.getElementById('modal-name').textContent = coin.fullSymbol;
-            document.getElementById('modal-price').textContent = '$' + formatPrice(coin.price);
-            
-            const changeEl = document.getElementById('modal-change');
-            changeEl.textContent = `${isPositive ? '+' : ''}${coin.change24h.toFixed(2)}%`;
-            changeEl.className = 'price-change-pill ' + (isPositive ? 'positive' : 'negative');
-            
-            document.getElementById('modal-volume').textContent = '$' + formatNumber(coin.volume24h);
-            document.getElementById('modal-turnover').textContent = '$' + formatNumber(coin.turnover24h);
-            document.getElementById('modal-high').textContent = '$' + formatPrice(coin.high24h);
-            document.getElementById('modal-low').textContent = '$' + formatPrice(coin.low24h);
-            
-            // Update HL progress
-            if (coin.high24h > coin.low24h) {
-                const range = coin.high24h - coin.low24h;
-                const position = ((coin.price - coin.low24h) / range) * 100;
-                document.getElementById('modal-hl-progress').style.width = Math.max(5, Math.min(95, position)) + '%';
-                document.getElementById('modal-hl-low').textContent = '$' + formatNumber(coin.low24h);
-                document.getElementById('modal-hl-high').textContent = '$' + formatNumber(coin.high24h);
-                document.getElementById('modal-hl-current').textContent = formatNumber(coin.price);
-            }
-            
-            // Generate volume bars
-            const barsContainer = document.getElementById('modal-volume-bars');
-            barsContainer.innerHTML = '';
-            for (let i = 0; i < 12; i++) {
-                const bar = document.createElement('div');
-                bar.className = 'volume-bar-mini';
-                bar.style.height = (20 + Math.random() * 80) + '%';
-                barsContainer.appendChild(bar);
-            }
-            
-            // Update nav buttons
-            document.getElementById('modal-prev').disabled = state.currentModalIndex <= 0;
-            document.getElementById('modal-next').disabled = state.currentModalIndex >= state.coins.length - 1;
-        }
-
-        function navigateModal(direction) {
-            const newIndex = state.currentModalIndex + direction;
-            if (newIndex >= 0 && newIndex < state.coins.length) {
-                state.currentModalIndex = newIndex;
-                updateModalContent(state.coins[newIndex]);
-            }
-        }
-
-        // ============================================
-        // THEME MANAGEMENT
-        // ============================================
-        function toggleTheme() {
-            const newTheme = state.currentTheme === 'dark' ? 'light' : 'dark';
-            state.currentTheme = newTheme;
-            document.body.setAttribute('data-theme', newTheme);
-            document.getElementById('theme-icon').textContent = newTheme === 'dark' ? '🌙' : '☀️';
-            
-            // Re-render bubbles with new theme colors
-            if (state.coins.length > 0) {
-                renderBubbles(state.coins);
-            }
-            
-            // Save preference
-            localStorage.setItem('bybit-heatmap-theme', newTheme);
-        }
-
-        function loadTheme() {
-            const savedTheme = localStorage.getItem('bybit-heatmap-theme') || 'dark';
-            state.currentTheme = savedTheme;
-            document.body.setAttribute('data-theme', savedTheme);
-            document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
-        }
-
-        // ============================================
-        // SEARCH FUNCTIONALITY
-        // ============================================
-        function filterCoins(query) {
-            state.searchQuery = query.toLowerCase();
-            if (!state.searchQuery) {
-                state.filteredCoins = state.coins;
-            } else {
-                state.filteredCoins = state.coins.filter(c => 
-                    c.symbol.toLowerCase().includes(state.searchQuery)
-                );
-            }
-            renderBubbles(state.filteredCoins);
-        }
-
-        // ============================================
-        // STATS UPDATE
-        // ============================================
-        function updateStats(coins) {
-            const bullish = coins.filter(c => c.change24h > 0).length;
-            const bearish = coins.filter(c => c.change24h < 0).length;
-            
-            document.getElementById('stat-bullish').textContent = bullish;
-            document.getElementById('stat-bearish').textContent = bearish;
-        }
-
-        // ============================================
-        // ALERT SYSTEM
-        // ============================================
-        function showAlert(message, type = 'info') {
-            const banner = document.getElementById('alert-banner');
-            const text = document.getElementById('alert-text');
-            const icon = banner.querySelector('.alert-icon');
-            
-            text.textContent = message;
-            icon.textContent = type === 'error' ? '⚠️' : type === 'success' ? '🔥' : '⚡';
-            
-            banner.classList.add('show');
-            
-            setTimeout(() => {
-                banner.classList.remove('show');
-            }, 4000);
-        }
-
-        // ============================================
-        // TOAST NOTIFICATION
-        // ============================================
-        function showToast(message) {
-            const toast = document.getElementById('modal-toast');
-            document.getElementById('toast-message').textContent = message;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2500);
-        }
-
-        // ============================================
-        // EVENT HANDLERS
-        // ============================================
-        function setupEventListeners() {
-            // Theme toggle
-            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-            
-            // Search
-            const searchInput = document.getElementById('search-input');
-            searchInput.addEventListener('input', (e) => filterCoins(e.target.value));
-            
-            // Modal close
-            document.getElementById('modal-close').addEventListener('click', closeModal);
-            document.getElementById('enhanced-modal').addEventListener('click', (e) => {
-                if (e.target.id === 'enhanced-modal') closeModal();
-            });
-            
-            // Modal navigation
-            document.getElementById('modal-prev').addEventListener('click', () => navigateModal(-1));
-            document.getElementById('modal-next').addEventListener('click', () => navigateModal(1));
-            
-            // Action buttons
-            document.getElementById('btn-trade').addEventListener('click', () => {
-                const coin = state.coins[state.currentModalIndex];
-                if (coin) {
-                    window.open(`https://www.bybit.com/trade/usdt/${coin.symbol}USDT`, '_blank');
-                }
-            });
-            
-            document.getElementById('btn-copy').addEventListener('click', async () => {
-                const coin = state.coins[state.currentModalIndex];
-                if (coin) {
-                    const text = `${coin.symbol}: $${formatPrice(coin.price)} (${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%)`;
-                    try {
-                        await navigator.clipboard.writeText(text);
-                        showToast('Price copied!');
-                    } catch (err) {
-                        showToast('Copy failed');
-                    }
-                }
-            });
-            
-            document.getElementById('btn-share').addEventListener('click', async () => {
-                const coin = state.coins[state.currentModalIndex];
-                if (coin) {
-                    const shareData = {
-                        title: `${coin.symbol} on Bybit`,
-                        text: `${coin.symbol}: $${formatPrice(coin.price)} (${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%)`,
-                        url: `https://www.bybit.com/trade/usdt/${coin.symbol}USDT`
-                    };
-                    
-                    try {
-                        if (navigator.share) {
-                            await navigator.share(shareData);
-                        } else {
-                            await navigator.clipboard.writeText(`${shareData.text} - ${shareData.url}`);
-                            showToast('Link copied!');
-                        }
-                    } catch (err) {
-                        if (err.name !== 'AbortError') {
-                            showToast('Share failed');
-                        }
-                    }
-                }
-            });
-            
-            // Keyboard shortcuts
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    closeModal();
-                } else if (e.key === 'ArrowLeft' && document.getElementById('enhanced-modal').classList.contains('active')) {
-                    navigateModal(-1);
-                } else if (e.key === 'ArrowRight' && document.getElementById('enhanced-modal').classList.contains('active')) {
-                    navigateModal(1);
-                } else if ((e.key === 't' || e.key === 'T') && e.target.tagName !== 'INPUT') {
-                    toggleTheme();
-                } else if ((e.key === '/' || e.key === 's' || e.key === 'S') && e.target.tagName !== 'INPUT') {
-                    e.preventDefault();
-                    searchInput.focus();
-                }
-            });
-            
-            // Swipe to close modal (mobile)
-            let touchStartY = 0;
-            const modalContent = document.querySelector('.enhanced-modal-content');
-            
-            modalContent.addEventListener('touchstart', (e) => {
-                touchStartY = e.touches[0].clientY;
-            }, { passive: true });
-            
-            modalContent.addEventListener('touchend', (e) => {
-                const touchEndY = e.changedTouches[0].clientY;
-                if (touchEndY - touchStartY > 100) {
-                    closeModal();
-                }
-            }, { passive: true });
-            
-            // Window resize
-            let resizeTimeout;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(() => {
-                    if (state.coins.length > 0) {
-                        renderBubbles(state.filteredCoins.length > 0 ? state.filteredCoins : state.coins);
-                    }
-                }, 250);
-            });
-            
-            // Mobile search toggle
-            document.getElementById('mobile-search-btn')?.addEventListener('click', () => {
-                const mobileSearch = document.getElementById('mobile-search');
-                mobileSearch.style.display = mobileSearch.style.display === 'none' ? 'block' : 'none';
-                if (mobileSearch.style.display === 'block') {
-                    mobileSearch.querySelector('input').focus();
-                }
-            });
-        }
-
-        // ============================================
-        // INITIALIZATION
-        // ============================================
-        async function init() {
-            // Load saved theme
-            loadTheme();
-            
-            // Initialize particles
-            initParticles();
-            
-            // Setup event listeners
-            setupEventListeners();
-            
-            // Fetch initial data
-            const data = await fetchMarketData();
-            
-            if (data) {
-                state.coins = data;
-                state.filteredCoins = data;
-                
-                // Hide loading
-                document.getElementById('loading-overlay').classList.add('hidden');
-                state.isLoading = false;
-                
-                // Render bubbles
-                renderBubbles(data);
-                
-                // Update stats
-                updateStats(data);
-                
-                // Check for volume spikes
-                detectVolumeSpikes(data);
-                
-                // Setup auto-refresh
-                setInterval(async () => {
-                    const newData = await fetchMarketData();
-                    if (newData) {
-                        state.coins = newData;
-                        if (!state.searchQuery) {
-                            state.filteredCoins = newData;
-                            renderBubbles(newData);
-                        }
-                        updateStats(newData);
-                        detectVolumeSpikes(newData);
-                    }
-                }, CONFIG.UPDATE_INTERVAL);
-            }
-        }
-
-        // Start application when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            init();
-        }
+        loadData();
+        setInterval(loadData, 30000);
     </script>
 </body>
 </html>
