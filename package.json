@@ -1,20 +1,28 @@
 {
   "name": "bybit-heatmap",
-  "version": "1.0.0",
-  "description": "Bybit Gainers & Losers Heatmap",
-  "main": "index.html",
+  "version": "2.0.0",
+  "description": "Bybit Gainers & Losers Heatmap — Real-time futures visualization",
+  "type": "module",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "start": "npx serve .",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run --config vitest.config.js",
+    "test:watch": "vitest --config vitest.config.js",
     "test:py": "pytest -v",
     "test:all": "npm run test && npm run test:py"
   },
+  "dependencies": {
+    "d3": "^7.9.0",
+    "lightweight-charts": "^4.2.2"
+  },
   "devDependencies": {
+    "vite": "^6.3.2",
     "vitest": "^3.1.1",
     "jsdom": "^26.0.0"
   },
-  "keywords": ["bybit", "crypto", "heatmap", "trading"],
+  "keywords": ["bybit", "crypto", "heatmap", "trading", "websocket"],
   "author": "acro16hunna",
   "license": "MIT"
 }

@@ -1,0 +1,42 @@
+/* ═══════════════════════════════════════════
+   CSS VARIABLES & THEME SYSTEM
+   ═══════════════════════════════════════════ */
+
+:root {
+  --bg-primary: #050a08;
+  --bg-secondary: #0a1a0f;
+  --text-primary: #fff;
+  --text-secondary: rgba(255,255,255,.7);
+  --text-muted: rgba(255,255,255,.5);
+  --accent-green: #0f0;
+  --accent-red: #f36;
+  --accent-purple: #b829dd;
+  --neon-cyan: #0d4;
+  --glow-green: rgba(0,255,0,.5);
+  --glow-red: rgba(255,51,102,.5);
+  --glow-purple: rgba(184,41,221,.6);
+  --transition-base: .3s ease;
+  --header-height: 70px;
+  --filter-bar-height: 160px;
+  --bottom-nav-height: 64px;
+  --safe-top: env(safe-area-inset-top, 0);
+  --safe-bottom: env(safe-area-inset-bottom, 0);
+  --z-background: 1;
+  --z-divers: 5;
+  --z-crypto-icons: 50;
+  --z-shapes: 100;
+  --z-modal: 200;
+  --z-alert: 95;
+}
+
+[data-theme=light] {
+  --bg-primary: #f0f5f0;
+  --bg-secondary: #e8f0e8;
+  --text-primary: #1a3a2a;
+  --text-secondary: rgba(26,58,42,.7);
+  --text-muted: rgba(26,58,42,.4);
+  --accent-green: #2a8a4a;
+  --accent-red: #c54a4a;
+  --glow-green: rgba(42,138,74,.3);
+  --glow-red: rgba(197,74,74,.3);
+}
