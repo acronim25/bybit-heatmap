@@ -1,0 +1,79 @@
+/* ═══════════════════════════════════════════
+   MODAL
+   ═══════════════════════════════════════════ */
+
+.enhanced-modal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.85); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); z-index:var(--z-modal); display:flex; justify-content:center; align-items:flex-end; opacity:0; visibility:hidden; transition:opacity .4s ease,visibility .4s ease }
+.enhanced-modal.active { opacity:1; visibility:visible }
+.enhanced-modal-content { background:linear-gradient(165deg,rgba(15,20,25,.98) 0%,rgba(8,12,15,.99) 100%); border-radius:24px 24px 0 0; width:100%; max-width:480px; max-height:85vh; position:relative; transform:translateY(100%) scale(.95); transition:transform .5s cubic-bezier(.34,1.56,.64,1); overflow-y:auto; overflow-x:hidden; box-shadow:0 -20px 80px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.1) }
+[data-theme=light] .enhanced-modal-content { background:linear-gradient(165deg,rgba(255,255,255,.98) 0%,rgba(240,245,240,.99) 100%) }
+.enhanced-modal.active .enhanced-modal-content { transform:translateY(0) scale(1) }
+.enhanced-modal-content::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--accent-green) 0%,var(--accent-red) 100%) }
+
+.modal-swipe-handle { width:100%; padding:12px 0; display:flex; justify-content:center; cursor:grab }
+.modal-swipe-handle::before { content:''; width:40px; height:4px; background:rgba(255,255,255,.2); border-radius:2px }
+
+.modal-header { padding:0 24px 16px; text-align:center; position:relative }
+.modal-close-btn { position:absolute; top:0; right:16px; width:32px; height:32px; border:0; background:rgba(255,255,255,.05); border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-secondary); font-size:20px; transition:all .3s ease }
+.modal-close-btn:hover { background:rgba(255,0,64,.2); color:var(--accent-red); transform:rotate(90deg) }
+.modal-nav { position:absolute; top:50%; transform:translateY(-50%); width:36px; height:36px; border:1px solid rgba(255,255,255,.1); background:rgba(10,26,15,.85); border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-secondary); font-size:18px; transition:all .3s ease; opacity:0 }
+.enhanced-modal-content:hover .modal-nav { opacity:1 }
+.modal-nav:hover { background:var(--bg-secondary); border-color:rgba(0,255,0,.3); color:var(--text-primary) }
+.modal-nav.prev { left:12px }
+.modal-nav.next { right:12px }
+.modal-nav:disabled { opacity:.3; cursor:not-allowed }
+
+.coin-symbol-large { font-family:Orbitron,sans-serif; font-size:2.5rem; font-weight:900; letter-spacing:3px; background:linear-gradient(180deg,#fff 0%,rgba(255,255,255,.7) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent }
+[data-theme=light] .coin-symbol-large { background:linear-gradient(180deg,var(--text-primary) 0%,rgba(26,58,42,.7) 100%); -webkit-background-clip:text }
+.coin-full-name { color:var(--text-secondary); font-size:.85rem; letter-spacing:2px; text-transform:uppercase }
+
+/* TradingView chart container */
+.chart-container { padding:0 24px 20px }
+.chart-wrapper { background:rgba(0,0,0,.2); border-radius:12px; overflow:hidden; min-height:200px }
+
+/* Price section */
+.price-section { padding:0 24px 20px; text-align:center }
+.price-display { font-family:Orbitron,sans-serif; font-size:2.8rem; font-weight:700; letter-spacing:-1px; margin-bottom:8px }
+.price-change-pill { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:20px; font-family:Orbitron,sans-serif; font-size:1rem; font-weight:600 }
+.price-change-pill.positive { background:rgba(0,255,0,.15); color:var(--accent-green); box-shadow:0 0 20px var(--glow-green) }
+.price-change-pill.negative { background:rgba(255,51,102,.15); color:var(--accent-red); box-shadow:0 0 20px var(--glow-red) }
+
+/* Stats grid */
+.modal-stats-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:0 24px 20px }
+.stat-card { background:rgba(10,26,15,.85); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:14px 12px; transition:all .3s ease }
+.stat-card:hover { border-color:rgba(0,255,0,.3); transform:translateY(-2px) }
+.stat-card-label { font-size:.65rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px }
+.stat-card-value { font-family:Orbitron,sans-serif; font-size:.95rem; font-weight:600 }
+.stat-card-value.highlight { font-size:1.1rem }
+.stat-card-sub { font-size:.6rem; color:var(--text-muted); margin-top:2px }
+
+.hl-progress { margin-top:8px; height:4px; background:rgba(255,255,255,.1); border-radius:2px; overflow:hidden; position:relative }
+.hl-progress-bar { height:100%; background:linear-gradient(90deg,var(--accent-red),var(--accent-green)); border-radius:2px; transition:width .6s cubic-bezier(.34,1.56,.64,1) }
+.hl-labels { display:flex; justify-content:space-between; margin-top:4px; font-size:.6rem; color:var(--text-muted) }
+.volume-bars { display:flex; align-items:flex-end; gap:2px; height:20px; margin-top:6px }
+.volume-bar-mini { flex:1; background:linear-gradient(to top,#3cf,rgba(51,204,255,.3)); border-radius:1px; min-height:2px }
+
+/* Actions */
+.modal-actions { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:0 24px 24px }
+.action-btn { display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 8px; background:rgba(10,26,15,.85); border:1px solid rgba(255,255,255,.1); border-radius:12px; cursor:pointer; transition:all .3s ease; color:var(--text-secondary) }
+.action-btn:hover { background:var(--bg-secondary); border-color:rgba(0,255,0,.3); transform:translateY(-2px); color:var(--text-primary) }
+.action-btn.primary { background:linear-gradient(135deg,rgba(0,255,0,.15),rgba(0,212,255,.1)); border-color:rgba(0,255,0,.3); color:var(--accent-green) }
+.action-btn.primary:hover { box-shadow:0 0 20px var(--glow-green) }
+.action-btn.active { background:linear-gradient(135deg,rgba(255,204,0,.15),rgba(255,204,0,.05)); border-color:rgba(255,204,0,.4); color:#fc0 }
+.action-icon { font-size:1.3rem }
+.action-label { font-size:.65rem; text-transform:uppercase; letter-spacing:1px }
+
+/* Alert banner */
+.alert-banner { position:fixed; top:calc(var(--header-height) + var(--filter-bar-height) - 20px); left:50%; transform:translateX(-50%) translateY(-200%); background:rgba(10,26,15,.95); border:1px solid #fc0; border-radius:12px; padding:12px 20px; display:flex; align-items:center; gap:12px; z-index:var(--z-alert); transition:transform .5s cubic-bezier(.34,1.56,.64,1); box-shadow:0 10px 40px rgba(0,0,0,.4),0 0 30px rgba(255,204,0,.2); min-width:300px; max-width:90vw; backdrop-filter:blur(10px) }
+.alert-banner.show { transform:translateX(-50%) translateY(0) }
+.alert-banner.volume-spike { border-color:var(--accent-red); box-shadow:0 10px 40px rgba(0,0,0,.4),0 0 30px var(--glow-red) }
+.alert-icon { font-size:20px; flex-shrink:0 }
+.alert-content { flex:1 }
+.alert-title { font-family:Orbitron,sans-serif; font-size:12px; font-weight:700; color:#fc0; text-transform:uppercase; letter-spacing:1px; margin-bottom:2px }
+.alert-banner.volume-spike .alert-title { color:var(--accent-red) }
+.alert-text { font-size:13px; color:var(--text-secondary) }
+.alert-close { background:0 0; border:0; color:var(--text-muted); cursor:pointer; font-size:18px; padding:0; width:24px; height:24px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:all .2s ease; flex-shrink:0 }
+.alert-close:hover { background:rgba(255,255,255,.1); color:var(--text-primary) }
+
+/* Toast */
+.modal-toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%) translateY(20px); background:rgba(0,0,0,.9); backdrop-filter:blur(10px); padding:12px 24px; border-radius:24px; border:1px solid rgba(255,255,255,.1); color:var(--text-primary); font-size:.85rem; display:flex; align-items:center; gap:8px; opacity:0; visibility:hidden; transition:all .3s ease; z-index:calc(var(--z-modal) + 1) }
+.modal-toast.show { opacity:1; visibility:visible; transform:translateX(-50%) translateY(0) }

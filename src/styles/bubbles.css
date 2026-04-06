@@ -1,0 +1,66 @@
+/* ═══════════════════════════════════════════
+   BUBBLES, BACKGROUND, SHAPES
+   ═══════════════════════════════════════════ */
+
+/* Background system */
+.bg-system-wrapper { position:fixed; top:0; left:0; width:100%; height:100%; z-index:var(--z-background); pointer-events:none; overflow:hidden }
+.bg-layer { position:absolute; inset:0; transition:opacity .5s ease }
+.bg-layer-dark { background:radial-gradient(ellipse at 30% 80%,rgba(0,50,100,.25) 0%,transparent 50%),radial-gradient(ellipse at 70% 20%,rgba(100,0,100,.15) 0%,transparent 40%),radial-gradient(ellipse at 50% 50%,rgba(0,30,60,.4) 0%,transparent 70%),linear-gradient(180deg,#0a0a1a 0%,#0d1f2d 20%,#051015 50%,#020508 80%,#000 100%); opacity:1 }
+.bg-layer-light { background:radial-gradient(ellipse at 30% 80%,rgba(0,100,150,.1) 0%,transparent 50%),radial-gradient(ellipse at 70% 20%,rgba(150,0,150,.08) 0%,transparent 40%),linear-gradient(180deg,#f8fafc 0%,#e8f0f0 50%,#d0e0e0 100%); opacity:0 }
+[data-theme=light] .bg-layer-dark { opacity:0 }
+[data-theme=light] .bg-layer-light { opacity:1 }
+
+.bg-particles { position:absolute; inset:0; pointer-events:none }
+.bg-particle { position:absolute; width:3px; height:3px; border-radius:50%; background:rgba(0,212,255,.4); box-shadow:0 0 8px rgba(0,212,255,.5); will-change:transform,opacity }
+@keyframes floatUp { 0% { transform:translateY(100vh) scale(.5); opacity:0 } 10% { opacity:.6 } 90% { opacity:.4 } 100% { transform:translateY(-10vh) scale(1.2); opacity:0 } }
+
+/* Diver circles */
+#divers-container { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:var(--z-divers); overflow:visible }
+.diver-group { position:absolute; pointer-events:none }
+.diver-group.bull { left:12%; top:40%; transform:translate(-50%,-50%) }
+.diver-group.bear { right:12%; top:60%; transform:translate(50%,-50%) }
+.diver-circle { position:absolute; border-radius:50%; transform:translate(-50%,-50%); left:50%; top:50%; opacity:1; will-change:transform,opacity }
+.diver-circle.bull { background:radial-gradient(circle,rgba(0,255,0,.35) 0%,rgba(0,255,0,.12) 40%,rgba(0,255,0,0) 70%); border:2px solid rgba(0,255,0,.7); box-shadow:0 0 50px rgba(0,255,0,.5),0 0 100px rgba(0,255,0,.25),inset 0 0 50px rgba(0,255,0,.1) }
+.diver-circle.bear { background:radial-gradient(circle,rgba(255,51,102,.35) 0%,rgba(255,51,102,.12) 40%,rgba(255,51,102,0) 70%); border:2px solid rgba(255,51,102,.7); box-shadow:0 0 50px rgba(255,51,102,.5),0 0 100px rgba(255,51,102,.25),inset 0 0 50px rgba(255,51,102,.1) }
+.diver-group.bull .diver-circle:nth-child(1) { width:140px; height:140px; animation:pulse-glow-green 4s ease-in-out infinite }
+.diver-group.bull .diver-circle:nth-child(2) { width:200px; height:200px; animation:pulse-glow-green 4s ease-in-out infinite .8s }
+.diver-group.bull .diver-circle:nth-child(3) { width:260px; height:260px; animation:pulse-glow-green 4s ease-in-out infinite 1.6s }
+.diver-group.bull .diver-circle:nth-child(4) { width:320px; height:320px; animation:pulse-glow-green 4s ease-in-out infinite 2.4s }
+.diver-group.bear .diver-circle:nth-child(1) { width:120px; height:120px; animation:pulse-glow-red 4s ease-in-out infinite }
+.diver-group.bear .diver-circle:nth-child(2) { width:170px; height:170px; animation:pulse-glow-red 4s ease-in-out infinite .8s }
+.diver-group.bear .diver-circle:nth-child(3) { width:220px; height:220px; animation:pulse-glow-red 4s ease-in-out infinite 1.6s }
+.diver-group.bear .diver-circle:nth-child(4) { width:270px; height:270px; animation:pulse-glow-red 4s ease-in-out infinite 2.4s }
+@keyframes pulse-glow-green { 0%,100% { transform:translate(-50%,-50%) scale(1); opacity:.85 } 50% { transform:translate(-50%,-50%) scale(1.12); opacity:.55 } }
+@keyframes pulse-glow-red { 0%,100% { transform:translate(-50%,-50%) scale(1); opacity:.85 } 50% { transform:translate(-50%,-50%) scale(1.12); opacity:.55 } }
+
+/* Bubble container */
+#bubble-container { position:relative; z-index:var(--z-crypto-icons); width:100%; min-height:calc(100vh - var(--header-height) - var(--filter-bar-height) - var(--bottom-nav-height) - 40px) }
+#bubble-container svg { width:100%; height:100%; display:block; overflow:visible }
+.bubble-group { cursor:pointer; transform-style:preserve-3d; perspective:1000px; will-change:transform }
+.bubble-spiral { filter:drop-shadow(0 0 10px currentColor); transition:all .4s cubic-bezier(.34,1.56,.64,1); will-change:filter,transform }
+.bubble-group:hover .bubble-spiral { filter:drop-shadow(0 0 25px currentColor) brightness(1.3); transform:scale(1.15) }
+.bubble-group.spinning .bubble-spiral { animation:bubbleSpin 1s cubic-bezier(.34,1.56,.64,1) }
+@keyframes bubbleSpin { 0% { transform:scale(1) rotate(0) } 50% { transform:scale(1.3) rotate(180deg) } 100% { transform:scale(1) rotate(360deg) } }
+.bubble-group.highlighted .bubble-spiral { filter:drop-shadow(0 0 30px currentColor) brightness(1.5); animation:highlightPulse 1.5s ease-in-out infinite }
+@keyframes highlightPulse { 0%,100% { transform:scale(1) } 50% { transform:scale(1.1) } }
+.bubble-group.dimmed { opacity:.2; filter:grayscale(.8) }
+.bubble-label { font-family:Orbitron,sans-serif; font-size:11px; font-weight:700; text-anchor:middle; pointer-events:none; fill:#fff; text-shadow:0 0 10px rgba(0,0,0,.9),0 0 20px currentColor; letter-spacing:1px }
+.bubble-change { font-family:Rajdhani,sans-serif; font-size:10px; font-weight:600; text-anchor:middle; pointer-events:none; fill:#fff; text-shadow:0 0 10px rgba(0,0,0,.9) }
+
+/* Geometric shapes */
+#geometric-shapes-container { position:fixed; top:0; left:0; width:100%; height:100%; z-index:var(--z-shapes); pointer-events:none; overflow:hidden }
+.geo-shape { position:absolute; pointer-events:auto; cursor:pointer; transition:transform .3s ease,opacity .3s ease; will-change:transform,opacity }
+.geo-shape:hover { transform:scale(1.2) rotate(5deg); opacity:.9 }
+.geo-square { background:0 0; border:2px solid var(--accent-green); box-shadow:0 0 15px var(--glow-green),inset 0 0 15px var(--glow-green) }
+.geo-circle { border-radius:50%; background:0 0; border:2px solid var(--accent-red); box-shadow:0 0 15px var(--glow-red),inset 0 0 15px var(--glow-red) }
+.geo-triangle { width:0; height:0; border-style:solid; filter:drop-shadow(0 0 8px var(--glow-green)) }
+.geo-triangle.up { border-left:15px solid transparent; border-right:15px solid transparent; border-bottom:26px solid var(--accent-green) }
+.geo-triangle.down { border-left:15px solid transparent; border-right:15px solid transparent; border-top:26px solid var(--accent-purple); border-bottom:none }
+.geo-diamond { background:0 0; border:2px solid #fc0; box-shadow:0 0 15px rgba(255,204,0,.4),inset 0 0 15px rgba(255,204,0,.2); transform:rotate(45deg) }
+.geo-hexagon { clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); background:0 0; border:2px solid #f0f; box-shadow:0 0 15px rgba(255,0,255,.4) }
+.geo-shape.float { animation:shapeFloat 6s ease-in-out infinite }
+.geo-shape.pulse { animation:shapePulse 3s ease-in-out infinite }
+.geo-shape.rotate { animation:shapeRotate 10s linear infinite }
+@keyframes shapeFloat { 0%,100% { transform:translateY(0) rotate(0) } 50% { transform:translateY(-15px) rotate(3deg) } }
+@keyframes shapePulse { 0%,100% { opacity:.4; transform:scale(1) } 50% { opacity:.8; transform:scale(1.1) } }
+@keyframes shapeRotate { 0% { transform:rotate(0) } 100% { transform:rotate(360deg) } }
