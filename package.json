@@ -4,7 +4,15 @@
   "description": "Bybit Gainers & Losers Heatmap",
   "main": "index.html",
   "scripts": {
-    "start": "npx serve ."
+    "start": "npx serve .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:py": "pytest -v",
+    "test:all": "npm run test && npm run test:py"
+  },
+  "devDependencies": {
+    "vitest": "^3.1.1",
+    "jsdom": "^26.0.0"
   },
   "keywords": ["bybit", "crypto", "heatmap", "trading"],
   "author": "acro16hunna",
