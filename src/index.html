@@ -3,64 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Crypto Diver | Bybit Futures Heatmap</title>
+  <title>Bybit Futures Heatmap</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#050a08">
+  <meta name="theme-color" content="#0a0e14">
 </head>
 <body data-theme="dark">
 
-  <!-- Background System -->
+  <!-- Background -->
   <div class="bg-system-wrapper">
     <div class="bg-layer bg-layer-dark"></div>
     <div class="bg-layer bg-layer-light"></div>
-    <div class="bg-particles" id="bg-particles"></div>
   </div>
 
-  <!-- Diver Circles -->
-  <div id="divers-container">
-    <div class="diver-group bull">
-      <div class="diver-circle bull"></div>
-      <div class="diver-circle bull"></div>
-      <div class="diver-circle bull"></div>
-      <div class="diver-circle bull"></div>
-    </div>
-    <div class="diver-group bear">
-      <div class="diver-circle bear"></div>
-      <div class="diver-circle bear"></div>
-      <div class="diver-circle bear"></div>
-      <div class="diver-circle bear"></div>
-    </div>
-  </div>
-
-  <!-- Geometric Shapes -->
-  <div id="geometric-shapes-container"></div>
-
-  <!-- Loading Overlay -->
+  <!-- Loading -->
   <div class="loading-overlay" id="loading-overlay">
     <div class="loading-spinner"></div>
-    <p class="loading-text">🤿 LOADING FUTURES...</p>
+    <p class="loading-text">Loading market data...</p>
   </div>
 
   <!-- Header -->
   <header class="header">
     <div class="logo">
-      <span>🤿</span>
-      <span>CRYPTO DIVER</span>
-      <span class="futures-badge">🎯 Perps</span>
-      <div class="ws-indicator" id="ws-indicator" title="WebSocket status"></div>
+      <span class="logo-text">Bybit Heatmap</span>
+      <span class="badge-live" id="ws-indicator">LIVE</span>
     </div>
     <div class="header-right">
       <div class="stats">
-        <div class="stat">
-          <div class="stat-value bullish" id="stat-bullish">0</div>
-          <div class="stat-label">Bullish</div>
+        <div class="stat green">
+          <span class="stat-value" id="stat-bullish">0</span>
+          <span class="stat-sep">▲</span>
         </div>
-        <div class="stat">
-          <div class="stat-value bearish" id="stat-bearish">0</div>
-          <div class="stat-label">Bearish</div>
+        <div class="stat red">
+          <span class="stat-value" id="stat-bearish">0</span>
+          <span class="stat-sep">▼</span>
         </div>
       </div>
       <button class="theme-toggle" id="theme-toggle" title="Toggle theme (T)">
@@ -69,64 +47,64 @@
     </div>
   </header>
 
-  <!-- Filter System -->
-  <div class="filter-system" id="filter-system">
-    <div class="filter-container">
-      <div class="filter-row">
-        <div class="category-filters">
-          <button class="category-btn active" data-category="all">All</button>
-          <button class="category-btn gainers" data-category="gainers">Gainers ▲</button>
-          <button class="category-btn losers" data-category="losers">Losers ▼</button>
-          <button class="category-btn" data-category="majors">Majors</button>
-          <!-- Watchlist button injected by JS -->
-        </div>
-        <div class="sort-controls">
-          <select class="sort-select" id="sort-select">
-            <option value="volume">Volume</option>
-            <option value="change">Change %</option>
-            <option value="price">Price</option>
-            <option value="name">Name</option>
-            <option value="funding">Funding Rate</option>
-            <option value="oi">Open Interest</option>
-          </select>
-          <button class="sort-direction-btn" id="sort-direction">↓</button>
-        </div>
+  <!-- Filters — single compact bar -->
+  <div class="filter-bar" id="filter-system">
+    <div class="filter-bar-inner">
+      <!-- Left: categories -->
+      <div class="filter-group category-filters">
+        <button class="pill active" data-category="all">All</button>
+        <button class="pill gainers" data-category="gainers">▲ Up</button>
+        <button class="pill losers" data-category="losers">▼ Down</button>
+        <button class="pill" data-category="majors">Majors</button>
       </div>
-      <div class="filter-row-secondary">
-        <div class="search-alert-row">
-          <div class="filter-search">
-            <span class="filter-search-icon">🔍</span>
-            <input type="text" class="filter-search-input" id="filter-search" placeholder="Search coin..." autocomplete="off">
-            <button class="filter-search-clear" id="search-clear">×</button>
-          </div>
-          <button class="alert-toggle-btn" id="alert-toggle" title="Toggle volume alerts">
-            <span class="bell-icon">🔔</span>
-            <span>Alerts</span>
-          </button>
-        </div>
-        <div class="volume-filter">
-          <span class="volume-filter-label">📊 Min Volume:</span>
-          <div class="volume-slider-wrapper">
-            <input type="range" class="volume-slider" id="volume-slider" min="0" max="8" step="1" value="0">
-          </div>
-          <span class="volume-value" id="volume-value">All</span>
-        </div>
-        <!-- Advanced filters -->
-        <div class="advanced-filters">
-          <select class="advanced-filter-select" id="funding-filter" title="Funding Rate">
-            <option value="all">💰 Funding: All</option>
-            <option value="positive">Positive</option>
-            <option value="negative">Negative</option>
-          </select>
-          <select class="advanced-filter-select" id="oi-filter" title="Open Interest Change">
-            <option value="all">📈 OI: All</option>
-            <option value="increasing">Increasing</option>
-            <option value="decreasing">Decreasing</option>
-          </select>
-        </div>
-        <div class="results-count" id="results-count">0 futures</div>
+
+      <!-- Center: search -->
+      <div class="filter-search">
+        <svg class="search-icon" viewBox="0 0 16 16" width="14" height="14"><circle cx="6.5" cy="6.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="10.5" y1="10.5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="text" class="search-input" id="filter-search" placeholder="Search..." autocomplete="off">
+        <button class="search-clear" id="search-clear">×</button>
       </div>
+
+      <!-- Right: sort + alert -->
+      <div class="filter-group">
+        <select class="sort-select" id="sort-select">
+          <option value="volume">Vol</option>
+          <option value="change">Change</option>
+          <option value="price">Price</option>
+          <option value="name">Name</option>
+          <option value="funding">Funding</option>
+          <option value="oi">OI</option>
+        </select>
+        <button class="pill sort-dir" id="sort-direction">↓</button>
+        <button class="pill alert-btn" id="alert-toggle" title="Volume alerts">
+          <span class="bell-icon">🔔</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Expandable row (hidden by default, shown via JS toggle) -->
+    <div class="filter-expand" id="filter-expand">
+      <div class="filter-group">
+        <label class="filter-label">Min Vol</label>
+        <input type="range" class="volume-slider" id="volume-slider" min="0" max="8" step="1" value="0">
+        <span class="volume-value" id="volume-value">All</span>
+      </div>
+      <select class="mini-select" id="funding-filter">
+        <option value="all">Funding: All</option>
+        <option value="positive">Positive</option>
+        <option value="negative">Negative</option>
+      </select>
+      <select class="mini-select" id="oi-filter">
+        <option value="all">OI: All</option>
+        <option value="increasing">Increasing</option>
+        <option value="decreasing">Decreasing</option>
+      </select>
+    </div>
+
+    <!-- Active filters + count -->
+    <div class="filter-meta">
       <div class="active-filters" id="active-filters"></div>
+      <span class="results-count" id="results-count">0 futures</span>
     </div>
   </div>
 
@@ -135,7 +113,7 @@
     <span class="alert-icon">⚡</span>
     <div class="alert-content">
       <div class="alert-title" id="alert-title">Alert</div>
-      <div class="alert-text" id="alert-text">Something happened!</div>
+      <div class="alert-text" id="alert-text"></div>
     </div>
     <button class="alert-close" id="alert-close">×</button>
   </div>
@@ -145,95 +123,85 @@
     <div id="bubble-container"></div>
   </main>
 
-  <!-- Bottom Nav (Mobile) -->
-  <nav class="bottom-nav">
-    <button class="bottom-nav-item active" data-tab="heatmap">
-      <span class="bottom-nav-icon">🌊</span><span>Heatmap</span>
-    </button>
-    <button class="bottom-nav-item" data-tab="search">
-      <span class="bottom-nav-icon">🔍</span><span>Search</span>
-    </button>
-    <button class="bottom-nav-item" data-tab="watchlist">
-      <span class="bottom-nav-icon">⭐</span><span>Watchlist</span>
-    </button>
-    <button class="bottom-nav-item" data-tab="settings">
-      <span class="bottom-nav-icon">⚙️</span><span>Settings</span>
-    </button>
-  </nav>
+  <!-- Modal -->
+  <div class="modal-overlay" id="enhanced-modal">
+    <div class="modal-content">
+      <div class="modal-drag-handle"></div>
+      <button class="modal-close" id="modal-close">×</button>
 
-  <!-- Enhanced Modal -->
-  <div class="enhanced-modal" id="enhanced-modal">
-    <div class="enhanced-modal-content">
-      <div class="modal-swipe-handle"></div>
+      <!-- Nav arrows -->
+      <button class="modal-nav prev" id="modal-prev">‹</button>
+      <button class="modal-nav next" id="modal-next">›</button>
+
+      <!-- Coin header -->
       <div class="modal-header">
-        <button class="modal-nav prev" id="modal-prev">‹</button>
-        <button class="modal-nav next" id="modal-next">›</button>
-        <button class="modal-close-btn" id="modal-close">×</button>
-        <div class="coin-symbol-large" id="modal-symbol">BTC</div>
-        <div class="coin-full-name" id="modal-name">Bitcoin</div>
-      </div>
-      <div class="price-section">
-        <div class="price-display" id="modal-price">$0.00</div>
-        <div class="price-change-pill" id="modal-change">+0.00%</div>
-      </div>
-      <!-- TradingView Chart -->
-      <div class="chart-container">
-        <div class="chart-wrapper" id="tradingview-chart"></div>
-      </div>
-      <div class="modal-stats-grid">
-        <div class="stat-card">
-          <div class="stat-card-label">📊 Volume 24h</div>
-          <div class="stat-card-value highlight" id="modal-volume">-</div>
-          <div class="volume-bars" id="modal-volume-bars"></div>
+        <div class="modal-title-row">
+          <h2 class="modal-symbol" id="modal-symbol">BTC</h2>
+          <span class="modal-coin-name" id="modal-name">Bitcoin</span>
         </div>
-        <div class="stat-card">
-          <div class="stat-card-label">📈 Turnover 24h</div>
-          <div class="stat-card-value highlight" id="modal-turnover">-</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-label">⬆️ High 24h</div>
-          <div class="stat-card-value" id="modal-high">-</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-label">⬇️ Low 24h</div>
-          <div class="stat-card-value" id="modal-low">-</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-label">🏦 Open Interest</div>
-          <div class="stat-card-value" id="modal-oi">-</div>
-          <div class="stat-card-sub" id="modal-oi-change">-</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-label">💰 Funding Rate</div>
-          <div class="stat-card-value" id="modal-funding">-</div>
-        </div>
-        <div class="stat-card" style="grid-column: span 2">
-          <div class="stat-card-label">📍 Price Range</div>
-          <div class="hl-progress">
-            <div class="hl-progress-bar" id="modal-hl-progress" style="width:50%"></div>
-          </div>
-          <div class="hl-labels">
-            <span id="modal-hl-low">Low</span>
-            <span id="modal-hl-current">Current</span>
-            <span id="modal-hl-high">High</span>
-          </div>
+        <div class="modal-price-row">
+          <span class="modal-price" id="modal-price">$0.00</span>
+          <span class="price-badge" id="modal-change">+0.00%</span>
         </div>
       </div>
+
+      <!-- Chart -->
+      <div class="modal-chart" id="tradingview-chart"></div>
+
+      <!-- Stats -->
+      <div class="modal-stats">
+        <div class="modal-stat">
+          <span class="stat-label">Volume</span>
+          <span class="stat-val" id="modal-volume">-</span>
+        </div>
+        <div class="modal-stat">
+          <span class="stat-label">Turnover</span>
+          <span class="stat-val" id="modal-turnover">-</span>
+        </div>
+        <div class="modal-stat">
+          <span class="stat-label">High</span>
+          <span class="stat-val" id="modal-high">-</span>
+        </div>
+        <div class="modal-stat">
+          <span class="stat-label">Low</span>
+          <span class="stat-val" id="modal-low">-</span>
+        </div>
+        <div class="modal-stat">
+          <span class="stat-label">Open Interest</span>
+          <span class="stat-val" id="modal-oi">-</span>
+          <span class="stat-sub" id="modal-oi-change"></span>
+        </div>
+        <div class="modal-stat">
+          <span class="stat-label">Funding</span>
+          <span class="stat-val" id="modal-funding">-</span>
+        </div>
+      </div>
+
+      <!-- Price range -->
+      <div class="modal-range">
+        <div class="range-bar">
+          <div class="range-fill" id="modal-hl-progress" style="width:50%"></div>
+        </div>
+        <div class="range-labels">
+          <span id="modal-hl-low">Low</span>
+          <span id="modal-hl-current">Current</span>
+          <span id="modal-hl-high">High</span>
+        </div>
+      </div>
+
+      <!-- Hidden volume bars container for compatibility -->
+      <div id="modal-volume-bars" style="display:none"></div>
+
+      <!-- Actions -->
       <div class="modal-actions">
-        <button class="action-btn primary" id="btn-trade">
-          <span class="action-icon">🚀</span><span class="action-label">Trade</span>
-        </button>
-        <button class="action-btn" id="modal-watchlist-btn">
-          <span class="action-icon">☆</span><span class="action-label">Watch</span>
-        </button>
-        <button class="action-btn" id="btn-copy">
-          <span class="action-icon">📋</span><span class="action-label">Copy</span>
-        </button>
-        <button class="action-btn" id="btn-share">
-          <span class="action-icon">🔗</span><span class="action-label">Share</span>
-        </button>
+        <a class="modal-btn primary" id="btn-trade">Trade</a>
+        <button class="modal-btn" id="modal-watchlist-btn">☆ Watch</button>
+        <button class="modal-btn" id="btn-copy">Copy</button>
+        <button class="modal-btn" id="btn-share">Share</button>
       </div>
     </div>
+
+    <!-- Toast -->
     <div class="modal-toast" id="modal-toast">
       <span>✓</span><span id="toast-message">Copied!</span>
     </div>

@@ -1,42 +1,57 @@
 /* ═══════════════════════════════════════════
-   CSS VARIABLES & THEME SYSTEM
+   DESIGN TOKENS
    ═══════════════════════════════════════════ */
 
 :root {
-  --bg-primary: #050a08;
-  --bg-secondary: #0a1a0f;
-  --text-primary: #fff;
-  --text-secondary: rgba(255,255,255,.7);
-  --text-muted: rgba(255,255,255,.5);
-  --accent-green: #0f0;
-  --accent-red: #f36;
-  --accent-purple: #b829dd;
-  --neon-cyan: #0d4;
-  --glow-green: rgba(0,255,0,.5);
-  --glow-red: rgba(255,51,102,.5);
-  --glow-purple: rgba(184,41,221,.6);
-  --transition-base: .3s ease;
-  --header-height: 70px;
-  --filter-bar-height: 160px;
-  --bottom-nav-height: 64px;
-  --safe-top: env(safe-area-inset-top, 0);
-  --safe-bottom: env(safe-area-inset-bottom, 0);
-  --z-background: 1;
-  --z-divers: 5;
-  --z-crypto-icons: 50;
-  --z-shapes: 100;
-  --z-modal: 200;
-  --z-alert: 95;
+  /* Background */
+  --bg-0: #0a0e14;
+  --bg-1: #111720;
+  --bg-2: #1a2030;
+  --bg-card: rgba(17, 23, 32, 0.85);
+
+  /* Text */
+  --text-1: #e6edf3;
+  --text-2: rgba(230, 237, 243, 0.65);
+  --text-3: rgba(230, 237, 243, 0.4);
+
+  /* Accent */
+  --green: #3fb950;
+  --green-dim: rgba(63, 185, 80, 0.15);
+  --red: #f85149;
+  --red-dim: rgba(248, 81, 73, 0.15);
+  --blue: #58a6ff;
+  --blue-dim: rgba(88, 166, 255, 0.12);
+  --purple: #bc8cff;
+  --yellow: #d29922;
+
+  /* Border */
+  --border: rgba(230, 237, 243, 0.08);
+  --border-hover: rgba(230, 237, 243, 0.16);
+
+  /* Transitions */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Layout */
+  --header-h: 52px;
+  --filter-h: 44px;
+  --radius: 8px;
+  --radius-lg: 16px;
 }
 
 [data-theme=light] {
-  --bg-primary: #f0f5f0;
-  --bg-secondary: #e8f0e8;
-  --text-primary: #1a3a2a;
-  --text-secondary: rgba(26,58,42,.7);
-  --text-muted: rgba(26,58,42,.4);
-  --accent-green: #2a8a4a;
-  --accent-red: #c54a4a;
-  --glow-green: rgba(42,138,74,.3);
-  --glow-red: rgba(197,74,74,.3);
+  --bg-0: #f6f8fa;
+  --bg-1: #ffffff;
+  --bg-2: #f0f2f5;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --text-1: #1f2328;
+  --text-2: rgba(31, 35, 40, 0.6);
+  --text-3: rgba(31, 35, 40, 0.35);
+  --green: #1a7f37;
+  --green-dim: rgba(26, 127, 55, 0.1);
+  --red: #cf222e;
+  --red-dim: rgba(207, 34, 46, 0.1);
+  --blue: #0969da;
+  --blue-dim: rgba(9, 105, 218, 0.08);
+  --border: rgba(31, 35, 40, 0.1);
+  --border-hover: rgba(31, 35, 40, 0.2);
 }

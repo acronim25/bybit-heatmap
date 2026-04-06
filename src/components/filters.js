@@ -12,7 +12,7 @@ const VOLUME_LEVELS = [0, 1e6, 5e6, 1e7, 5e7, 1e8, 5e8, 1e9, 5e9];
 
 export function setupFilterListeners() {
   // Category buttons
-  document.querySelectorAll('.category-btn').forEach(btn => {
+  document.querySelectorAll('.pill[data-category]').forEach(btn => {
     btn.addEventListener('click', () => {
       const category = btn.dataset.category;
       const current = getState().filters.category;
@@ -23,7 +23,7 @@ export function setupFilterListeners() {
         updateFilters({ category });
       }
 
-      document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.pill[data-category]').forEach(b => b.classList.remove('active'));
       const activeCategory = getState().filters.category;
       document.querySelector(`.category-btn[data-category="${activeCategory}"]`)?.classList.add('active');
     });
@@ -179,8 +179,8 @@ function removeFilter(type) {
 
   // Reset UI elements
   if (type === 'category') {
-    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector('.category-btn[data-category="all"]')?.classList.add('active');
+    document.querySelectorAll('.pill[data-category]').forEach(b => b.classList.remove('active'));
+    document.querySelector('.pill[data-category="all"]')?.classList.add('active');
   }
   if (type === 'search') {
     const input = document.getElementById('filter-search');
@@ -202,8 +202,8 @@ function clearAllFilters() {
     search: '', minVolume: 0, fundingRate: 'all', oiChange: 'all',
   });
 
-  document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('.category-btn[data-category="all"]')?.classList.add('active');
+  document.querySelectorAll('.pill[data-category]').forEach(b => b.classList.remove('active'));
+  document.querySelector('.pill[data-category="all"]')?.classList.add('active');
   const search = document.getElementById('filter-search');
   if (search) search.value = '';
   const slider = document.getElementById('volume-slider');

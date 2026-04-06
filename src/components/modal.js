@@ -4,7 +4,7 @@
 
 import { getState, setState, isInWatchlist, toggleWatchlist } from '../store/index.js';
 import { formatPrice, formatNumber, formatCurrency } from '../utils/format.js';
-import { getCoinName, getCoinIcon } from '../utils/colors.js';
+import { getCoinName } from '../utils/colors.js';
 import { showToast } from './toast.js';
 
 let chartWidget = null;
@@ -50,11 +50,11 @@ function updateModalContent(coin) {
   const priceEl = document.getElementById('modal-price');
   if (priceEl) priceEl.textContent = '$' + formatPrice(coin.price);
 
-  // Change pill
+  // Change badge
   const changeEl = document.getElementById('modal-change');
   if (changeEl) {
     changeEl.textContent = `${positive ? '+' : ''}${coin.change24h.toFixed(2)}%`;
-    changeEl.className = 'price-change-pill ' + (positive ? 'positive' : 'negative');
+    changeEl.className = 'price-badge ' + (positive ? 'positive' : 'negative');
   }
 
   // Stats

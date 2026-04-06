@@ -19,12 +19,6 @@ const COIN_NAMES = {
   GALA: 'Gala', DYDX: 'dYdX', CRV: 'Curve DAO', COMP: 'Compound',
 };
 
-const COIN_ICONS = {
-  BTC: '₿', ETH: 'Ξ', XRP: '✕', SOL: '◎', BNB: '⬡', DOGE: 'Ð',
-  ADA: '₳', DOT: '●', LINK: '⬡', AVAX: '▲', UNI: '🦄', LTC: 'Ł',
-  ATOM: '⚛', XLM: '✴', NEAR: '◉',
-};
-
 export const MAJOR_COINS = new Set([
   'BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'AVAX', 'DOT', 'LINK', 'MATIC'
 ]);
@@ -33,20 +27,16 @@ export function getCoinName(symbol) {
   return COIN_NAMES[symbol] || symbol;
 }
 
-export function getCoinIcon(symbol) {
-  return COIN_ICONS[symbol] || symbol.charAt(0);
-}
-
 export function getBubbleColor(change, theme) {
   const positive = change >= 0;
   if (theme === 'dark') {
     return positive
-      ? { primary: '#00ff41', glow: 'rgba(0,255,65,.6)', text: '#00ff41' }
-      : { primary: '#ff0040', glow: 'rgba(255,0,64,.6)', text: '#ff0040' };
+      ? { primary: '#3fb950', glow: 'rgba(63,185,80,.35)', text: '#3fb950' }
+      : { primary: '#f85149', glow: 'rgba(248,81,73,.35)', text: '#f85149' };
   }
   return positive
-    ? { primary: '#2a8a4a', glow: 'rgba(42,138,74,.3)', text: '#2a8a4a' }
-    : { primary: '#c54a4a', glow: 'rgba(197,74,74,.3)', text: '#c54a4a' };
+    ? { primary: '#1a7f37', glow: 'rgba(26,127,55,.2)', text: '#1a7f37' }
+    : { primary: '#cf222e', glow: 'rgba(207,34,46,.2)', text: '#cf222e' };
 }
 
 export function calculateBubbleSize(volume, maxVolume, minSize = 45, maxSize = 110) {

@@ -1,6 +1,5 @@
 /**
- * CRYPTO DIVER — Main Entry Point
- * Bybit Futures Heatmap with real-time WebSocket data
+ * Bybit Futures Heatmap — Main Entry Point
  */
 
 // Styles
@@ -19,21 +18,17 @@ import { setupModalListeners, closeModal, navigateModal } from './components/mod
 import { setupFilterListeners, applyFilters } from './components/filters.js';
 import { initWatchlist } from './components/watchlist.js';
 import { checkVolumeSpikes, showAlert, requestNotificationPermission } from './components/notifications.js';
-import { initParticles, initGeometricShapes } from './components/particles.js';
 
-// ─── Error Boundary ───
-
+// Error boundary
 window.addEventListener('error', (e) => {
-  console.error('[ErrorBoundary]', e.error);
+  console.error('[Error]', e.error);
   showAlert('Something went wrong. Try refreshing.', 'error');
 });
-
 window.addEventListener('unhandledrejection', (e) => {
-  console.error('[ErrorBoundary] Unhandled promise:', e.reason);
+  console.error('[Error] Unhandled promise:', e.reason);
 });
 
-// ─── Fallback Data ───
-
+// Fallback data
 const FALLBACK_DATA = [
   { symbol: 'BTC', fullSymbol: 'BTCUSDT', price: 67543.21, change24h: 2.34, volume24h: 285e9, turnover24h: 192e9, high24h: 68200, low24h: 65800, openInterest: 0, fundingRate: 0.01, oiChange: 0 },
   { symbol: 'ETH', fullSymbol: 'ETHUSDT', price: 3542.18, change24h: 1.87, volume24h: 152e9, turnover24h: 538e9, high24h: 3580.5, low24h: 3450.2, openInterest: 0, fundingRate: 0.005, oiChange: 0 },
@@ -47,11 +42,7 @@ const FALLBACK_DATA = [
   { symbol: 'DOGE', fullSymbol: 'DOGEUSDT', price: 0.165, change24h: -3.2, volume24h: 38e8, turnover24h: 298e7, high24h: 0.172, low24h: 0.158, openInterest: 0, fundingRate: -0.003, oiChange: 0 },
 ];
 
-// ─── Init ───
-
 async function init() {
-  console.log('🤿 CRYPTO DIVER v7 — Vite + WebSocket + TradingView');
-
   const state = getState();
   setState({ isLoading: true });
 
@@ -60,39 +51,26 @@ async function init() {
   document.getElementById('theme-icon').textContent = state.currentTheme === 'dark' ? '🌙' : '☀️';
 
   // Loading timeout
-  const loadingTimeout = setTimeout(() => {
-    if (getState().isLoading) hideLoading(true);
-  }, 8000);
-  const backupTimeout = setTimeout(() => {
-    if (getState().isLoading) hideLoading();
-  }, 15000);
+  const loadingTimeout = setTimeout(() => { if (getState().isLoading) hideLoading(true); }, 8000);
 
-  // Init UI components
-  initParticles();
-  initGeometricShapes();
+  // Init UI
   setupEventListeners();
   setupFilterListeners();
   setupModalListeners();
   initWatchlist();
 
-  // Fetch initial data
+  // Fetch data
   let coins = null;
   let isFallback = false;
 
   try {
     coins = await fetchMarketData();
-    if (!coins) {
-      coins = [...FALLBACK_DATA];
-      isFallback = true;
-    }
-  } catch (err) {
-    console.error('[Init] Error:', err);
-    coins = [...FALLBACK_DATA];
-    isFallback = true;
+    if (!coins) { coins = [...FALLBACK_DATA]; isFallback = true; }
+  } catch {
+    coins = [...FALLBACK_DATA]; isFallback = true;
   }
 
   clearTimeout(loadingTimeout);
-  clearTimeout(backupTimeout);
 
   if (coins.length > 0) {
     setState({ coins, filteredCoins: coins });
@@ -103,16 +81,12 @@ async function init() {
 
     if (!isFallback) {
       checkVolumeSpikes(coins);
-
-      // Connect WebSocket for real-time updates
       connectWebSocket((updatedCoins) => {
         setState({ coins: updatedCoins });
-        const filtered = applyFilters();
+        applyFilters();
         updateStats(updatedCoins);
         checkVolumeSpikes(updatedCoins);
       });
-
-      // Also poll as backup every 30s
       startPolling((newCoins) => {
         setState({ coins: newCoins });
         const filtered = applyFilters();
@@ -122,44 +96,35 @@ async function init() {
         updateWsSubscriptions(newCoins);
       }, 30000);
     }
-
-    console.log(`✅ ${coins.length} futures${isFallback ? ' (fallback)' : ''}`);
   } else {
     hideLoading(true);
     showAlert('Failed to load data', 'error');
   }
 
-  // Register service worker
   registerServiceWorker();
 }
 
 function hideLoading(isFallback = false) {
   const overlay = document.getElementById('loading-overlay');
-  if (overlay) {
-    overlay.style.display = 'none';
-    overlay.classList.add('hidden');
-  }
+  if (overlay) { overlay.style.display = 'none'; overlay.classList.add('hidden'); }
   setState({ isLoading: false });
-  if (isFallback) {
-    showAlert('Using cached data — live feed unavailable', 'info');
-  }
+  if (isFallback) showAlert('Using cached data — live feed unavailable', 'info');
 }
 
 function updateStats(coins) {
-  const bullish = coins.filter(c => c.change24h > 0).length;
-  const bearish = coins.filter(c => c.change24h < 0).length;
+  const bull = coins.filter(c => c.change24h > 0).length;
+  const bear = coins.filter(c => c.change24h < 0).length;
   const bullEl = document.getElementById('stat-bullish');
   const bearEl = document.getElementById('stat-bearish');
-  if (bullEl) bullEl.textContent = bullish;
-  if (bearEl) bearEl.textContent = bearish;
+  if (bullEl) bullEl.textContent = bull;
+  if (bearEl) bearEl.textContent = bear;
 }
 
 function setupEventListeners() {
-  // Theme toggle
+  // Theme
   document.getElementById('theme-toggle')?.addEventListener('click', () => {
-    const newTheme = toggleTheme();
-    document.getElementById('theme-icon').textContent = newTheme === 'dark' ? '🌙' : '☀️';
-    // Re-render with new theme
+    const t = toggleTheme();
+    document.getElementById('theme-icon').textContent = t === 'dark' ? '🌙' : '☀️';
     const state = getState();
     if (state.coins.length > 0) {
       if (state.rafId) cancelAnimationFrame(state.rafId);
@@ -177,16 +142,14 @@ function setupEventListeners() {
     requestNotificationPermission();
   });
 
-  // Keyboard shortcuts
+  // Keyboard
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeModal();
     else if (e.key === 'ArrowLeft') {
-      const modal = document.getElementById('enhanced-modal');
-      if (modal?.classList.contains('active')) navigateModal(-1);
+      if (document.getElementById('enhanced-modal')?.classList.contains('active')) navigateModal(-1);
     }
     else if (e.key === 'ArrowRight') {
-      const modal = document.getElementById('enhanced-modal');
-      if (modal?.classList.contains('active')) navigateModal(1);
+      if (document.getElementById('enhanced-modal')?.classList.contains('active')) navigateModal(1);
     }
     else if ((e.key === 't' || e.key === 'T') && e.target.tagName !== 'INPUT') {
       toggleTheme();
@@ -198,16 +161,15 @@ function setupEventListeners() {
     }
   });
 
-  // Resize with throttle
+  // Resize
   window.addEventListener('resize', handleResize);
 
-  // WS status indicator
+  // WS indicator
   on('change:wsConnected', (connected) => {
-    const indicator = document.getElementById('ws-indicator');
-    if (indicator) indicator.classList.toggle('connected', connected);
+    document.getElementById('ws-indicator')?.classList.toggle('connected', connected);
   });
 
-  // Filter changes trigger re-render
+  // Filter changes → re-render
   on('filtersChange', () => {
     const filtered = applyFilters();
     const state = getState();
@@ -216,20 +178,10 @@ function setupEventListeners() {
   });
 }
 
-// ─── Service Worker ───
-
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
-
-  try {
-    const reg = await navigator.serviceWorker.register('/sw.js');
-    console.log('[SW] Registered:', reg.scope);
-  } catch (err) {
-    console.warn('[SW] Registration failed:', err.message);
-  }
+  try { await navigator.serviceWorker.register('/sw.js'); } catch { /* */ }
 }
-
-// ─── Start ───
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);

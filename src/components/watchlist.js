@@ -13,9 +13,9 @@ export function initWatchlist() {
   if (existing) return;
 
   const btn = document.createElement('button');
-  btn.className = 'category-btn watchlist';
+  btn.className = 'pill watchlist';
   btn.dataset.category = 'watchlist';
-  btn.innerHTML = '⭐ Watchlist';
+  btn.textContent = '⭐ Watch';
   categoryFilters.appendChild(btn);
 }
 

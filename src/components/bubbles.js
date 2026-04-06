@@ -178,7 +178,7 @@ export function renderBubbles(coins) {
     g.append('circle')
       .attr('class', 'bubble-spiral')
       .attr('r', r)
-      .attr('fill', state.currentTheme === 'dark' ? 'rgba(10,10,15,.9)' : 'rgba(255,255,255,.9)')
+      .attr('fill', state.currentTheme === 'dark' ? 'rgba(10,14,20,.92)' : 'rgba(255,255,255,.92)')
       .attr('stroke', color.primary)
       .attr('stroke-width', mobile ? 1.5 : 2)
       .style('color', color.primary);
