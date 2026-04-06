@@ -4,31 +4,80 @@
 
 @media (max-width: 768px) {
   :root {
-    --header-height: 60px;
-    --filter-bar-height: 200px;
+    --header-height: 56px;
+    --filter-bar-height: 180px;
   }
   .logo { font-size: 1rem }
   .stats { display: none }
-  .filter-system { padding: 10px 12px }
-  .filter-row { gap: 8px }
-  .filter-row-secondary { gap: 8px; flex-direction: row; align-items: center; flex-wrap: wrap }
-  .category-btn { padding: 6px 12px; font-size: 12px }
-  .filter-search { min-width: 150px; flex: 1 }
-  .alert-toggle-btn { padding: 6px 12px; font-size: 11px }
+  .filter-system { padding: 8px 10px }
+  .filter-row { gap: 6px }
+  .filter-row-secondary { gap: 6px; flex-direction: row; align-items: center; flex-wrap: wrap }
+  .category-btn { padding: 5px 10px; font-size: 11px }
+  .filter-search { min-width: 120px; flex: 1 }
+  .filter-search-input { padding: 8px 14px 8px 34px; font-size: 13px }
+  .alert-toggle-btn { padding: 5px 10px; font-size: 11px }
   .volume-filter { min-width: 100%; order: 3; margin-top: 4px }
   .advanced-filters { min-width: 100%; order: 4 }
   .sort-controls { margin-left: auto }
+
+  /* Bubbles — smaller, tighter, cleaner */
+  #bubble-container { padding: 0 4px }
+  .bubble-group:hover .bubble-spiral {
+    filter: drop-shadow(0 0 12px currentColor) brightness(1.2);
+    transform: scale(1.08);
+  }
+  .bubble-label { font-size: 9px !important; font-weight: 700; letter-spacing: 0.5px }
+  .bubble-change { font-size: 8px !important }
+  .bubble-spiral { stroke-width: 1.5 !important }
+
+  /* Modal */
   .coin-symbol-large { font-size: 2rem }
   .price-display { font-size: 2.2rem }
   .modal-stats-grid { grid-template-columns: 1fr }
   .modal-actions { grid-template-columns: repeat(2, 1fr) }
-  .diver-group.bull { left: 8%; top: 30% }
-  .diver-group.bear { right: 8%; top: 70% }
-  .diver-group.bull .diver-circle:nth-child(4),
-  .diver-group.bear .diver-circle:nth-child(4) { display: none }
+
+  /* Background — reduce visual clutter */
+  .diver-group.bull { left: 5%; top: 30% }
+  .diver-group.bear { right: 5%; top: 70% }
+  .diver-group .diver-circle:nth-child(3),
+  .diver-group .diver-circle:nth-child(4) { display: none }
   .geo-shape { display: none }
-  .alert-banner { min-width: auto; width: calc(100% - 32px); padding: 10px 16px }
+  .alert-banner { min-width: auto; width: calc(100% - 24px); padding: 10px 14px }
   .results-count { font-size: 11px }
+
+  /* Reduce main content top padding so bubbles fill more screen */
+  .main-content {
+    padding-top: calc(var(--header-height) + var(--filter-bar-height) + 8px);
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+}
+
+/* Small phones (iPhone SE, Galaxy S, etc.) */
+@media (max-width: 400px) {
+  :root {
+    --header-height: 50px;
+    --filter-bar-height: 160px;
+  }
+  .logo { font-size: 0.85rem; gap: 6px }
+  .futures-badge { font-size: 8px; padding: 2px 5px }
+  .filter-system { padding: 6px 8px }
+  .filter-container { gap: 6px }
+  .category-btn { padding: 4px 8px; font-size: 10px; gap: 4px }
+  .sort-select { padding: 6px 24px 6px 8px; font-size: 12px }
+  .sort-direction-btn { width: 30px; height: 30px; font-size: 12px }
+  .filter-search-input { padding: 7px 12px 7px 30px; font-size: 12px }
+  .filter-search-icon { left: 10px; font-size: 12px }
+  .volume-filter { gap: 8px }
+  .volume-filter-label { font-size: 10px }
+  .advanced-filter-select { font-size: 10px; padding: 5px 22px 5px 6px }
+
+  .bubble-label { font-size: 8px !important }
+  .bubble-change { font-size: 7px !important }
+
+  .main-content {
+    padding-top: calc(var(--header-height) + var(--filter-bar-height) + 4px);
+  }
 }
 
 @media (min-width: 769px) {

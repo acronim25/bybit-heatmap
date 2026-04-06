@@ -49,7 +49,7 @@ export function getBubbleColor(change, theme) {
     : { primary: '#c54a4a', glow: 'rgba(197,74,74,.3)', text: '#c54a4a' };
 }
 
-export function calculateBubbleSize(volume, maxVolume) {
+export function calculateBubbleSize(volume, maxVolume, minSize = 45, maxSize = 110) {
   const ratio = Math.log10(volume + 1) / Math.log10(maxVolume + 1);
-  return 45 + 65 * ratio;
+  return minSize + (maxSize - minSize) * ratio;
 }
