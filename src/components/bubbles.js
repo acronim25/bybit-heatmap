@@ -15,19 +15,21 @@ function isMobile() {
   return window.innerWidth <= 768;
 }
 
-function getLayoutConfig(width) {
+function getLayoutConfig(width, coinCount) {
+  // Dynamic sizing: more coins = smaller bubbles to fit them all
   if (width <= 400) {
-    // Small phones (iPhone SE, etc.)
-    return { cellSize: 75, maxBubble: 60, minBubble: 28, rowHeight: 80, jitter: 8, glow: 3, gap: 4, maxCoins: 40 };
+    const scale = coinCount > 100 ? 0.7 : coinCount > 60 ? 0.85 : 1;
+    return { cellSize: 55 * scale, maxBubble: 48 * scale, minBubble: 18 * scale, rowHeight: 60 * scale, jitter: 5, glow: 2, gap: 2 };
   } else if (width <= 768) {
-    // Larger phones / small tablets
-    return { cellSize: 90, maxBubble: 70, minBubble: 32, rowHeight: 95, jitter: 12, glow: 3, gap: 6, maxCoins: 50 };
+    const scale = coinCount > 100 ? 0.75 : coinCount > 60 ? 0.88 : 1;
+    return { cellSize: 70 * scale, maxBubble: 60 * scale, minBubble: 22 * scale, rowHeight: 75 * scale, jitter: 8, glow: 3, gap: 3 };
   } else if (width <= 1024) {
-    // Tablets
-    return { cellSize: 110, maxBubble: 90, minBubble: 38, rowHeight: 120, jitter: 20, glow: 4, gap: 8, maxCoins: 60 };
+    const scale = coinCount > 150 ? 0.65 : coinCount > 100 ? 0.78 : coinCount > 60 ? 0.9 : 1;
+    return { cellSize: 85 * scale, maxBubble: 75 * scale, minBubble: 28 * scale, rowHeight: 90 * scale, jitter: 10, glow: 3, gap: 5 };
   }
-  // Desktop
-  return { cellSize: 130, maxBubble: 110, minBubble: 45, rowHeight: 140, jitter: 30, glow: 4, gap: 10, maxCoins: 60 };
+  // Desktop — scale down for large counts
+  const scale = coinCount > 200 ? 0.55 : coinCount > 150 ? 0.65 : coinCount > 100 ? 0.75 : coinCount > 60 ? 0.88 : 1;
+  return { cellSize: 100 * scale, maxBubble: 90 * scale, minBubble: 32 * scale, rowHeight: 105 * scale, jitter: 15, glow: 4, gap: 6 };
 }
 
 export function initBubbleSimulation(coins) {
@@ -35,7 +37,7 @@ export function initBubbleSimulation(coins) {
   if (!container) return coins;
 
   const width = container.clientWidth;
-  const config = getLayoutConfig(width);
+  const config = getLayoutConfig(width, coins.length);
   const maxVol = Math.max(...coins.map(c => c.volume24h));
   const cols = Math.max(2, Math.floor(width / config.cellSize));
   const colWidth = width / cols;
@@ -59,6 +61,17 @@ export function initBubbleSimulation(coins) {
   return coins;
 }
 
+// Spatial hash for O(n) neighbor lookup instead of O(n²)
+function buildSpatialGrid(coins, cellSize) {
+  const grid = new Map();
+  for (let i = 0; i < coins.length; i++) {
+    const key = `${Math.floor(coins[i].x / cellSize)},${Math.floor(coins[i].y / cellSize)}`;
+    if (!grid.has(key)) grid.set(key, []);
+    grid.get(key).push(i);
+  }
+  return grid;
+}
+
 function runPhysicsStep(coins) {
   const now = performance.now();
   if (now - lastPhysicsTime < 1000 / ANIMATION_FPS) return;
@@ -73,33 +86,48 @@ function runPhysicsStep(coins) {
   const centerY = h / 2;
   const damping = 0.9;
   const mobile = isMobile();
-  const minGap = mobile ? 4 : 10;
+  const minGap = mobile ? 2 : 6;
+
+  // Build spatial grid for fast collision (critical with 300+ bubbles)
+  const maxSize = coins.length > 0 ? coins.reduce((m, c) => Math.max(m, c.size), 0) : 60;
+  const gridCell = maxSize + minGap + 20;
+  const spatialGrid = buildSpatialGrid(coins, gridCell);
 
   coins.forEach((coin, i) => {
     let fx = 0, fy = 0;
 
-    // Repulsion
-    coins.forEach((other, j) => {
-      if (i === j) return;
-      const dx = coin.x - other.x;
-      const dy = coin.y - other.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const minDist = (coin.size + other.size) / 2 + minGap;
-      if (dist < minDist && dist > 0) {
-        const force = 2000 * (minDist - dist) / minDist;
-        fx += (dx / dist) * force;
-        fy += (dy / dist) * force;
+    // Only check neighbors in adjacent spatial cells
+    const cx = Math.floor(coin.x / gridCell);
+    const cy = Math.floor(coin.y / gridCell);
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const cell = spatialGrid.get(`${cx + dx},${cy + dy}`);
+        if (!cell) continue;
+        for (const j of cell) {
+          if (i === j) continue;
+          const other = coins[j];
+          const ddx = coin.x - other.x;
+          const ddy = coin.y - other.y;
+          const distSq = ddx * ddx + ddy * ddy;
+          const minDist = (coin.size + other.size) / 2 + minGap;
+          if (distSq < minDist * minDist && distSq > 0) {
+            const dist = Math.sqrt(distSq);
+            const force = 1500 * (minDist - dist) / minDist;
+            fx += (ddx / dist) * force;
+            fy += (ddy / dist) * force;
+          }
+        }
       }
-    });
+    }
 
-    // Grid attraction (stronger on mobile to keep them tidy)
-    const gridStrength = mobile ? 0.02 : 0.01;
+    // Grid attraction
+    const gridStrength = mobile ? 0.025 : 0.015;
     fx += (coin.gridX - coin.x) * gridStrength;
     fy += (coin.gridY - coin.y) * gridStrength;
 
-    // Center gravity
-    fx += (centerX - coin.x) * 0.0005;
-    fy += (centerY - coin.y) * 0.0005;
+    // Gentle center gravity
+    fx += (centerX - coin.x) * 0.0003;
+    fy += (centerY - coin.y) * 0.0003;
 
     coin.vx = (coin.vx + fx / coin.mass) * damping;
     coin.vy = (coin.vy + fy / coin.mass) * damping;
@@ -107,7 +135,7 @@ function runPhysicsStep(coins) {
     coin.y += coin.vy;
 
     // Bounds
-    const margin = coin.size / 2 + 5;
+    const margin = coin.size / 2 + 3;
     coin.x = Math.max(margin, Math.min(w - margin, coin.x));
     coin.y = Math.max(margin, Math.min(h - margin, coin.y));
   });
@@ -119,11 +147,9 @@ export function renderBubbles(coins) {
 
   const state = getState();
   const width = container.clientWidth;
-  const config = getLayoutConfig(width);
   const mobile = isMobile();
-
-  // Limit coins on mobile for cleaner layout
-  const displayCoins = coins.slice(0, config.maxCoins);
+  const displayCoins = coins; // Show ALL contracts
+  const config = getLayoutConfig(width, displayCoins.length);
 
   const cols = Math.max(2, Math.floor(width / config.cellSize));
   const rows = Math.ceil(displayCoins.length / cols);

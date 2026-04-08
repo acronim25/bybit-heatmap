@@ -7,7 +7,6 @@ import { getState, setState, emit } from '../store/index.js';
 
 const API_URL = 'https://api.bybit.com/v5/market/tickers';
 const WS_URL = 'wss://stream.bybit.com/v5/public/linear';
-const MAX_BUBBLES = 60;
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000];
 
 let ws = null;
@@ -33,8 +32,7 @@ export async function fetchMarketData() {
     const coins = rawList
       .map(raw => validateTicker(raw))
       .filter(Boolean)
-      .sort((a, b) => b.volume24h - a.volume24h)
-      .slice(0, MAX_BUBBLES);
+      .sort((a, b) => b.volume24h - a.volume24h);
 
     // Compute OI change from history
     coins.forEach(coin => {
@@ -76,17 +74,15 @@ export function connectWebSocket(onUpdate) {
     reconnectAttempt = 0;
     setState({ wsConnected: true });
 
-    // Subscribe to all USDT perp tickers
-    ws.send(JSON.stringify({
-      op: 'subscribe',
-      args: ['tickers.BTCUSDT', 'tickers.ETHUSDT', 'tickers.SOLUSDT']
-    }));
-
-    // Subscribe to top coins dynamically
+    // Subscribe to all USDT perp tickers — batch in groups of 10 (Bybit limit)
     const { coins } = getState();
-    if (coins.length > 0) {
-      const topics = coins.slice(0, 20).map(c => `tickers.${c.fullSymbol}`);
-      ws.send(JSON.stringify({ op: 'subscribe', args: topics }));
+    const allSymbols = coins.length > 0
+      ? coins.map(c => `tickers.${c.fullSymbol}`)
+      : ['tickers.BTCUSDT', 'tickers.ETHUSDT', 'tickers.SOLUSDT'];
+
+    for (let i = 0; i < allSymbols.length; i += 10) {
+      const batch = allSymbols.slice(i, i + 10);
+      ws.send(JSON.stringify({ op: 'subscribe', args: batch }));
     }
   };
 
@@ -144,8 +140,11 @@ function handleTickerUpdate(data, onUpdate) {
 
 export function updateWsSubscriptions(coins) {
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
-  const topics = coins.slice(0, 30).map(c => `tickers.${c.fullSymbol}`);
-  ws.send(JSON.stringify({ op: 'subscribe', args: topics }));
+  // Subscribe ALL contracts in batches of 10
+  const topics = coins.map(c => `tickers.${c.fullSymbol}`);
+  for (let i = 0; i < topics.length; i += 10) {
+    ws.send(JSON.stringify({ op: 'subscribe', args: topics.slice(i, i + 10) }));
+  }
 }
 
 // ─── Polling fallback ───
