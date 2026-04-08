@@ -3,31 +3,31 @@
    ═══════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-  :root { --header-h: 46px; --filter-h: 40px }
+  :root { --header-h: 48px; --filter-h: 42px }
   .logo-text { font-size: 13px }
-  .badge-live { font-size: 9px; padding: 1px 5px }
-  .stats { font-size: 12px }
-  .stat { padding: 3px 6px }
-  .theme-toggle { width: 32px; height: 32px; font-size: 14px }
+  .badge-live { font-size: 8px; padding: 2px 6px }
+  .stats { font-size: 12px; gap: 4px }
+  .stat { padding: 3px 7px }
+  .theme-toggle { width: 34px; height: 34px; font-size: 14px }
 
+  .filter-bar { padding: 0 12px }
   .filter-bar-inner { gap: 6px }
-  .pill { padding: 4px 8px; font-size: 11px }
+  .pill { padding: 5px 10px; font-size: 11px }
   .filter-search { max-width: 140px; min-width: 80px }
-  .search-input { font-size: 11px; padding: 5px 24px 5px 24px }
-  .sort-select { font-size: 11px; padding: 4px 20px 4px 6px }
+  .search-input { font-size: 11px; padding: 5px 24px 5px 28px }
+  .sort-select { font-size: 11px; padding: 5px 22px 5px 8px }
 
   .main-content { padding-top: calc(var(--header-h) + var(--filter-h) + 8px) }
 
   .bubble-label { font-size: 9px !important }
   .bubble-change { font-size: 7px !important }
 
-  .modal-content { max-width: 100%; border-radius: 12px 12px 0 0 }
+  .modal-content { max-width: 100%; border-radius: 16px 16px 0 0 }
   .modal-symbol { font-size: 1.5rem }
   .modal-price { font-size: 1.2rem }
-  .modal-stats { grid-template-columns: repeat(2, 1fr) }
+  .modal-stats { grid-template-columns: repeat(2, 1fr); gap: 6px }
   .modal-actions { flex-wrap: wrap }
   .modal-btn { min-width: calc(50% - 4px) }
-
   .alert-banner { width: calc(100% - 24px) }
 }
 
@@ -36,6 +36,7 @@
   .category-filters::-webkit-scrollbar { display: none }
   .pill { flex-shrink: 0 }
   .filter-search { max-width: 100px }
+  .stats { display: none }
 }
 
 @media (min-width: 769px) {

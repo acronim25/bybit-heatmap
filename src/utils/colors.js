@@ -1,5 +1,5 @@
 /**
- * Color utilities for bubbles and UI elements
+ * Color utilities — Cyberpunk palette
  */
 
 const COIN_NAMES = {
@@ -27,16 +27,20 @@ export function getCoinName(symbol) {
   return COIN_NAMES[symbol] || symbol;
 }
 
+/**
+ * Get bubble colors — gradient-based for cyberpunk look
+ * Returns: primary stroke, gradient stops, glow color, text color
+ */
 export function getBubbleColor(change, theme) {
   const positive = change >= 0;
   if (theme === 'dark') {
     return positive
-      ? { primary: '#3fb950', glow: 'rgba(63,185,80,.35)', text: '#3fb950' }
-      : { primary: '#f85149', glow: 'rgba(248,81,73,.35)', text: '#f85149' };
+      ? { primary: '#00FFA3', gradStart: '#00FFA3', gradEnd: '#00D9FF', glow: 'rgba(0,255,163,.4)', text: '#00FFA3' }
+      : { primary: '#FF6B6B', gradStart: '#FF6B6B', gradEnd: '#FF006E', glow: 'rgba(255,0,110,.4)', text: '#FF6B6B' };
   }
   return positive
-    ? { primary: '#1a7f37', glow: 'rgba(26,127,55,.2)', text: '#1a7f37' }
-    : { primary: '#cf222e', glow: 'rgba(207,34,46,.2)', text: '#cf222e' };
+    ? { primary: '#00B374', gradStart: '#00B374', gradEnd: '#0096C7', glow: 'rgba(0,179,116,.25)', text: '#00B374' }
+    : { primary: '#E0245E', gradStart: '#E0245E', gradEnd: '#C70039', glow: 'rgba(224,36,94,.25)', text: '#E0245E' };
 }
 
 export function calculateBubbleSize(volume, maxVolume, minSize = 45, maxSize = 110) {

@@ -137,18 +137,20 @@ export function renderBubbles(coins) {
     .attr('width', width)
     .attr('height', height);
 
-  // Glow filter (reduced blur on mobile)
   const defs = svg.append('defs');
-  const filter = defs.append('filter')
+
+  // Glow filter
+  const glowFilter = defs.append('filter')
     .attr('id', 'glow')
     .attr('x', '-50%').attr('y', '-50%')
     .attr('width', '200%').attr('height', '200%');
-  filter.append('feGaussianBlur')
-    .attr('stdDeviation', config.glow)
-    .attr('result', 'coloredBlur');
-  const merge = filter.append('feMerge');
+  glowFilter.append('feGaussianBlur').attr('stdDeviation', config.glow).attr('result', 'coloredBlur');
+  const merge = glowFilter.append('feMerge');
   merge.append('feMergeNode').attr('in', 'coloredBlur');
   merge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+  // Gradient defs for each coin — created per-bubble for unique IDs
+  const maxVol = Math.max(...displayCoins.map(c => c.volume24h));
 
   initBubbleSimulation(displayCoins);
 
@@ -161,47 +163,57 @@ export function renderBubbles(coins) {
     .attr('transform', d => `translate(${d.x},${d.y})`)
     .style('opacity', 0);
 
-  groups.each(function (d) {
+  groups.each(function (d, idx) {
     const g = d3.select(this);
     const color = getBubbleColor(d.change24h, state.currentTheme);
     const r = d.size / 2;
 
-    // Glow circle (smaller on mobile)
-    const glowPad = mobile ? 4 : 8;
+    // Volume-proportional glow intensity (bigger volume = stronger glow)
+    const volRatio = Math.log10(d.volume24h + 1) / Math.log10(maxVol + 1);
+    const glowOpacity = mobile ? 0.15 + volRatio * 0.2 : 0.2 + volRatio * 0.35;
+
+    // Create gradient for this bubble
+    const gradId = `bubbleGrad-${idx}`;
+    const grad = defs.append('radialGradient').attr('id', gradId);
+    grad.append('stop').attr('offset', '0%').attr('stop-color', color.gradStart).attr('stop-opacity', 0.15);
+    grad.append('stop').attr('offset', '70%').attr('stop-color', color.gradEnd).attr('stop-opacity', 0.05);
+    grad.append('stop').attr('offset', '100%').attr('stop-color', color.primary).attr('stop-opacity', 0);
+
+    // Outer glow — intensity scales with volume
+    const glowPad = mobile ? 6 : 12;
     g.append('circle')
       .attr('r', r + glowPad)
       .attr('fill', color.glow)
-      .attr('opacity', mobile ? 0.2 : 0.3)
+      .attr('opacity', glowOpacity)
       .attr('filter', 'url(#glow)');
 
-    // Main circle
+    // Main circle with gradient fill
     g.append('circle')
       .attr('class', 'bubble-spiral')
       .attr('r', r)
-      .attr('fill', state.currentTheme === 'dark' ? 'rgba(10,14,20,.92)' : 'rgba(255,255,255,.92)')
+      .attr('fill', `url(#${gradId})`)
       .attr('stroke', color.primary)
       .attr('stroke-width', mobile ? 1.5 : 2)
       .style('color', color.primary);
 
-    // Inner ring (skip on very small bubbles)
+    // Inner ring (subtle)
     if (r > 18) {
       g.append('circle')
-        .attr('r', r - 4)
+        .attr('r', r - 5)
         .attr('fill', 'none')
         .attr('stroke', color.primary)
-        .attr('stroke-width', mobile ? 0.5 : 1)
-        .attr('opacity', 0.2);
+        .attr('stroke-width', 0.5)
+        .attr('opacity', 0.15);
     }
 
     // Watchlist star
     if (state.watchlist.has(d.symbol)) {
       g.append('text')
-        .attr('class', 'bubble-star')
-        .attr('dy', mobile ? '-1.2em' : '-1.8em')
+        .attr('dy', mobile ? '-1.2em' : '-1.6em')
         .attr('text-anchor', 'middle')
-        .attr('fill', '#ffcc00')
+        .attr('fill', '#FFD93D')
         .attr('font-size', mobile ? '8px' : '10px')
-        .text('⭐');
+        .text('★');
     }
 
     // Label
