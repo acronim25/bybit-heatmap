@@ -29,58 +29,50 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 // Fallback data
+const fb = (s, p, c, v) => ({ symbol: s, fullSymbol: s+'USDT', price: p, change24h: c, volume24h: v, turnover24h: v*0.7, high24h: p*1.02, low24h: p*0.98, openInterest: 0, fundingRate: c > 0 ? 0.005 : -0.003, oiChange: 0 });
 const FALLBACK_DATA = [
-  { symbol: 'BTC', fullSymbol: 'BTCUSDT', price: 67543.21, change24h: 2.34, volume24h: 285e9, turnover24h: 192e9, high24h: 68200, low24h: 65800, openInterest: 0, fundingRate: 0.01, oiChange: 0 },
-  { symbol: 'ETH', fullSymbol: 'ETHUSDT', price: 3542.18, change24h: 1.87, volume24h: 152e9, turnover24h: 538e9, high24h: 3580.5, low24h: 3450.2, openInterest: 0, fundingRate: 0.005, oiChange: 0 },
-  { symbol: 'SOL', fullSymbol: 'SOLUSDT', price: 178.92, change24h: 5.23, volume24h: 42e9, turnover24h: 752e8, high24h: 182.4, low24h: 168.7, openInterest: 0, fundingRate: 0.008, oiChange: 0 },
-  { symbol: 'XRP', fullSymbol: 'XRPUSDT', price: 0.6234, change24h: -1.25, volume24h: 21e9, turnover24h: 131e8, high24h: 0.6345, low24h: 0.6123, openInterest: 0, fundingRate: -0.002, oiChange: 0 },
-  { symbol: 'BNB', fullSymbol: 'BNBUSDT', price: 612.45, change24h: -0.52, volume24h: 89e8, turnover24h: 545e7, high24h: 618.9, low24h: 605.1, openInterest: 0, fundingRate: 0.003, oiChange: 0 },
-  { symbol: 'ADA', fullSymbol: 'ADAUSDT', price: 0.5845, change24h: 0.89, volume24h: 68e8, turnover24h: 397e7, high24h: 0.5923, low24h: 0.5767, openInterest: 0, fundingRate: 0.001, oiChange: 0 },
-  { symbol: 'AVAX', fullSymbol: 'AVAXUSDT', price: 42.18, change24h: 3.45, volume24h: 89e8, turnover24h: 375e7, high24h: 43.25, low24h: 40.65, openInterest: 0, fundingRate: 0.004, oiChange: 0 },
-  { symbol: 'DOT', fullSymbol: 'DOTUSDT', price: 8.92, change24h: -2.14, volume24h: 42e8, turnover24h: 374e7, high24h: 9.15, low24h: 8.71, openInterest: 0, fundingRate: -0.001, oiChange: 0 },
-  { symbol: 'LINK', fullSymbol: 'LINKUSDT', price: 18.45, change24h: 4.56, volume24h: 62e8, turnover24h: 114e8, high24h: 18.92, low24h: 17.58, openInterest: 0, fundingRate: 0.006, oiChange: 0 },
-  { symbol: 'DOGE', fullSymbol: 'DOGEUSDT', price: 0.165, change24h: -3.2, volume24h: 38e8, turnover24h: 298e7, high24h: 0.172, low24h: 0.158, openInterest: 0, fundingRate: -0.003, oiChange: 0 },
+  fb('BTC',67543,2.34,285e9), fb('ETH',3542,1.87,152e9), fb('SOL',178,-5.23,42e9),
+  fb('XRP',0.62,-1.25,21e9), fb('BNB',612,-0.52,89e8), fb('DOGE',0.165,8.2,68e8),
+  fb('ADA',0.58,0.89,58e8), fb('AVAX',42,3.45,49e8), fb('DOT',8.9,-2.1,42e8),
+  fb('LINK',18.4,4.56,40e8), fb('MATIC',0.78,1.2,38e8), fb('UNI',12.5,-1.8,35e8),
+  fb('SHIB',0.000025,6.7,32e8), fb('LTC',92,-0.9,30e8), fb('ATOM',11.2,2.1,28e8),
+  fb('NEAR',7.8,3.3,25e8), fb('APT',13.5,-4.1,22e8), fb('ARB',1.45,1.9,20e8),
+  fb('OP',3.2,2.8,18e8), fb('FIL',8.1,-3.5,16e8), fb('SUI',1.8,7.2,15e8),
+  fb('INJ',38,-2.7,14e8), fb('SEI',0.85,5.1,13e8), fb('TIA',14.2,-1.3,12e8),
+  fb('PEPE',0.0000018,12.5,11e8), fb('FET',2.3,4.8,10e8), fb('RUNE',6.5,-3.2,9e8),
+  fb('IMX',2.9,1.1,8e8), fb('STX',2.1,3.7,7e8), fb('BONK',0.000032,9.4,6e8),
 ];
 
 async function init() {
   const state = getState();
-  setState({ isLoading: true });
 
   // Apply saved theme
   document.body.setAttribute('data-theme', state.currentTheme);
   document.getElementById('theme-icon').textContent = state.currentTheme === 'dark' ? '🌙' : '☀️';
 
-  // Loading timeout
-  const loadingTimeout = setTimeout(() => { if (getState().isLoading) hideLoading(true); }, 8000);
-
-  // Init UI
+  // Init UI immediately (no waiting)
   setupEventListeners();
   setupFilterListeners();
   setupModalListeners();
   initWatchlist();
 
-  // Fetch data
-  let coins = null;
-  let isFallback = false;
+  // STEP 1: Show fallback data INSTANTLY — no waiting for API
+  setState({ coins: FALLBACK_DATA, filteredCoins: FALLBACK_DATA });
+  hideLoading();
+  renderBubbles(FALLBACK_DATA);
+  updateStats(FALLBACK_DATA);
+  applyFilters();
 
-  try {
-    coins = await fetchMarketData();
-    if (!coins) { coins = [...FALLBACK_DATA]; isFallback = true; }
-  } catch {
-    coins = [...FALLBACK_DATA]; isFallback = true;
-  }
-
-  clearTimeout(loadingTimeout);
-
-  if (coins.length > 0) {
-    setState({ coins, filteredCoins: coins });
-    hideLoading(isFallback);
-    renderBubbles(coins);
-    updateStats(coins);
-    applyFilters();
-
-    if (!isFallback) {
+  // STEP 2: Fetch real data in background and swap in
+  fetchMarketData().then(coins => {
+    if (coins && coins.length > 0) {
+      setState({ coins, filteredCoins: coins });
+      const filtered = applyFilters();
+      renderBubbles(filtered);
+      updateStats(coins);
       checkVolumeSpikes(coins);
+
+      // Start real-time updates
       connectWebSocket((updatedCoins) => {
         setState({ coins: updatedCoins });
         applyFilters();
@@ -96,19 +88,18 @@ async function init() {
         updateWsSubscriptions(newCoins);
       }, 30000);
     }
-  } else {
-    hideLoading(true);
-    showAlert('Failed to load data', 'error');
-  }
+  }).catch(() => {
+    // Fallback already showing — just notify
+    showAlert('Live data unavailable — showing cached prices', 'info');
+  });
 
   registerServiceWorker();
 }
 
-function hideLoading(isFallback = false) {
+function hideLoading() {
   const overlay = document.getElementById('loading-overlay');
   if (overlay) { overlay.style.display = 'none'; overlay.classList.add('hidden'); }
   setState({ isLoading: false });
-  if (isFallback) showAlert('Using cached data — live feed unavailable', 'info');
 }
 
 function updateStats(coins) {

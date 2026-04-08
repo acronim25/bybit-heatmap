@@ -6,8 +6,10 @@ import { validateTickerResponse, validateTicker, ValidationError } from './valid
 import { getState, setState, emit } from '../store/index.js';
 
 const API_URL = 'https://api.bybit.com/v5/market/tickers';
+const API_PROXY = 'https://api.bybit.com/v5/market/tickers'; // same — no proxy needed, Bybit has CORS
 const WS_URL = 'wss://stream.bybit.com/v5/public/linear';
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000];
+const FETCH_TIMEOUT = 4000; // 4 seconds max
 
 let ws = null;
 let reconnectAttempt = 0;
@@ -18,7 +20,7 @@ let oiHistory = {}; // track open interest changes
 
 export async function fetchMarketData() {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
 
   try {
     const response = await fetch(`${API_URL}?category=linear`, { signal: controller.signal });
