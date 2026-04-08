@@ -44,11 +44,13 @@ const FALLBACK_DATA = [
 ];
 
 async function init() {
+  try {
   const state = getState();
 
   // Apply saved theme
   document.body.setAttribute('data-theme', state.currentTheme);
-  document.getElementById('theme-icon').textContent = state.currentTheme === 'dark' ? '🌙' : '☀️';
+  const themeIcon = document.getElementById('theme-icon');
+  if (themeIcon) themeIcon.textContent = state.currentTheme === 'dark' ? '🌙' : '☀️';
 
   // Init UI immediately (no waiting)
   setupEventListeners();
@@ -94,11 +96,19 @@ async function init() {
   });
 
   registerServiceWorker();
+  } catch (err) {
+    console.error('[Init] Fatal error:', err);
+    hideLoading();
+  }
 }
 
 function hideLoading() {
   const overlay = document.getElementById('loading-overlay');
-  if (overlay) { overlay.style.display = 'none'; overlay.classList.add('hidden'); }
+  if (overlay) {
+    overlay.classList.add('hidden');
+    // Remove from DOM after transition
+    setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 600);
+  }
   setState({ isLoading: false });
 }
 
